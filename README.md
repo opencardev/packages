@@ -32,10 +32,6 @@ sudo apt install openauto
 | Distribution | Codename | Status |
 |--------------|----------|---------|
 | Debian 13    | trixie   | ✅ Active |
-| Debian 12    | bookworm | ✅ Active |
-| Debian 11    | bullseye | ✅ Active |
-| Ubuntu 24.04 | noble    | 🔄 Planned |
-| Ubuntu 22.04 | jammy    | 🔄 Planned |
 
 ## Supported Architectures
 
