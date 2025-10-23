@@ -48,6 +48,41 @@ sudo apt install openauto
 | `libaasdk` | Runtime library for Android Auto SDK |
 | `libaasdk-dev` | Development headers and files |
 
+## Repository Management
+
+### Automated Package Publishing
+
+This repository uses GitHub Actions to automatically publish packages from build artifacts. The workflow can be triggered in several ways:
+
+#### 1. Direct Workflow Dispatch (from packages repository)
+```bash
+# Manually trigger the workflow from the packages repository
+gh workflow run apt-publish-aptly.yml \
+  --repo opencardev/packages \
+  -f source_repo="opencardev/aasdk" \
+  -f build_run_id="12345" \
+  -f distribution="trixie"
+```
+
+#### 2. Repository Dispatch (from source repository)
+```bash
+# Trigger from the source repository (e.g., aasdk)
+gh workflow run trigger-apt-publish.yml \
+  --repo opencardev/aasdk \
+  -f build_run_id="12345" \
+  -f distribution="trixie"
+```
+
+#### 3. Workflow Call (from other workflows)
+```yaml
+- name: Publish to APT Repository
+  uses: opencardev/packages/.github/workflows/apt-publish-aptly.yml@main
+  with:
+    source_repo: ${{ github.repository }}
+    build_run_id: ${{ github.run_id }}
+    distribution: 'trixie'
+```
+
 #### Installation Example
 
 ```bash
