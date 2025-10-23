@@ -1,0 +1,36 @@
+Package: libaasdk-armhf
+Priority: optional
+Section: libs
+Installed-Size: 264241
+Maintainer: AASDK <opencardevuk@gmail.com>
+Architecture: armhf
+Version: 2025.10.23
+Depends: libusb-1.0-0 (>= 1.0.0), libboost-system1.83.0 | libboost-system1.81.0 | libboost-system1.74.0, libboost-log1.83.0 | libboost-log1.81.0 | libboost-log1.74.0, libssl3 (>= 3.0.0), libprotobuf32 (>= 3.21.0)
+Filename: pool/trixie/main/liba/libaasdk-armhf/libaasdk-armhf_2025.10.23_armhf.deb
+Size: 37188730
+MD5sum: e32b354e773502ee8a53b89473baae72
+SHA1: 46e0aca9130152b3b456d963943cf37b89e60b9b
+SHA256: ed0fb9425f59567660558b39099295d6812b7e4fa2db452625fd80a842eac707
+SHA512: 0bb56177f9ed7c705b164807d947410f94ab1c0522609b8497f30c6d44ba517b43bb75ec20ff05398ace45996527fb4493a5ceee1c17732d032c742b44a74d38
+Description: Android Auto SDK Library for armhf
+ Runtime libraries for Android Auto SDK on armhf architecture
+Homepage: https://github.com/opencardev/aasdk
+
+Package: libaasdk-armhf-dev
+Priority: optional
+Section: libdevel
+Installed-Size: 4106
+Maintainer: AASDK <opencardevuk@gmail.com>
+Architecture: armhf
+Version: 2025.10.23
+Depends: libaasdk-armhf (= 2025.10.23)
+Filename: pool/trixie/main/liba/libaasdk-armhf-dev/libaasdk-armhf-dev_2025.10.23_armhf.deb
+Size: 305100
+MD5sum: 85f3cae76dd97898c15b247c8b02b391
+SHA1: 9befc14ad50634b9272a2c968477d8659730c78e
+SHA256: 18a132477cf44746f0c9268235d56a844a2ce730551943bed79d8f7516a71cea
+SHA512: df55e14757e4fbcb3b92c87e6d1a38d633e24c807e6671be2f61fbc34f4123732571ea889821636706d2b9a534be9b8ae3e4394ec3f4736403ae2dc059ab1dfa
+Description: Android Auto SDK Library for armhf
+ Development headers and CMake files for Android Auto SDK on armhf architecture
+Homepage: https://github.com/opencardev/aasdk
+

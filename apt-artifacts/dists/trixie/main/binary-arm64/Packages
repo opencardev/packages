@@ -1,0 +1,36 @@
+Package: libaasdk-arm64
+Priority: optional
+Section: libs
+Installed-Size: 275461
+Maintainer: AASDK <opencardevuk@gmail.com>
+Architecture: arm64
+Version: 2025.10.23
+Depends: libusb-1.0-0 (>= 1.0.0), libboost-system1.83.0 | libboost-system1.81.0 | libboost-system1.74.0, libboost-log1.83.0 | libboost-log1.81.0 | libboost-log1.74.0, libssl3 (>= 3.0.0), libprotobuf32 (>= 3.21.0)
+Filename: pool/trixie/main/liba/libaasdk-arm64/libaasdk-arm64_2025.10.23_arm64.deb
+Size: 37359754
+MD5sum: cd1aaf574d2ca590b055c211a5f1be22
+SHA1: 9d7228a3976635e0275d27cfb205de7bf7a309ca
+SHA256: fea09c2bfa198799ce22de0bb7f2e3c0793e361de354e38cefc55825a848a093
+SHA512: 3e17bb741614e4b5be276f17a4c52f37be586e01f5259f9770caebf3a8b9d9b19f34145213366c4afbb002450e979003e2b53da0754194308bcc49ae5ac868e3
+Description: Android Auto SDK Library for arm64
+ Runtime libraries for Android Auto SDK on arm64 architecture
+Homepage: https://github.com/opencardev/aasdk
+
+Package: libaasdk-arm64-dev
+Priority: optional
+Section: libdevel
+Installed-Size: 4106
+Maintainer: AASDK <opencardevuk@gmail.com>
+Architecture: arm64
+Version: 2025.10.23
+Depends: libaasdk-arm64 (= 2025.10.23)
+Filename: pool/trixie/main/liba/libaasdk-arm64-dev/libaasdk-arm64-dev_2025.10.23_arm64.deb
+Size: 305138
+MD5sum: 29138a67bda5b436752392297267c0b4
+SHA1: 48c50d1e42741289dd9b9e27e481687929bde402
+SHA256: 17ccef6087226ce889a8d38b1a0dafa20131796b8c53b0cf323ac743d1cba7a6
+SHA512: 0bebfa26036bab3c00e984c6a144b52cce5eb3ec81805493ffb425c4dc6256e06516a28233f344588ce459e6dbc5e0103a0f06b397fe2056a02b3ca0b2c7d423
+Description: Android Auto SDK Library for arm64
+ Development headers and CMake files for Android Auto SDK on arm64 architecture
+Homepage: https://github.com/opencardev/aasdk
+
