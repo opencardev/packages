@@ -1,4 +1,4 @@
-name: AASDK APT Repository Upload (Aptly)
+name: opencardev APT Repository Upload (Aptly)
 
 on:
   workflow_dispatch:
@@ -103,7 +103,7 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Create APT Repository for Trixie
-      if: ${{ (inputs.distribution == 'trixie' || inputs.distribution == 'both') || (github.event.client_payload.distribution == 'trixie' || github.event.client_payload.distribution == 'both') }}
+      if: ${{ (inputs.distribution == 'trixie') || (github.event.client_payload.distribution == 'trixie') }}
       uses: jinnatar/actions-aptly-repo@v2
       with:
         name: opencardev-trixie
@@ -112,10 +112,10 @@ jobs:
           trixie,main,\"amd64 arm64 armhf\",false,./debs/*/*.deb
         gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
         gpg_passphrase: ${{ secrets.APT_SIGNING_PASSPHRASE }}
-        artifact_name: aasdk-trixie-apt-repo
+        artifact_name: opencardev-trixie-apt-repo
 
     - name: Create APT Repository for Bookworm
-      if: ${{ (inputs.distribution == 'bookworm' || inputs.distribution == 'both') || (github.event.client_payload.distribution == 'bookworm' || github.event.client_payload.distribution == 'both') }}
+      if: ${{ (inputs.distribution == 'bookworm') || (github.event.client_payload.distribution == 'bookworm') }}
       uses: jinnatar/actions-aptly-repo@v2
       with:
         name: opencardev-bookworm
@@ -124,7 +124,19 @@ jobs:
           bookworm,main,\"amd64 arm64 armhf\",false,./debs/*/*.deb
         gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
         gpg_passphrase: ${{ secrets.APT_SIGNING_PASSPHRASE }}
-        artifact_name: aasdk-bookworm-apt-repo
+        artifact_name: opencardev-bookworm-apt-repo
+
+    - name: Create APT Repository for Bookworm/Trixie (Both)
+      if: ${{ (inputs.distribution == 'both') || (github.event.client_payload.distribution == 'both') }}
+      uses: jinnatar/actions-aptly-repo@v2
+      with:
+        name: opencardev-apt
+        repo_url: https://opencardev.github.io/packages
+        repos: |
+          bookworm,main,\"amd64 arm64 armhf\",false,./debs/*/*.deb
+        gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
+        gpg_passphrase: ${{ secrets.APT_SIGNING_PASSPHRASE }}
+        artifact_name: opencardev-apt-repo
 
   deploy-apt-repo:
     needs: create-apt-repo
@@ -140,7 +152,7 @@ jobs:
     - name: Download APT repository artifacts
       uses: actions/download-artifact@v4
       with:
-        pattern: aasdk-*-apt-repo
+        pattern: opencardev-*-apt-repo
         path: ./apt-artifacts
         merge-multiple: true
 
@@ -153,14 +165,14 @@ jobs:
         find ./apt-artifacts -type f | head -20
         
         # Extract and deploy the apt repository
-        if [ -f "./apt-artifacts/aasdk-trixie-apt-repo.tar.gz" ]; then
+        if [ -f "./apt-artifacts/opencardev-trixie-apt-repo.tar.gz" ]; then
           echo "Extracting Trixie repository..."
-          tar -xzf "./apt-artifacts/aasdk-trixie-apt-repo.tar.gz" -C .
+          tar -xzf "./apt-artifacts/opencardev-trixie-apt-repo.tar.gz" -C .
         fi
         
-        if [ -f "./apt-artifacts/aasdk-bookworm-apt-repo.tar.gz" ]; then
+        if [ -f "./apt-artifacts/opencardev-bookworm-apt-repo.tar.gz" ]; then
           echo "Extracting Bookworm repository..."
-          tar -xzf "./apt-artifacts/aasdk-bookworm-apt-repo.tar.gz" -C .
+          tar -xzf "./apt-artifacts/opencardev-bookworm-apt-repo.tar.gz" -C .
         fi
         
         # Ensure GPG public key is available in the repository
@@ -214,7 +226,7 @@ jobs:
         BUILD_RUN_ID="${{ inputs.build_run_id || github.event.client_payload.build_run_id }}"
         DISTRIBUTION="${{ inputs.distribution || github.event.client_payload.distribution || 'trixie' }}"
         
-        echo "## AASDK APT Repository Update Complete (Aptly)"
+        echo "## opencardev APT Repository Update Complete (Aptly)"
         echo "Source Repository: $SOURCE_REPO"
         echo "Build Run ID: $BUILD_RUN_ID"
         echo "Distribution: $DISTRIBUTION"
