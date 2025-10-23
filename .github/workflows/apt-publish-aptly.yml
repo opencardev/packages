@@ -102,6 +102,21 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Debug GPG Configuration
+      run: |
+        echo "Checking GPG configuration..."
+        if [ -n "${{ secrets.APT_SIGNING_KEY }}" ]; then
+          echo "✅ APT_SIGNING_KEY secret is present (length: $(echo '${{ secrets.APT_SIGNING_KEY }}' | wc -c))"
+        else
+          echo "❌ APT_SIGNING_KEY secret is missing or empty"
+        fi
+        
+        if [ -n "${{ secrets.APT_SIGNING_PASSPHRASE }}" ]; then
+          echo "✅ APT_SIGNING_PASSPHRASE secret is present"
+        else
+          echo "⚠️  APT_SIGNING_PASSPHRASE secret is missing (may not be required)"
+        fi
+
     - name: Create APT Repository for Trixie
       if: ${{ (inputs.distribution == 'trixie') || (github.event.client_payload.distribution == 'trixie') }}
       uses: jinnatar/actions-aptly-repo@v2
