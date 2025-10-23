@@ -1,3 +1,6 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
 Origin: . trixie
 Label: . trixie
 Suite: trixie
@@ -106,3 +109,10 @@ SHA512:
  93e9419ec820568105e7e89f76247464272d8cee21de64c6f6b631936645ced23d20d4e59b8e234ecd486e7ac7e01ce3e4a153bfb98833cf3069e20059988e78      917 main/binary-armhf/Packages.bz2
  6e9318a451cf1a922bf5c91d517a59a597e1696c735d3ee3357b5fbc2ac3b029c285c29cdd0790d8839c70d3a353e8713bfcd9aa4706ae3d61ecc94a9db10b98      829 main/binary-armhf/Packages.gz
  0128f0fe492c6cb0c711970c91be28056d2142df9d5463b9b88f0ec5b309904fe035c68c028f9d69311031e73009a5db33466cc5572d38109c2ec7d780821c4b      116 main/binary-armhf/Release
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYIAB0WIQS0+eXU5BsMvurfM8rd1heH2TYMLwUCaPq+oAAKCRDd1heH2TYM
+LwRRAP4pdd0SI4lpXwdCbKyDcMraOu+at7X+g2MZtpqPApbY8wEA7lAt/WtBwYjK
+6ypAzdCSXknCbmjzSU/AevPTNekdVwQ=
+=3AUd
+-----END PGP SIGNATURE-----
