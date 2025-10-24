@@ -27,6 +27,24 @@ sudo apt install libaasdk libaasdk-dev
 sudo apt install openauto
 ```
 
+#### Installing for a specific architecture
+
+On multi-arch systems or when installing a foreign architecture, specify the architecture suffix using Debian's package:arch syntax, for example:
+
+```bash
+# Examples
+sudo apt install libaasdk:arm64 libaasdk-dev:arm64   # 64-bit ARM
+sudo apt install libaasdk:armhf libaasdk-dev:armhf   # 32-bit ARM
+sudo apt install libaasdk:amd64 libaasdk-dev:amd64   # 64-bit x86
+```
+
+If you're installing a foreign architecture, ensure it's enabled first:
+
+```bash
+sudo dpkg --add-architecture arm64   # or armhf, amd64, etc.
+sudo apt update
+```
+
 ## Supported Distributions
 
 | Distribution | Codename | Status |
