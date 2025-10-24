@@ -1,5 +1,10 @@
 name: opencardev APT Repository Upload (Aptly)
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 on:
   workflow_dispatch:
     inputs:
@@ -163,6 +168,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
+        ref: main
 
     - name: Download APT repository artifacts
       uses: actions/download-artifact@v4
@@ -229,8 +235,50 @@ jobs:
           echo "APT repository successfully updated!"
         fi
 
+    - name: Trigger GitHub Pages deployment
+      if: success()
+      run: |
+        echo "Triggering GitHub Pages deployment..."
+        
+        # Wait a moment for git push to complete
+        sleep 5
+        
+        # Trigger Pages build using GitHub API
+        curl -X POST \
+          -H "Accept: application/vnd.github.v3+json" \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          https://api.github.com/repos/${{ github.repository }}/pages/builds
+        
+        echo "GitHub Pages deployment triggered!"
+
+  deploy-pages:
+    needs: deploy-apt-repo
+    if: needs.deploy-apt-repo.result == 'success'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: main
+        
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      
+    - name: Upload to GitHub Pages
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: '.'
+        
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+
   summary:
-    needs: [create-apt-repo, deploy-apt-repo]
+    needs: [create-apt-repo, deploy-apt-repo, deploy-pages]
     if: always()
     runs-on: ubuntu-latest
     
@@ -247,10 +295,11 @@ jobs:
         echo "Distribution: $DISTRIBUTION"
         echo "APT Repo Creation: ${{ needs.create-apt-repo.result }}"
         echo "Deployment: ${{ needs.deploy-apt-repo.result }}"
+        echo "Pages Deployment: ${{ needs.deploy-pages.result }}"
         echo ""
         echo "Repository URL: https://opencardev.github.io/packages"
         echo ""
-        if [[ "${{ needs.create-apt-repo.result }}" == "success" && "${{ needs.deploy-apt-repo.result }}" == "success" ]]; then
+        if [[ "${{ needs.create-apt-repo.result }}" == "success" && "${{ needs.deploy-apt-repo.result }}" == "success" && "${{ needs.deploy-pages.result }}" == "success" ]]; then
           echo "✅ APT repository successfully created and deployed using Aptly!"
           echo ""
           echo "To use the repository:"
