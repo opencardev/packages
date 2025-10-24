@@ -272,15 +272,30 @@ jobs:
       run: |
         git pull origin main
         
-    - name: Debug repository contents for Pages
+    - name: Extract APT repository to root for Pages
       run: |
-        echo "=== Repository contents being deployed to Pages ==="
-        find . -type f -name "*.deb" | head -10
-        find . -name "Packages*" | head -10  
-        find . -name "Release*" | head -10
-        find . -name "dists" -type d
-        find . -name "pool" -type d
+        echo "=== Before extraction ==="
         ls -la
+        
+        # Move APT repository files from apt-artifacts to root
+        if [ -d "apt-artifacts/dists" ]; then
+          echo "Moving dists/ to root..."
+          mv apt-artifacts/dists/ ./
+        fi
+        
+        if [ -d "apt-artifacts/pool" ]; then
+          echo "Moving pool/ to root..."
+          mv apt-artifacts/pool/ ./
+        fi
+        
+        # Clean up the apt-artifacts directory for Pages
+        rm -rf apt-artifacts/
+        
+        echo "=== After extraction - Repository contents for Pages ==="
+        ls -la
+        find . -name "dists" -type d
+        find . -name "pool" -type d  
+        find . -name "Release*" | head -5
         echo "=== End repository contents ==="
         
     - name: Setup Pages
