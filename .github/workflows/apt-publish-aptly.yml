@@ -267,7 +267,7 @@ jobs:
         ref: main
         
     - name: Setup Pages
-      uses: actions/configure-pages@v4
+      uses: actions/configure-pages@v5
       
     - name: Upload to GitHub Pages
       uses: actions/upload-pages-artifact@v3
@@ -296,7 +296,7 @@ jobs:
         echo "Distribution: $DISTRIBUTION"
         echo "APT Repo Creation: ${{ needs.create-apt-repo.result }}"
         echo "Deployment: ${{ needs.deploy-apt-repo.result }}"
-        echo "Pages Deployment: ${{ needs.deploy-pages.result }}"
+        echo "GitHub Pages (Actions): ${{ needs.deploy-pages.result }}"
         echo ""
         echo "Repository URL: https://opencardev.github.io/packages"
         echo ""
