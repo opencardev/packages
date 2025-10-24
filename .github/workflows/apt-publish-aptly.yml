@@ -261,10 +261,27 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     
     steps:
-    - name: Checkout
+    - name: Checkout latest main with APT files  
       uses: actions/checkout@v4
       with:
         ref: main
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Pull latest changes including APT files
+      run: |
+        git pull origin main
+        
+    - name: Debug repository contents for Pages
+      run: |
+        echo "=== Repository contents being deployed to Pages ==="
+        find . -type f -name "*.deb" | head -10
+        find . -name "Packages*" | head -10  
+        find . -name "Release*" | head -10
+        find . -name "dists" -type d
+        find . -name "pool" -type d
+        ls -la
+        echo "=== End repository contents ==="
         
     - name: Setup Pages
       uses: actions/configure-pages@v5
@@ -304,32 +321,30 @@ jobs:
           echo "✅ APT repository successfully created and deployed using Aptly!"
           echo ""
           echo "To use the repository:"
-          echo "```bash"
+          echo '```bash'
           echo "# Add GPG key"
           echo "curl -fsSL https://opencardev.github.io/packages/opencardev.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/opencardev-archive-keyring.gpg"
           echo ""
-          case "$DISTRIBUTION" in
-            "trixie")
-              echo "# Add Trixie repository"
-              echo "echo 'deb [arch=\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages trixie main' | sudo tee /etc/apt/sources.list.d/opencardev.list"
-              ;;
-            "bookworm")
-              echo "# Add Bookworm repository"
-              echo "echo 'deb [arch=\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages bookworm main' | sudo tee /etc/apt/sources.list.d/opencardev.list"
-              ;;
-            "both")
-              echo "# Add repositories (choose your distribution)"
-              echo "# For Trixie (Debian 13):"
-              echo "echo 'deb [arch=\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages trixie main' | sudo tee /etc/apt/sources.list.d/opencardev.list"
-              echo "# For Bookworm (Debian 12):"
-              echo "echo 'deb [arch=\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages bookworm main' | sudo tee /etc/apt/sources.list.d/opencardev.list"
-              ;;
-          esac
+          
+          if [ "$DISTRIBUTION" = "trixie" ]; then
+            echo "# Add Trixie repository"
+            echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages trixie main" | sudo tee /etc/apt/sources.list.d/opencardev.list'
+          elif [ "$DISTRIBUTION" = "bookworm" ]; then
+            echo "# Add Bookworm repository"
+            echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages bookworm main" | sudo tee /etc/apt/sources.list.d/opencardev.list'
+          elif [ "$DISTRIBUTION" = "both" ]; then
+            echo "# Add repositories (choose your distribution)"
+            echo "# For Trixie (Debian 13):"
+            echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages trixie main" | sudo tee /etc/apt/sources.list.d/opencardev.list'
+            echo "# For Bookworm (Debian 12):"
+            echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages bookworm main" | sudo tee /etc/apt/sources.list.d/opencardev.list'
+          fi
+          
           echo ""
           echo "# Update and install"
           echo "sudo apt update"
           echo "sudo apt install libaasdk"
-          echo "```"
+          echo '```'
         else
           echo "❌ APT repository update failed. Check the logs above for details."
         fi
