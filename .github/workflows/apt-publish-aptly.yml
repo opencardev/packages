@@ -129,7 +129,7 @@ jobs:
         name: opencardev-trixie
         repo_url: https://opencardev.github.io/packages
         repos: |
-          trixie,main,\"amd64 arm64 armhf\",false,./debs/*/*.deb
+          trixie,main,\"amd64 arm64 armhf\",true,./debs/*/*.deb
         gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
         gpg_passphrase: ${{ secrets.APT_SIGNING_PASSPHRASE }}
         artifact_name: opencardev-trixie-apt-repo
@@ -141,7 +141,7 @@ jobs:
         name: opencardev-bookworm
         repo_url: https://opencardev.github.io/packages
         repos: |
-          bookworm,main,\"amd64 arm64 armhf\",false,./debs/*/*.deb
+          bookworm,main,\"amd64 arm64 armhf\",true,./debs/*/*.deb
         gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
         gpg_passphrase: ${{ secrets.APT_SIGNING_PASSPHRASE }}
         artifact_name: opencardev-bookworm-apt-repo
@@ -153,8 +153,8 @@ jobs:
         name: opencardev-apt
         repo_url: https://opencardev.github.io/packages
         repos: |
-          trixie,main,\"amd64 arm64 armhf\",false,./debs/*/*.deb
-          bookworm,main,\"amd64 arm64 armhf\",false,./debs/*/*.deb
+          trixie,main,\"amd64 arm64 armhf\",true,./debs/*/*.deb
+          bookworm,main,\"amd64 arm64 armhf\",true,./debs/*/*.deb
         gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
         gpg_passphrase: ${{ secrets.APT_SIGNING_PASSPHRASE }}
         artifact_name: opencardev-apt-repo
