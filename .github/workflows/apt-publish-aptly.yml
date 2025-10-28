@@ -161,8 +161,8 @@ jobs:
       with:
         name: opencardev-trixie
         repo_url: https://opencardev.github.io/packages
-          repos: |
-            trixie,${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }},"amd64 arm64 armhf",${{ inputs.apt_import || github.event.client_payload.apt_import || true }},${{ inputs.apt_glob || github.event.client_payload.apt_glob || './debs/*/*.deb' }}
+        repos: |
+          trixie,${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }},"amd64 arm64 armhf",${{ inputs.apt_import || github.event.client_payload.apt_import || true }},${{ inputs.apt_glob || github.event.client_payload.apt_glob || './debs/*/*.deb' }}
         gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
         gpg_passphrase: ${{ secrets.APT_SIGNING_PASSPHRASE }}
           artifact_name: opencardev-trixie-apt-repo-${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }}
@@ -173,8 +173,8 @@ jobs:
       with:
         name: opencardev-bookworm
         repo_url: https://opencardev.github.io/packages
-          repos: |
-            bookworm,${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }},"amd64 arm64 armhf",${{ inputs.apt_import || github.event.client_payload.apt_import || true }},${{ inputs.apt_glob || github.event.client_payload.apt_glob || './debs/*/*.deb' }}
+        repos: |
+          bookworm,${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }},"amd64 arm64 armhf",${{ inputs.apt_import || github.event.client_payload.apt_import || true }},${{ inputs.apt_glob || github.event.client_payload.apt_glob || './debs/*/*.deb' }}
         gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
         gpg_passphrase: ${{ secrets.APT_SIGNING_PASSPHRASE }}
           artifact_name: opencardev-bookworm-apt-repo-${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }}
@@ -185,9 +185,9 @@ jobs:
       with:
         name: opencardev-apt
         repo_url: https://opencardev.github.io/packages
-          repos: |
-            trixie,${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }},"amd64 arm64 armhf",${{ inputs.apt_import || github.event.client_payload.apt_import || true }},${{ inputs.apt_glob || github.event.client_payload.apt_glob || './debs/*/*.deb' }}
-            bookworm,${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }},"amd64 arm64 armhf",${{ inputs.apt_import || github.event.client_payload.apt_import || true }},${{ inputs.apt_glob || github.event.client_payload.apt_glob || './debs/*/*.deb' }}
+        repos: |
+          trixie,${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }},"amd64 arm64 armhf",${{ inputs.apt_import || github.event.client_payload.apt_import || true }},${{ inputs.apt_glob || github.event.client_payload.apt_glob || './debs/*/*.deb' }}
+          bookworm,${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }},"amd64 arm64 armhf",${{ inputs.apt_import || github.event.client_payload.apt_import || true }},${{ inputs.apt_glob || github.event.client_payload.apt_glob || './debs/*/*.deb' }}
         gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
         gpg_passphrase: ${{ secrets.APT_SIGNING_PASSPHRASE }}
           artifact_name: opencardev-apt-repo-${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }}
