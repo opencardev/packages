@@ -220,14 +220,20 @@ jobs:
         find ./apt-artifacts -type f | head -20
         
         # Extract and deploy the apt repository
-        if [ -f "./apt-artifacts/opencardev-trixie-apt-repo.tar.gz" ]; then
-          echo "Extracting Trixie repository..."
-          tar -xzf "./apt-artifacts/opencardev-trixie-apt-repo.tar.gz" -C .
+        # Handle both individual distribution artifacts and combined "both" artifacts
+        if [ -f "./apt-artifacts/opencardev-apt-repo-main.tar.gz" ]; then
+          echo "Extracting combined (both) repository..."
+          tar -xzf "./apt-artifacts/opencardev-apt-repo-main.tar.gz" -C .
         fi
         
-        if [ -f "./apt-artifacts/opencardev-bookworm-apt-repo.tar.gz" ]; then
+        if [ -f "./apt-artifacts/opencardev-trixie-apt-repo-main.tar.gz" ]; then
+          echo "Extracting Trixie repository..."
+          tar -xzf "./apt-artifacts/opencardev-trixie-apt-repo-main.tar.gz" -C .
+        fi
+        
+        if [ -f "./apt-artifacts/opencardev-bookworm-apt-repo-main.tar.gz" ]; then
           echo "Extracting Bookworm repository..."
-          tar -xzf "./apt-artifacts/opencardev-bookworm-apt-repo.tar.gz" -C .
+          tar -xzf "./apt-artifacts/opencardev-bookworm-apt-repo-main.tar.gz" -C .
         fi
         
         # Ensure GPG public key is available in the repository
