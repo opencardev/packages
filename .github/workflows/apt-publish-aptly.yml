@@ -119,18 +119,36 @@ jobs:
           suite="unknown"
           arch_dir="unknown"
 
-          # Extract suite from filename (matches _<suite>_ for any word)
+          # Try to extract suite from filename (_<suite>_)
           if [[ "$filename" =~ _([a-zA-Z0-9]+)_ ]]; then
             suite="${BASH_REMATCH[1]}"
           fi
 
-          # Detect architecture from filename
+          # Try to extract arch from filename
           if [[ "$filename" == *"amd64"* ]]; then
             arch_dir="amd64"
           elif [[ "$filename" == *"arm64"* ]]; then
             arch_dir="arm64"
           elif [[ "$filename" == *"armhf"* ]]; then
             arch_dir="armhf"
+          fi
+
+          # If suite or arch not detected, try to extract from path
+          if [[ "$suite" == "unknown" || "$arch_dir" == "unknown" ]]; then
+            # Example: ./downloaded-artifacts/aasdk-packages-trixie-amd64/libaasdk_2025.10.28_amd64.deb
+            parent_dir=$(basename $(dirname "$deb_file"))
+            # Try to match <suite>-<arch> in parent_dir
+            if [[ "$parent_dir" =~ ([a-zA-Z0-9]+)-([a-zA-Z0-9]+)$ ]]; then
+              suite_candidate="${BASH_REMATCH[1]}"
+              arch_candidate="${BASH_REMATCH[2]}"
+              # Only update if not already detected
+              if [[ "$suite" == "unknown" ]]; then
+                suite="$suite_candidate"
+              fi
+              if [[ "$arch_dir" == "unknown" ]]; then
+                arch_dir="$arch_candidate"
+              fi
+            fi
           fi
 
           # Only copy if suite and arch are detected
