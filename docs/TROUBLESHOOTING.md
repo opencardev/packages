@@ -107,11 +107,92 @@ After the publishing workflow completes, GitHub Pages and CDN caches can take a 
 - Publishing workflow runs:
   - https://github.com/opencardev/packages/actions
 
-- When publishing “all” distributions, a combined artifact is created and extracted (the workflow now supports both combined and per-distro artefacts).
+- When publishing "all" distributions, a combined artifact is created and extracted (the workflow now supports both combined and per-distro artefacts).
 
 - Collision protection: the workflow validates that new pool paths do not overwrite existing files with different content. If a collision is detected, the job fails with a clear error.
 
 - If publish completes but Pages still shows old content, check the subsequent Pages deployment job and its logs.
+
+### Debugging missing distributions (404 on dists/suite/Release)
+
+If the workflow succeeded and uploaded artifacts but `https://opencardev.github.io/packages/dists/<suite>/Release` returns 404:
+
+1. **Check that the artifact was created**
+   - Go to the workflow run (e.g., https://github.com/opencardev/packages/actions/runs/<run_id>)
+   - Confirm `create-apt-repo` job succeeded and uploaded `opencardev-apt-repo-main` (or `opencardev-<suite>-apt-repo-main`)
+   - Note the artifact ID and size
+
+2. **Inspect the artifact contents locally**
+   ```bash
+   # Download artifact using gh CLI (requires gh auth login)
+   gh run download <run_id> --repo opencardev/packages --name opencardev-apt-repo-main -D ./artifact_check
+   
+   # List contents (artifact is typically a .tar.gz)
+   tar -tzf ./artifact_check/opencardev-apt-repo-main.tar.gz | grep -E '^(dists|pool)/' | head -50
+   
+   # Extract and inspect Release file
+   tar -xOzf ./artifact_check/opencardev-apt-repo-main.tar.gz dists/bookworm/Release | head -20
+   tar -xOzf ./artifact_check/opencardev-apt-repo-main.tar.gz dists/trixie/Release | head -20
+   ```
+   
+   If `dists/<suite>/Release` is **present inside the artifact**, the artifact is fine → the problem is in deployment.
+
+3. **Check the deploy-apt-repo job logs**
+   - Open the workflow run and inspect `deploy-apt-repo` job
+   - Look for:
+     - "Extracting combined (all distributions) repository..." or similar extraction messages
+     - "Collision detected" errors (means the workflow refused to deploy due to differing content at same pool path)
+     - Git errors during `git add`, `git commit`, or `git push`
+     - Authentication/permission errors (needs write access to main branch)
+   
+4. **Check the main branch Git history**
+   ```bash
+   # Clone or pull latest main
+   git clone https://github.com/opencardev/packages.git
+   cd packages
+   git log --oneline --name-status -5 | head -50
+   
+   # Confirm dists/ and pool/ were committed
+   ls -la dists/
+   ls -la pool/
+   ```
+   
+   If `dists/bookworm/` is **missing from main**, the deploy job either failed or didn't run.
+
+5. **Check the deploy-pages job**
+   - After `deploy-apt-repo` pushes to main, a separate `deploy-pages` job should trigger
+   - Inspect its logs for errors or warnings
+   - Confirm it uploaded the Pages artifact and deployed successfully
+
+6. **Common failure modes**
+   - **deploy-apt-repo didn't run**: Check the `if:` condition and event payload; ensure distribution input was passed correctly
+   - **Artifact download failed**: Check artifact name pattern matches (we support `opencardev-*-apt-repo-main`)
+   - **Extraction failed**: Look for tar/unzip errors in logs
+   - **Collision validation blocked deployment**: Check for "Collision detected" error with specific file paths and checksums
+   - **Git push failed**: Branch protection, missing token permissions, or authentication issues
+   - **Pages deployment pending**: Can take 2–5 minutes; check deploy-pages job status
+
+7. **Manual recovery (if deploy job failed)**
+   ```bash
+   # Download and extract artifact manually
+   gh run download <run_id> --repo opencardev/packages --name opencardev-apt-repo-main -D ./tmp_deploy
+   cd /path/to/packages/clone
+   git checkout main
+   git pull
+   
+   # Extract artifact (adjust path if needed)
+   tar -xzf ../tmp_deploy/opencardev-apt-repo-main.tar.gz
+   
+   # Verify extracted content
+   ls -la dists/ pool/
+   
+   # Commit and push
+   git add dists/ pool/ opencardev.gpg.key
+   git commit -m "Deploy APT repo from artifact (manual recovery)"
+   git push origin main
+   ```
+   
+   This will make Pages serve the newly added suite after the next deployment.
 
 ## 8) Debian revision suffix expectations
 

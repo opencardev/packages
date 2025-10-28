@@ -259,11 +259,17 @@ dpkg-sig --verify libaasdk_*.deb
 
 ## Troubleshooting
 
-For a comprehensive, step-by-step diagnostic, see the full guide:
+For a comprehensive, step-by-step diagnostic guide including:
+- Verifying repository availability and distribution Release files
+- Debugging missing packages or 404 errors
+- Inspecting workflow artifacts and deployment logs
+- Manual recovery procedures
 
-- docs/TROUBLESHOOTING.md
+See the full troubleshooting guide:
 
-### Common Issues
+**[📖 docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)**
+
+### Quick Common Issues
 
 #### GPG Key Errors
 
