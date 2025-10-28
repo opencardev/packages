@@ -34,7 +34,7 @@ on:
       apt_import:
         description: 'Use APT import (true/false)'
         required: false
-        default: 'true'
+        default: true
         type: boolean
       apt_glob:
         description: 'Glob pattern for selecting .deb files'
@@ -69,7 +69,7 @@ on:
       apt_import:
         description: 'Use APT import (true/false)'
         required: false
-        default: 'true'
+        default: true
         type: boolean
       apt_glob:
         description: 'Glob pattern for selecting .deb files'
