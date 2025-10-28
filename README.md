@@ -259,6 +259,10 @@ dpkg-sig --verify libaasdk_*.deb
 
 ## Troubleshooting
 
+For a comprehensive, step-by-step diagnostic, see the full guide:
+
+- docs/TROUBLESHOOTING.md
+
 ### Common Issues
 
 #### GPG Key Errors
