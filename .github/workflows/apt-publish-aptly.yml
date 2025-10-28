@@ -20,7 +20,7 @@ on:
       distribution:
         description: 'Distribution to publish to'
         required: false
-        default: 'trixie'
+        default: 'all'
         type: choice
         options:
           - trixie
