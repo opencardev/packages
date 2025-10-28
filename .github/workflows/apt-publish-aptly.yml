@@ -207,7 +207,7 @@ jobs:
     - name: Download APT repository artifacts
       uses: actions/download-artifact@v4
       with:
-        pattern: opencardev-*-apt-repo
+        pattern: opencardev-*-apt-repo-*
         path: ./apt-artifacts
         merge-multiple: true
 
