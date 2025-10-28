@@ -39,7 +39,7 @@ on:
       apt_glob:
         description: 'Glob pattern for selecting .deb files'
         required: false
-        default: './debs/*/*/*.deb'
+        default: './debs/**/*.deb'
         type: string
   
   repository_dispatch:
@@ -74,7 +74,7 @@ on:
       apt_glob:
         description: 'Glob pattern for selecting .deb files'
         required: false
-        default: './debs/*/*/*.deb'
+        default: './debs/**/*.deb'
         type: string
 
 jobs:
