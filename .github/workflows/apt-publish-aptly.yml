@@ -165,7 +165,7 @@ jobs:
           trixie,${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }},"amd64 arm64 armhf",${{ inputs.apt_import || github.event.client_payload.apt_import || true }},${{ inputs.apt_glob || github.event.client_payload.apt_glob || './debs/*/*.deb' }}
         gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
         gpg_passphrase: ${{ secrets.APT_SIGNING_PASSPHRASE }}
-          artifact_name: opencardev-trixie-apt-repo-${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }}
+        artifact_name: opencardev-trixie-apt-repo-${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }}
 
     - name: Create APT Repository for Bookworm
       if: ${{ (inputs.distribution == 'bookworm') || (github.event.client_payload.distribution == 'bookworm') }}
@@ -177,7 +177,7 @@ jobs:
           bookworm,${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }},"amd64 arm64 armhf",${{ inputs.apt_import || github.event.client_payload.apt_import || true }},${{ inputs.apt_glob || github.event.client_payload.apt_glob || './debs/*/*.deb' }}
         gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
         gpg_passphrase: ${{ secrets.APT_SIGNING_PASSPHRASE }}
-          artifact_name: opencardev-bookworm-apt-repo-${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }}
+        artifact_name: opencardev-bookworm-apt-repo-${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }}
 
     - name: Create APT Repository for Bookworm/Trixie (Both)
       if: ${{ (inputs.distribution == 'both') || (github.event.client_payload.distribution == 'both') }}
@@ -190,7 +190,7 @@ jobs:
           bookworm,${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }},"amd64 arm64 armhf",${{ inputs.apt_import || github.event.client_payload.apt_import || true }},${{ inputs.apt_glob || github.event.client_payload.apt_glob || './debs/*/*.deb' }}
         gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
         gpg_passphrase: ${{ secrets.APT_SIGNING_PASSPHRASE }}
-          artifact_name: opencardev-apt-repo-${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }}
+        artifact_name: opencardev-apt-repo-${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }}
 
   deploy-apt-repo:
     needs: create-apt-repo
