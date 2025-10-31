@@ -7,11 +7,11 @@ Architecture: amd64
 Version: 2025.10.31-1+deb13u1
 Depends: libc6 (>= 2.38), libgcc-s1 (>= 3.0), libprotobuf32t64 (>= 3.21.12), libssl3t64 (>= 3.0.0), libstdc++6 (>= 14), libusb-1.0-0 (>= 2:1.0.16)
 Filename: pool/trixie/main/liba/libaasdk/libaasdk_2025.10.31_deb13u1_amd64.deb
-Size: 37409494
-MD5sum: c29a4f4fabd54252bd3403b6dacbf5e9
-SHA1: e2cd3499af24c8d06cc1c89219a2e0fda4dde4b4
-SHA256: 8e8db2c7562b0664e088f0d3b602c3f66c915343346bf6ae760016ee7e935d9c
-SHA512: 07f3401a997ba72599de1b53de8045c316b6c3988020442d67c40ed08cfdf0a6d6931b9c98773f84aac1041fd90ec5f2d5db2250d5c874c7b80457b16e06fa12
+Size: 37409488
+MD5sum: c78a03edc14799b279b21cc0e98cf315
+SHA1: cddc47fee1c4ebdddf19bb8307b5b3101d95d901
+SHA256: 21943c7c09b9583636916779d5fd96fda1cdc18f0eaed10d57b385012ed3f40e
+SHA512: 946bece7b27b0910b24c993b1174b3e6b6fbc696202af45d210cb5ba5abdc49dc69d48b11b4b6f2885bcf90ae3995754a72111fb72bc438970a35ad109f60f56
 Description: Android Auto SDK Library
  Runtime libraries for Android Auto SDK on amd64 architecture
 Homepage: https://github.com/opencardev/aasdk
@@ -25,11 +25,11 @@ Architecture: amd64
 Version: 2025.10.31-1+deb13u1
 Depends: libaasdk (= 2025.10.31)
 Filename: pool/trixie/main/liba/libaasdk-dev/libaasdk-dev_2025.10.31_deb13u1_amd64.deb
-Size: 304942
-MD5sum: 8b50280316a1ea867d20b9f72e95eb18
-SHA1: 3ae6c5700f22650a7f7af720e0b7405a1c9e6fa5
-SHA256: 9f7222af15556bf1262bc27322ac70d9077e665b2ea017cbda42ae58c7495507
-SHA512: 3255e431713fd14f98068ed5cbc945441960a2379c63d4e0678f8c1195834396d17b1cbf10e4e19934152de34793396eb369aee7af282bd453677eb0b343af3d
+Size: 304934
+MD5sum: 6a70bf8ade1f31c8a670539a59e0ff4d
+SHA1: ad173e5c90f6a3c77d25c04e6efb52c4213cf52e
+SHA256: 14419ef0209c68920e7db7e685f2363eedb58924dfe61ca77d21a25443d6516a
+SHA512: 8258183966edaa77972566883248152a096d278ca237d13be662cccf452de08c829507b52ba89cb0a0617acf816ddaf2348970dd1b60bec0d13c6ed521ae74d6
 Description: Android Auto SDK Library
  Development headers and CMake files for Android Auto SDK on amd64 architecture
 Homepage: https://github.com/opencardev/aasdk

@@ -7,11 +7,11 @@ Architecture: amd64
 Version: 2025.10.31-1+deb12u1
 Depends: libc6 (>= 2.32), libgcc-s1 (>= 3.0), libprotobuf32 (>= 3.21.12), libssl3 (>= 3.0.0), libstdc++6 (>= 12), libusb-1.0-0 (>= 2:1.0.16)
 Filename: pool/bookworm/main/liba/libaasdk/libaasdk_2025.10.31_deb12u1_amd64.deb
-Size: 39435554
-MD5sum: b7cfa94dc65fcabfa05482ac79888ca7
-SHA1: 5058bd6c997f2bf30cfe71c4630d04c96f6231b8
-SHA256: 40d0a3a279be2ca2db87dce1d150b40af52e9e612f72fa04a515bfdde7f22c39
-SHA512: 79d15c853402e770126bf11a462e62869369de8358e4900797a1d7759e0ec7815e43b3dea42604c9c69228b2bb6f72a667e9f5668cc116586604939973d734dd
+Size: 39435552
+MD5sum: 2d2099f551d1c4e244c37b4f1ad9ceb2
+SHA1: 1945577500b1c774c9de0631bf81dc5eaeab1afb
+SHA256: 9a2f66a739f75159ee54c965b9f715196e09623e7f2c83362813410081ff7b0f
+SHA512: 6adf497c749b7ebfb9e782102bffffee9cd6a6806a37e47eaf4ccb640930bac935c6a39d43e29503a889021cc5a12ef38c786063d69fbfd17cee1ee147373b0e
 Description: Android Auto SDK Library
  Runtime libraries for Android Auto SDK on amd64 architecture
 Homepage: https://github.com/opencardev/aasdk
@@ -25,11 +25,11 @@ Architecture: amd64
 Version: 2025.10.31-1+deb12u1
 Depends: libaasdk (= 2025.10.31)
 Filename: pool/bookworm/main/liba/libaasdk-dev/libaasdk-dev_2025.10.31_deb12u1_amd64.deb
-Size: 304946
-MD5sum: c3e8dc299fbb3420f30a8deb8ad0cff6
-SHA1: 74c6855ed81613c5ab6df97639a9bf0e080d7de7
-SHA256: c2f4a5f106ca34e699f73137448d3319c1d87580bb61d386ff75f9c8f03db349
-SHA512: 147a47b28449208bf80e876fc48431847376156c0e1dc1141373bf1d8b847c3bc5f3a61fcc9db7d47414548e33ac769fdd5be83977a0710da176c4fa833731be
+Size: 304952
+MD5sum: 8ce638c5a3b059f0778623d138d38bd9
+SHA1: 53bf8ca0c26a26b51c3f84b7a1628bbe4dc14454
+SHA256: 5c10a34ff916936b8b06a3c57d8b1f345c0df9c4d7ca62c05ee1a9409e61bd9f
+SHA512: c9db0874a405203f9f573619571afe4d51c3cd206ee25f40bc568129c3db7bc8a877eab70ac331e278974a8f3701e3f2f9316eca7d8bad66d42272ada5a5534f
 Description: Android Auto SDK Library
  Development headers and CMake files for Android Auto SDK on amd64 architecture
 Homepage: https://github.com/opencardev/aasdk
