@@ -231,9 +231,9 @@ jobs:
         ref: main
 
     - name: Download APT repository artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
-        pattern: opencardev-*-apt-repo-*
+        pattern: opencardev-apt-repo-*
         path: ./apt-artifacts
         merge-multiple: true
 
