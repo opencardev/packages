@@ -1,0 +1,5 @@
+# You probably want to use only one of the examples below!
+# Example for enabling only the main component on trixie: 
+deb [arch=amd64 arm64 armhf signed-by=/etc/apt/trusted.gpg.d/opencardev-apt.asc] https://opencardev.github.io/packages trixie main
+# Example for enabling only the main component on bookworm: 
+deb [arch=amd64 arm64 armhf signed-by=/etc/apt/trusted.gpg.d/opencardev-apt.asc] https://opencardev.github.io/packages bookworm main
