@@ -7,11 +7,11 @@ Architecture: amd64
 Version: 2025.10.31-1+deb12u1
 Depends: libc6 (>= 2.32), libgcc-s1 (>= 3.0), libprotobuf32 (>= 3.21.12), libssl3 (>= 3.0.0), libstdc++6 (>= 12), libusb-1.0-0 (>= 2:1.0.16)
 Filename: pool/bookworm/main/liba/libaasdk/libaasdk_2025.10.31_deb12u1_amd64.deb
-Size: 39435552
-MD5sum: 2d2099f551d1c4e244c37b4f1ad9ceb2
-SHA1: 1945577500b1c774c9de0631bf81dc5eaeab1afb
-SHA256: 9a2f66a739f75159ee54c965b9f715196e09623e7f2c83362813410081ff7b0f
-SHA512: 6adf497c749b7ebfb9e782102bffffee9cd6a6806a37e47eaf4ccb640930bac935c6a39d43e29503a889021cc5a12ef38c786063d69fbfd17cee1ee147373b0e
+Size: 39435576
+MD5sum: c3c17a3e96c8dacb78d97f2fd97ad596
+SHA1: dbe33f7b93423dba90fab59376a2b708ec92fdb8
+SHA256: 0f7c238ea843f84dbe3433a320c8634b7a73f59fa6a1dbc74f735007eda6046e
+SHA512: f8077f78796afdcd199d4b57a73caddd233330aabbf6daa2235eacd084a4c16eaf8c76427e7b13526a68c4d1978bc41213320f8f3434b81e3b2a809e2c0f300e
 Description: Android Auto SDK Library
  Runtime libraries for Android Auto SDK on amd64 architecture
 Homepage: https://github.com/opencardev/aasdk
@@ -23,13 +23,13 @@ Installed-Size: 4106
 Maintainer: AASDK <opencardevuk@gmail.com>
 Architecture: amd64
 Version: 2025.10.31-1+deb12u1
-Depends: libaasdk (= 2025.10.31)
+Depends: libaasdk (= 2025.10.31-1+deb12u1)
 Filename: pool/bookworm/main/liba/libaasdk-dev/libaasdk-dev_2025.10.31_deb12u1_amd64.deb
-Size: 304952
-MD5sum: 8ce638c5a3b059f0778623d138d38bd9
-SHA1: 53bf8ca0c26a26b51c3f84b7a1628bbe4dc14454
-SHA256: 5c10a34ff916936b8b06a3c57d8b1f345c0df9c4d7ca62c05ee1a9409e61bd9f
-SHA512: c9db0874a405203f9f573619571afe4d51c3cd206ee25f40bc568129c3db7bc8a877eab70ac331e278974a8f3701e3f2f9316eca7d8bad66d42272ada5a5534f
+Size: 304948
+MD5sum: b4ceab2a73adde82b9eedd81144e30e2
+SHA1: 35c4b04b125dd8e5b2afdc2f8932a54d028fd19d
+SHA256: 458065b8e2f49fecd49b2f280d03183c49d21b7560b85c28fbfb0889f8fb2824
+SHA512: 7c6afd780d637db6335704ad3477b0b9d665ab5f81a4f3a5d9fde3529464465fa5673c09b53275b041a9915438918eea545ffcd6f8af751c22a448c94c1e9e80
 Description: Android Auto SDK Library
  Development headers and CMake files for Android Auto SDK on amd64 architecture
 Homepage: https://github.com/opencardev/aasdk
