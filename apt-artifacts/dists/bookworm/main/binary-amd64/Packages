@@ -1,53 +1,17 @@
-Package: libaasdk
-Priority: optional
-Section: libs
-Installed-Size: 289692
-Maintainer: AASDK <opencardevuk@gmail.com>
-Architecture: amd64
-Version: 2025.10.31-1+deb12u1
-Depends: libc6 (>= 2.32), libgcc-s1 (>= 3.0), libprotobuf32 (>= 3.21.12), libssl3 (>= 3.0.0), libstdc++6 (>= 12), libusb-1.0-0 (>= 2:1.0.16)
-Filename: pool/bookworm/main/liba/libaasdk/libaasdk_2025.10.31_deb12u1_amd64.deb
-Size: 39435548
-MD5sum: 31a83465f2bdbf1977e18a0ce60b3ae5
-SHA1: 500419e2f7d2364eb552b3aff3c4b24f9cd24746
-SHA256: c76945d2f8e781acd27b5e5bc805270b8fc02e260e8413940d999d22db6019aa
-SHA512: 1ed2cba52221b1d94e990b6eff21db26728b4496457f41b5f9a751e7f84e07d4754d8ddbda80a13cf26dd1a776b79b4af866e4a182d603f5091a747d31bb2509
-Description: Android Auto SDK Library
- Runtime libraries for Android Auto SDK on amd64 architecture
-Homepage: https://github.com/opencardev/aasdk
-
-Package: libaasdk-dev
-Priority: optional
-Section: libdevel
-Installed-Size: 4106
-Maintainer: AASDK <opencardevuk@gmail.com>
-Architecture: amd64
-Version: 2025.10.31-1+deb12u1
-Depends: libaasdk (= 2025.10.31-1+deb12u1)
-Filename: pool/bookworm/main/liba/libaasdk-dev/libaasdk-dev_2025.10.31_deb12u1_amd64.deb
-Size: 304994
-MD5sum: fac258fb12a9fbbea74f4d8018c7d282
-SHA1: 4d848a2bf31e83e29bcd80a76ce91a3668b71540
-SHA256: 7ba811f23d9fdcde881ffa570c8164a31779902d491c7e265ce460f9187bf2c9
-SHA512: 6cfc05e88598ac29ed234d199987cc22fa71ad2b9a3a8ecf07d6a9ace90f3a49cc061ef0bc392583315e8ea3d92dde40be1d13ff7bb8e7e4d5c8b3d8fd86bee4
-Description: Android Auto SDK Library
- Development headers and CMake files for Android Auto SDK on amd64 architecture
-Homepage: https://github.com/opencardev/aasdk
-
 Package: openauto
 Priority: optional
 Section: utils
-Installed-Size: 103229
+Installed-Size: 103255
 Maintainer: OpenCarDev Team <opencardevuk@gmail.com>
 Architecture: amd64
-Version: 2025.11.01-1+deb12u1
+Version: 2025.11.03-1+deb12u1
 Depends: libboost-log1.74.0 (>= 1.74.0+ds1), libc6 (>= 2.34), libgcc-s1 (>= 3.0), libgps28 (>= 3.3), libprotobuf32 (>= 3.21.12), libqt5bluetooth5 (>= 5.6.0), libqt5core5a (>= 5.15.1), libqt5gui5 (>= 5.0.2) | libqt5gui5-gles (>= 5.0.2), libqt5multimedia5 (>= 5.14.1), libqt5multimediawidgets5 (>= 5.6.0~beta), libqt5network5 (>= 5.0.2), libqt5widgets5 (>= 5.2.0~alpha1), librtaudio6 (>= 5.2.0~ds1), libstdc++6 (>= 11), libtag1v5 (>= 1.9.1-2.2~), libusb-1.0-0 (>= 2:1.0.9)
-Filename: pool/bookworm/main/o/openauto/openauto_2025.11.01_deb12u1_amd64.deb
-Size: 20272066
-MD5sum: deac88bb0270eed302122c09a0a8e3d8
-SHA1: d9e2973144ec222c92fcfaabccb97683fb07e115
-SHA256: 4ba15d08e3f37bc17f47f64d3d5d4e4188fa15e9ff2dd9bc478ff3968e525df2
-SHA512: a6606d5e521b8bdfe1e069fb952ae4d5d858efd2404a32ddf973116aea2f8f611248b3aba81cd3128c591839e670f826c36fbd14f86f2267957d7ecbf998e0ea
+Filename: pool/bookworm/main/o/openauto/openauto_2025.11.03_deb12u1_amd64.deb
+Size: 20275076
+MD5sum: 591c6320afb55ab58df265fdbd4d9f39
+SHA1: 2762c3f61b129ab36198629bb265b4da98484046
+SHA256: 63f36c39a6aba8a083685d0e9bf30afe52a3b880ebe234e66a1b723c928d5c05
+SHA512: 4a73b74a65c2f7ba2a3fc3f3cceefb7b228a6197f6d27aba7e1e91aa3dcd7176460480413d95f65c46017f8e05c03aa5f28cc6ee98f0e986ef05e3e32efaf954
 Description: OpenAuto head unit application using libaasdk
  OpenAuto is an AndroidAuto head unit emulator designed for Raspberry Pi and other embedded platforms.
 Homepage: https://github.com/opencardev/openauto
