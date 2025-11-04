@@ -1,0 +1,639 @@
+name: opencardev APT Repository Upload (Multi-Source)
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      aasdk_run_id:
+        description: 'AASDK build run ID (leave empty to use latest successful run)'
+        required: false
+        type: string
+      openauto_run_id:
+        description: 'OpenAuto build run ID (leave empty to use latest successful run)'
+        required: false
+        type: string
+      aasdk_workflow:
+        description: 'AASDK workflow name'
+        required: false
+        default: 'Build Packages'
+        type: string
+      openauto_workflow:
+        description: 'OpenAuto workflow name'
+        required: false
+        default: 'Build Release Package'
+        type: string
+      distribution:
+        description: 'Distribution to publish to'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - trixie
+          - bookworm
+          - all
+      apt_category:
+        description: 'APT category (e.g., main, contrib, non-free)'
+        required: false
+        default: 'main'
+        type: string
+      include_aasdk:
+        description: 'Include AASDK packages'
+        required: false
+        default: true
+        type: boolean
+      include_openauto:
+        description: 'Include OpenAuto packages'
+        required: false
+        default: true
+        type: boolean
+      target_channel:
+        description: 'Target publication channel'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - stable
+          - unstable
+      aasdk_branch:
+        description: 'AASDK branch to pull from (leave empty for auto-detection)'
+        required: false
+        type: string
+      openauto_branch:
+        description: 'OpenAuto branch to pull from (leave empty for auto-detection)'
+        required: false
+        type: string
+
+jobs:
+  fetch-artifacts:
+    runs-on: ubuntu-latest
+    outputs:
+      aasdk_run_id: ${{ steps.resolve-runs.outputs.aasdk_run_id }}
+      openauto_run_id: ${{ steps.resolve-runs.outputs.openauto_run_id }}
+      target_channel: ${{ steps.resolve-runs.outputs.target_channel }}
+      aasdk_branch: ${{ steps.resolve-runs.outputs.aasdk_branch }}
+      openauto_branch: ${{ steps.resolve-runs.outputs.openauto_branch }}
+    
+    steps:
+    - name: Checkout packages repository
+      uses: actions/checkout@v4
+
+    - name: Resolve workflow run IDs
+      id: resolve-runs
+      run: |
+        set -euo pipefail
+        
+        # Function to get latest successful run ID for a workflow
+        get_latest_run_id() {
+          local repo=$1
+          local workflow=$2
+          local branch=$3
+          local run_id
+          
+          echo "Getting latest successful run for workflow '$workflow' in $repo on branch '$branch'..."
+          workflow_id=$(gh api "/repos/$repo/actions/workflows" \
+            --jq ".workflows[] | select(.name == \"$workflow\") | .id" | head -1)
+          
+          if [ -z "$workflow_id" ]; then
+            echo "Error: Could not find workflow '$workflow' in $repo"
+            return 1
+          fi
+          
+          echo "Found workflow ID: $workflow_id"
+          
+          latest_run_id=$(gh api "/repos/$repo/actions/workflows/$workflow_id/runs?status=success&branch=$branch&per_page=1" \
+            --jq '.workflow_runs[0].id // empty')
+          
+          if [ -z "$latest_run_id" ]; then
+            echo "Error: No successful runs found for workflow '$workflow' in $repo on branch '$branch'"
+            return 1
+          fi
+          
+          echo "Latest successful run ID: $latest_run_id"
+          echo "$latest_run_id"
+        }
+        
+        # Determine target branches based on channel
+        determine_branches() {
+          local channel=$1
+          local aasdk_branch_input="$2"
+          local openauto_branch_input="$3"
+          
+          case "$channel" in
+            "stable")
+              AASDK_BRANCH="${aasdk_branch_input:-main}"
+              OPENAUTO_BRANCH="${openauto_branch_input:-main}"
+              ;;
+            "unstable")
+              AASDK_BRANCH="${aasdk_branch_input:-develop}"
+              OPENAUTO_BRANCH="${openauto_branch_input:-develop}"
+              ;;
+            "auto")
+              # Auto-detect based on current repository context or default to stable
+              AASDK_BRANCH="${aasdk_branch_input:-main}"
+              OPENAUTO_BRANCH="${openauto_branch_input:-main}"
+              ;;
+            *)
+              echo "Error: Unknown channel '$channel'"
+              exit 1
+              ;;
+          esac
+          
+          echo "Target branches determined:"
+          echo "  AASDK: $AASDK_BRANCH"
+          echo "  OpenAuto: $OPENAUTO_BRANCH"
+        }
+        
+        # Determine target channel and branches
+        TARGET_CHANNEL="${{ inputs.target_channel }}"
+        determine_branches "$TARGET_CHANNEL" "${{ inputs.aasdk_branch }}" "${{ inputs.openauto_branch }}"
+        
+        echo "target_channel=$TARGET_CHANNEL" >> $GITHUB_OUTPUT
+        echo "aasdk_branch=$AASDK_BRANCH" >> $GITHUB_OUTPUT
+        echo "openauto_branch=$OPENAUTO_BRANCH" >> $GITHUB_OUTPUT
+        
+        # Resolve AASDK run ID
+        if [ "${{ inputs.include_aasdk }}" = "true" ]; then
+          if [ -n "${{ inputs.aasdk_run_id }}" ]; then
+            AASDK_RUN_ID="${{ inputs.aasdk_run_id }}"
+            echo "Using specified AASDK run ID: $AASDK_RUN_ID"
+          else
+            AASDK_RUN_ID=$(get_latest_run_id "opencardev/aasdk" "${{ inputs.aasdk_workflow }}" "$AASDK_BRANCH")
+            echo "Using latest AASDK run ID from $AASDK_BRANCH: $AASDK_RUN_ID"
+          fi
+          echo "aasdk_run_id=$AASDK_RUN_ID" >> $GITHUB_OUTPUT
+        else
+          echo "AASDK packages disabled"
+          echo "aasdk_run_id=" >> $GITHUB_OUTPUT
+        fi
+        
+        # Resolve OpenAuto run ID  
+        if [ "${{ inputs.include_openauto }}" = "true" ]; then
+          if [ -n "${{ inputs.openauto_run_id }}" ]; then
+            OPENAUTO_RUN_ID="${{ inputs.openauto_run_id }}"
+            echo "Using specified OpenAuto run ID: $OPENAUTO_RUN_ID"
+          else
+            OPENAUTO_RUN_ID=$(get_latest_run_id "opencardev/openauto" "${{ inputs.openauto_workflow }}" "$OPENAUTO_BRANCH")
+            echo "Using latest OpenAuto run ID from $OPENAUTO_BRANCH: $OPENAUTO_RUN_ID"
+          fi
+          echo "openauto_run_id=$OPENAUTO_RUN_ID" >> $GITHUB_OUTPUT
+        else
+          echo "OpenAuto packages disabled"
+          echo "openauto_run_id=" >> $GITHUB_OUTPUT
+        fi
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Download AASDK artifacts
+      if: ${{ inputs.include_aasdk == true && steps.resolve-runs.outputs.aasdk_run_id != '' }}
+      run: |
+        echo "Downloading AASDK artifacts from run ID: ${{ steps.resolve-runs.outputs.aasdk_run_id }}"
+        gh run download ${{ steps.resolve-runs.outputs.aasdk_run_id }} --repo opencardev/aasdk --dir ./aasdk-artifacts
+        
+        echo "AASDK artifacts structure:"
+        find ./aasdk-artifacts -type f -name "*.deb" | head -20
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Download OpenAuto artifacts
+      if: ${{ inputs.include_openauto == true && steps.resolve-runs.outputs.openauto_run_id != '' }}
+      run: |
+        echo "Downloading OpenAuto artifacts from run ID: ${{ steps.resolve-runs.outputs.openauto_run_id }}"
+        gh run download ${{ steps.resolve-runs.outputs.openauto_run_id }} --repo opencardev/openauto --dir ./openauto-artifacts
+        
+        echo "OpenAuto artifacts structure:"
+        find ./openauto-artifacts -type f -name "*.deb" | head -20
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Organize packages
+      run: |
+        set -euo pipefail
+        
+        # Create consolidated debs directory
+        mkdir -p ./debs
+        
+        # Function to organize packages from a source directory
+        organize_packages() {
+          local source_dir=$1
+          local source_name=$2
+          
+          if [ ! -d "$source_dir" ]; then
+            echo "Source directory $source_dir does not exist, skipping $source_name"
+            return 0
+          fi
+          
+          echo "Organizing $source_name packages from $source_dir"
+          
+          find "$source_dir" -name "*.deb" -type f | while read -r deb_file; do
+            filename=$(basename "$deb_file")
+            suite="unknown"
+            arch_dir="unknown"
+
+            # Try to extract suite from filename (_<suite>_)
+            if [[ "$filename" =~ _([a-zA-Z0-9]+)_ ]]; then
+              suite="${BASH_REMATCH[1]}"
+            fi
+
+            # Try to extract arch from filename
+            if [[ "$filename" == *"amd64"* ]]; then
+              arch_dir="amd64"
+            elif [[ "$filename" == *"arm64"* ]]; then
+              arch_dir="arm64"
+            elif [[ "$filename" == *"armhf"* ]]; then
+              arch_dir="armhf"
+            fi
+
+            # If suite or arch not detected, try to extract from path
+            if [[ "$suite" == "unknown" || "$arch_dir" == "unknown" ]]; then
+              parent_dir=$(basename $(dirname "$deb_file"))
+              # Try to match <suite>-<arch> in parent_dir
+              if [[ "$parent_dir" =~ ([a-zA-Z0-9]+)-([a-zA-Z0-9]+)$ ]]; then
+                suite_candidate="${BASH_REMATCH[1]}"
+                arch_candidate="${BASH_REMATCH[2]}"
+                if [[ "$suite" == "unknown" ]]; then
+                  suite="$suite_candidate"
+                fi
+                if [[ "$arch_dir" == "unknown" ]]; then
+                  arch_dir="$arch_candidate"
+                fi
+              fi
+            fi
+
+            # Default fallbacks based on common patterns
+            if [[ "$suite" == "unknown" ]]; then
+              if [[ "$filename" == *"deb13"* ]] || [[ "$filename" == *"trixie"* ]]; then
+                suite="deb13u1"
+              elif [[ "$filename" == *"deb12"* ]] || [[ "$filename" == *"bookworm"* ]]; then
+                suite="deb12u1"
+              else
+                suite="deb13u1"  # Default to trixie
+              fi
+            fi
+
+            if [[ "$arch_dir" == "unknown" ]]; then
+              arch_dir="amd64"  # Default to amd64
+              echo "Warning: Could not detect architecture for $filename, defaulting to amd64"
+            fi
+
+            # Create directory and copy file
+            mkdir -p "./debs/$suite/$arch_dir"
+            cp "$deb_file" "./debs/$suite/$arch_dir/"
+            echo "[$source_name] Copied $filename to debs/$suite/$arch_dir/"
+          done
+        }
+        
+        # Organize packages from both sources
+        if [ "${{ inputs.include_aasdk }}" = "true" ]; then
+          organize_packages "./aasdk-artifacts" "AASDK"
+        fi
+        
+        if [ "${{ inputs.include_openauto }}" = "true" ]; then
+          organize_packages "./openauto-artifacts" "OpenAuto"
+        fi
+        
+        echo "Final debs structure:"
+        find ./debs -type f -name "*.deb" | sort
+        
+        # Verify we have packages
+        if [ ! "$(find ./debs -name "*.deb" 2>/dev/null)" ]; then
+          echo "Error: No .deb packages found from any source"
+          exit 1
+        fi
+        
+        echo "Package count by distribution/architecture:"
+        find ./debs -name "*.deb" | cut -d'/' -f3,4 | sort | uniq -c
+
+    - name: Upload organized packages
+      uses: actions/upload-artifact@v4
+      with:
+        name: organized-packages
+        path: ./debs
+        retention-days: 1
+
+  create-apt-repo:
+    needs: fetch-artifacts
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout packages repository
+      uses: actions/checkout@v4
+
+    - name: Download organized packages
+      uses: actions/download-artifact@v4
+      with:
+        name: organized-packages
+        path: ./debs
+
+    - name: Debug package structure
+      run: |
+        echo "Package structure for APT repository creation:"
+        find ./debs -type f -name "*.deb" | sort
+        echo "Total packages: $(find ./debs -name "*.deb" | wc -l)"
+
+    - name: Debug GPG Configuration
+      run: |
+        echo "Checking GPG configuration..."
+        if [ -n "${{ secrets.APT_SIGNING_KEY }}" ]; then
+          echo "✅ APT_SIGNING_KEY secret is present (length: $(echo '${{ secrets.APT_SIGNING_KEY }}' | wc -c))"
+        else
+          echo "❌ APT_SIGNING_KEY secret is missing or empty"
+        fi
+        
+        if [ -n "${{ secrets.APT_SIGNING_PASSPHRASE }}" ]; then
+          echo "✅ APT_SIGNING_PASSPHRASE secret is present"
+        else
+          echo "⚠️  APT_SIGNING_PASSPHRASE secret is missing (may not be required)"
+        fi
+
+    - name: Create APT Repository for Trixie
+      if: ${{ inputs.distribution == 'trixie' }}
+      uses: jinnatar/actions-aptly-repo@v2
+      with:
+        name: opencardev-trixie
+        repo_url: https://opencardev.github.io/packages
+        repos: |
+          trixie,${{ inputs.apt_category }},"amd64 arm64 armhf",false,./debs/deb13u1/*/*.deb
+        gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
+        gpg_passphrase: ${{ secrets.APT_SIGNING_PASSPHRASE }}
+        artifact_name: opencardev-trixie-apt-repo-${{ inputs.apt_category }}
+
+    - name: Create APT Repository for Bookworm
+      if: ${{ inputs.distribution == 'bookworm' }}
+      uses: jinnatar/actions-aptly-repo@v2
+      with:
+        name: opencardev-bookworm
+        repo_url: https://opencardev.github.io/packages
+        repos: |
+          bookworm,${{ inputs.apt_category }},"amd64 arm64 armhf",false,./debs/deb12u1/*/*.deb
+        gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
+        gpg_passphrase: ${{ secrets.APT_SIGNING_PASSPHRASE }}
+        artifact_name: opencardev-bookworm-apt-repo-${{ inputs.apt_category }}
+
+    - name: Create APT Repository for All
+      if: ${{ inputs.distribution == 'all' }}
+      uses: jinnatar/actions-aptly-repo@v2
+      with:
+        name: opencardev-all
+        repo_url: https://opencardev.github.io/packages
+        repos: |
+          bookworm,${{ inputs.apt_category }},"amd64 arm64 armhf",false,./debs/deb12u1/*/*.deb
+          trixie,${{ inputs.apt_category }},"amd64 arm64 armhf",false,./debs/deb13u1/*/*.deb
+        gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
+        gpg_passphrase: ${{ secrets.APT_SIGNING_PASSPHRASE }}
+        artifact_name: opencardev-all-apt-repo-${{ inputs.apt_category }}
+
+  deploy-apt-repo:
+    needs: [fetch-artifacts, create-apt-repo]
+    runs-on: ubuntu-latest
+    if: always() && needs.create-apt-repo.result == 'success'
+    
+    steps:
+    - name: Checkout packages repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        ref: main
+
+    - name: Download APT repository artifacts
+      uses: actions/download-artifact@v5
+      with:
+        pattern: opencardev-*-apt-repo-*
+        path: ./apt-artifacts
+        merge-multiple: true
+
+    - name: Deploy to packages repository
+      run: |
+        set -euo pipefail
+        echo "Current packages repo structure:"
+        ls -la
+        
+        echo "Available APT artifacts:"
+        find ./apt-artifacts -type f | head -20
+        
+        # Validate pool collisions by extracting to a temp dir first
+        TMP_EXTRACT_DIR="./_apt_extract"
+        rm -rf "$TMP_EXTRACT_DIR"
+        mkdir -p "$TMP_EXTRACT_DIR"
+        
+        # Extract any artifacts we have into the temp dir
+        for tarball in ./apt-artifacts/*.tar.gz; do
+          if [ -f "$tarball" ]; then
+            echo "Extracting $(basename $tarball) to $TMP_EXTRACT_DIR ..."
+            tar -xzf "$tarball" -C "$TMP_EXTRACT_DIR"
+          fi
+        done
+        
+        echo "Validating for pool filename collisions..."
+        # Build a list of extracted pool files
+        mapfile -t NEW_DEBS < <(find "$TMP_EXTRACT_DIR/pool" -type f -name "*.deb" 2>/dev/null || true)
+        if [ ${#NEW_DEBS[@]} -gt 0 ]; then
+          for f in "${NEW_DEBS[@]}"; do
+            rel="${f#${TMP_EXTRACT_DIR}/}"
+            dest="./${rel}"
+            if [ -f "$dest" ]; then
+              # Compare checksum to detect differing content under identical path
+              old_sum=$(sha256sum "$dest" | awk '{print $1}')
+              new_sum=$(sha256sum "$f" | awk '{print $1}')
+              if [ "$old_sum" != "$new_sum" ]; then
+                echo "::error::Collision detected for $rel with differing content."
+                echo "Existing: $dest ($old_sum)"
+                echo "New:      $f ($new_sum)"
+                echo "Refuse to overwrite. Ensure Debian revision differs per distribution (e.g., +deb12u1 vs +deb13u1)."
+                exit 1
+              fi
+            fi
+          done
+          echo "No pool collisions detected."
+        else
+          echo "No new pool packages found in artifacts."
+        fi
+        
+        # Extract and deploy the apt repository
+        for tarball in ./apt-artifacts/*.tar.gz; do
+          if [ -f "$tarball" ]; then
+            echo "Extracting $(basename $tarball) to repository..."
+            tar -xzf "$tarball" -C .
+          fi
+        done
+        
+        # Ensure GPG public key is available in the repository
+        if [ ! -f "opencardev.gpg.key" ]; then
+          echo "Exporting GPG public key..."
+          echo "${{ secrets.APT_SIGNING_KEY }}" | gpg --import --batch --yes
+          # Get the key ID from the imported key
+          KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | head -1 | sed 's/.*\/\([A-F0-9]*\) .*/\1/')
+          gpg --armor --export $KEY_ID > opencardev.gpg.key
+          echo "GPG public key exported to opencardev.gpg.key"
+        else
+          echo "GPG public key already exists"
+        fi
+        
+        echo "Updated packages repo structure:"
+        find . -name "*.deb" | head -10
+        find . -name "Packages*" | head -10
+        find . -name "Release*" | head -10
+        
+        # Configure git
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        
+        # Add changes
+        git add .
+        
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          # Create commit message with source information
+          COMMIT_MSG="Update APT repository from multi-source build"
+          if [ "${{ needs.fetch-artifacts.outputs.aasdk_run_id }}" != "" ]; then
+            COMMIT_MSG="$COMMIT_MSG - AASDK: ${{ needs.fetch-artifacts.outputs.aasdk_run_id }}"
+          fi
+          if [ "${{ needs.fetch-artifacts.outputs.openauto_run_id }}" != "" ]; then
+            COMMIT_MSG="$COMMIT_MSG - OpenAuto: ${{ needs.fetch-artifacts.outputs.openauto_run_id }}"
+          fi
+          COMMIT_MSG="$COMMIT_MSG - Distribution: ${{ inputs.distribution }} - Generated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          
+          git commit -m "$COMMIT_MSG"
+          
+          echo "Pushing changes..."
+          git push
+          
+          echo "APT repository successfully updated!"
+        fi
+
+    - name: Trigger GitHub Pages deployment
+      if: success()
+      run: |
+        echo "Triggering GitHub Pages deployment..."
+        
+        # Wait a moment for git push to complete
+        sleep 5
+        
+        # Trigger Pages build using GitHub API
+        curl -X POST \
+          -H "Accept: application/vnd.github.v3+json" \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          https://api.github.com/repos/${{ github.repository }}/pages/builds
+        
+        echo "GitHub Pages deployment triggered!"
+
+  deploy-pages:
+    needs: deploy-apt-repo
+    if: needs.deploy-apt-repo.result == 'success'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+    - name: Checkout latest main with APT files  
+      uses: actions/checkout@v4
+      with:
+        ref: main
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Pull latest changes including APT files
+      run: |
+        git pull origin main
+        
+    - name: Extract APT repository to root for Pages
+      run: |
+        echo "=== Repository contents for Pages ==="
+        ls -la
+        find . -name "dists" -type d
+        find . -name "pool" -type d  
+        find . -name "Release*" | head -5
+        echo "=== End repository contents ==="
+        
+    - name: Setup Pages
+      uses: actions/configure-pages@v5
+      
+    - name: Upload to GitHub Pages
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: '.'
+        
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+
+  summary:
+    needs: [fetch-artifacts, create-apt-repo, deploy-apt-repo, deploy-pages]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Summary
+      run: |
+        echo "## opencardev APT Repository Update Complete (Multi-Source)"
+        echo ""
+        echo "### Source Information:"
+        if [ "${{ inputs.include_aasdk }}" = "true" ]; then
+          echo "- AASDK Run ID: ${{ needs.fetch-artifacts.outputs.aasdk_run_id || 'Not specified/failed' }}"
+          echo "- AASDK Workflow: ${{ inputs.aasdk_workflow }}"
+        else
+          echo "- AASDK: Disabled"
+        fi
+        
+        if [ "${{ inputs.include_openauto }}" = "true" ]; then
+          echo "- OpenAuto Run ID: ${{ needs.fetch-artifacts.outputs.openauto_run_id || 'Not specified/failed' }}"
+          echo "- OpenAuto Workflow: ${{ inputs.openauto_workflow }}"
+        else
+          echo "- OpenAuto: Disabled"
+        fi
+        
+        echo "- Distribution: ${{ inputs.distribution }}"
+        echo "- APT Category: ${{ inputs.apt_category }}"
+        echo ""
+        echo "### Job Results:"
+        echo "- Artifact Fetch: ${{ needs.fetch-artifacts.result }}"
+        echo "- APT Repo Creation: ${{ needs.create-apt-repo.result }}"
+        echo "- Deployment: ${{ needs.deploy-apt-repo.result }}"
+        echo "- GitHub Pages: ${{ needs.deploy-pages.result }}"
+        echo ""
+        echo "Repository URL: https://opencardev.github.io/packages"
+        echo ""
+        
+        if [[ "${{ needs.create-apt-repo.result }}" == "success" && "${{ needs.deploy-apt-repo.result }}" == "success" && "${{ needs.deploy-pages.result }}" == "success" ]]; then
+          echo "✅ Multi-source APT repository successfully created and deployed!"
+          echo ""
+          echo "### Usage Instructions:"
+          echo '```bash'
+          echo "# Add GPG key"
+          echo "curl -fsSL https://opencardev.github.io/packages/opencardev.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/opencardev-archive-keyring.gpg"
+          echo ""
+          
+          if [ "${{ inputs.distribution }}" = "trixie" ]; then
+            echo "# Add Trixie repository"
+            echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages trixie main" | sudo tee /etc/apt/sources.list.d/opencardev.list'
+          elif [ "${{ inputs.distribution }}" = "bookworm" ]; then
+            echo "# Add Bookworm repository"
+            echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages bookworm main" | sudo tee /etc/apt/sources.list.d/opencardev.list'
+          elif [ "${{ inputs.distribution }}" = "all" ]; then
+            echo "# Add repositories (choose your distribution)"
+            echo "# For Trixie (Debian 13):"
+            echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages trixie main" | sudo tee /etc/apt/sources.list.d/opencardev.list'
+            echo "# For Bookworm (Debian 12):"
+            echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages bookworm main" | sudo tee /etc/apt/sources.list.d/opencardev.list'
+          fi
+          
+          echo ""
+          echo "# Update and install packages"
+          echo "sudo apt update"
+          if [ "${{ inputs.include_aasdk }}" = "true" ] && [ "${{ inputs.include_openauto }}" = "true" ]; then
+            echo "sudo apt install libaasdk openauto-modern"
+          elif [ "${{ inputs.include_aasdk }}" = "true" ]; then
+            echo "sudo apt install libaasdk"
+          elif [ "${{ inputs.include_openauto }}" = "true" ]; then
+            echo "sudo apt install openauto-modern"
+          fi
+          echo '```'
+        else
+          echo "❌ Multi-source APT repository update failed. Check the logs above for details."
+        fi
