@@ -1,4 +1,4 @@
-name: opencardev APT Repository Upload (Multi-Source)
+name: opencardev APT Repository Upload (Multi-Source Enhanced)
 
 permissions:
   contents: write
@@ -50,23 +50,6 @@ on:
         required: false
         default: true
         type: boolean
-      target_channel:
-        description: 'Target publication channel'
-        required: false
-        default: 'auto'
-        type: choice
-        options:
-          - auto
-          - stable
-          - unstable
-      aasdk_branch:
-        description: 'AASDK branch to pull from (leave empty for auto-detection)'
-        required: false
-        type: string
-      openauto_branch:
-        description: 'OpenAuto branch to pull from (leave empty for auto-detection)'
-        required: false
-        type: string
 
 jobs:
   fetch-artifacts:
@@ -74,9 +57,6 @@ jobs:
     outputs:
       aasdk_run_id: ${{ steps.resolve-runs.outputs.aasdk_run_id }}
       openauto_run_id: ${{ steps.resolve-runs.outputs.openauto_run_id }}
-      target_channel: ${{ steps.resolve-runs.outputs.target_channel }}
-      aasdk_branch: ${{ steps.resolve-runs.outputs.aasdk_branch }}
-      openauto_branch: ${{ steps.resolve-runs.outputs.openauto_branch }}
     
     steps:
     - name: Checkout packages repository
@@ -91,10 +71,9 @@ jobs:
         get_latest_run_id() {
           local repo=$1
           local workflow=$2
-          local branch=$3
           local run_id
           
-          echo "Getting latest successful run for workflow '$workflow' in $repo on branch '$branch'..."
+          echo "Getting latest successful run for workflow '$workflow' in $repo..."
           workflow_id=$(gh api "/repos/$repo/actions/workflows" \
             --jq ".workflows[] | select(.name == \"$workflow\") | .id" | head -1)
           
@@ -105,11 +84,11 @@ jobs:
           
           echo "Found workflow ID: $workflow_id"
           
-          latest_run_id=$(gh api "/repos/$repo/actions/workflows/$workflow_id/runs?status=success&branch=$branch&per_page=1" \
+          latest_run_id=$(gh api "/repos/$repo/actions/workflows/$workflow_id/runs?status=success&per_page=1" \
             --jq '.workflow_runs[0].id // empty')
           
           if [ -z "$latest_run_id" ]; then
-            echo "Error: No successful runs found for workflow '$workflow' in $repo on branch '$branch'"
+            echo "Error: No successful runs found for workflow '$workflow' in $repo"
             return 1
           fi
           
@@ -117,53 +96,14 @@ jobs:
           echo "$latest_run_id"
         }
         
-        # Determine target branches based on channel
-        determine_branches() {
-          local channel=$1
-          local aasdk_branch_input="$2"
-          local openauto_branch_input="$3"
-          
-          case "$channel" in
-            "stable")
-              AASDK_BRANCH="${aasdk_branch_input:-main}"
-              OPENAUTO_BRANCH="${openauto_branch_input:-main}"
-              ;;
-            "unstable")
-              AASDK_BRANCH="${aasdk_branch_input:-develop}"
-              OPENAUTO_BRANCH="${openauto_branch_input:-develop}"
-              ;;
-            "auto")
-              # Auto-detect based on current repository context or default to stable
-              AASDK_BRANCH="${aasdk_branch_input:-main}"
-              OPENAUTO_BRANCH="${openauto_branch_input:-main}"
-              ;;
-            *)
-              echo "Error: Unknown channel '$channel'"
-              exit 1
-              ;;
-          esac
-          
-          echo "Target branches determined:"
-          echo "  AASDK: $AASDK_BRANCH"
-          echo "  OpenAuto: $OPENAUTO_BRANCH"
-        }
-        
-        # Determine target channel and branches
-        TARGET_CHANNEL="${{ inputs.target_channel }}"
-        determine_branches "$TARGET_CHANNEL" "${{ inputs.aasdk_branch }}" "${{ inputs.openauto_branch }}"
-        
-        echo "target_channel=$TARGET_CHANNEL" >> $GITHUB_OUTPUT
-        echo "aasdk_branch=$AASDK_BRANCH" >> $GITHUB_OUTPUT
-        echo "openauto_branch=$OPENAUTO_BRANCH" >> $GITHUB_OUTPUT
-        
         # Resolve AASDK run ID
         if [ "${{ inputs.include_aasdk }}" = "true" ]; then
           if [ -n "${{ inputs.aasdk_run_id }}" ]; then
             AASDK_RUN_ID="${{ inputs.aasdk_run_id }}"
             echo "Using specified AASDK run ID: $AASDK_RUN_ID"
           else
-            AASDK_RUN_ID=$(get_latest_run_id "opencardev/aasdk" "${{ inputs.aasdk_workflow }}" "$AASDK_BRANCH")
-            echo "Using latest AASDK run ID from $AASDK_BRANCH: $AASDK_RUN_ID"
+            AASDK_RUN_ID=$(get_latest_run_id "opencardev/aasdk" "${{ inputs.aasdk_workflow }}")
+            echo "Using latest AASDK run ID: $AASDK_RUN_ID"
           fi
           echo "aasdk_run_id=$AASDK_RUN_ID" >> $GITHUB_OUTPUT
         else
@@ -171,14 +111,14 @@ jobs:
           echo "aasdk_run_id=" >> $GITHUB_OUTPUT
         fi
         
-        # Resolve OpenAuto run ID  
+        # Resolve OpenAuto run ID
         if [ "${{ inputs.include_openauto }}" = "true" ]; then
           if [ -n "${{ inputs.openauto_run_id }}" ]; then
             OPENAUTO_RUN_ID="${{ inputs.openauto_run_id }}"
             echo "Using specified OpenAuto run ID: $OPENAUTO_RUN_ID"
           else
-            OPENAUTO_RUN_ID=$(get_latest_run_id "opencardev/openauto" "${{ inputs.openauto_workflow }}" "$OPENAUTO_BRANCH")
-            echo "Using latest OpenAuto run ID from $OPENAUTO_BRANCH: $OPENAUTO_RUN_ID"
+            OPENAUTO_RUN_ID=$(get_latest_run_id "opencardev/openauto" "${{ inputs.openauto_workflow }}")
+            echo "Using latest OpenAuto run ID: $OPENAUTO_RUN_ID"
           fi
           echo "openauto_run_id=$OPENAUTO_RUN_ID" >> $GITHUB_OUTPUT
         else
