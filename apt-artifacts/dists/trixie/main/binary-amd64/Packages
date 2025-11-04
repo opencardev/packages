@@ -34,21 +34,3 @@ Description: Android Auto SDK Library
  Development headers and CMake files for Android Auto SDK on amd64 architecture
 Homepage: https://github.com/opencardev/aasdk
 
-Package: openauto
-Priority: optional
-Section: utils
-Installed-Size: 100638
-Maintainer: OpenCarDev Team <opencardevuk@gmail.com>
-Architecture: amd64
-Version: 2025.11.03-1+deb13u1
-Depends: libboost-log1.83.0 (>= 1.83.0), libc6 (>= 2.38), libgcc-s1 (>= 3.0), libgps30t64 (>= 3.3), libprotobuf32t64 (>= 3.21.12), libqt5bluetooth5 (>= 5.6.0), libqt5core5t64 (>= 5.15.1), libqt5gui5t64 (>= 5.0.2) | libqt5gui5-gles (>= 5.0.2), libqt5multimedia5 (>= 5.14.1), libqt5multimediawidgets5 (>= 5.6.0~beta), libqt5network5t64 (>= 5.0.2), libqt5widgets5t64 (>= 5.2.0~alpha1), librtaudio7 (>= 6.0.1~ds), libstdc++6 (>= 14), libtag2 (>= 2.0), libusb-1.0-0 (>= 2:1.0.9)
-Filename: pool/trixie/main/o/openauto/openauto_2025.11.03_deb13u1_amd64.deb
-Size: 19630976
-MD5sum: dd25da55e0755d767867202bde93e8d2
-SHA1: 31a8db2d67d13db56ff21a1bc4a90f9456a8298d
-SHA256: f0afec01b415bb7fb62cb26b12dd1535c6607f69ac64cdd78c5a290c22ac3de7
-SHA512: 28b850b2f61f56cd282d2f1b451e52742099c08a0aab3822c7759b16f4bba4c7c9e4325a9a7eab5dd25da1917d38df3ea38e3ee09ebb6683b6f5aada94b4b282
-Description: OpenAuto head unit application using libaasdk
- OpenAuto is an AndroidAuto head unit emulator designed for Raspberry Pi and other embedded platforms.
-Homepage: https://github.com/opencardev/openauto
-
