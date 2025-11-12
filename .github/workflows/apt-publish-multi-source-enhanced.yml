@@ -414,9 +414,12 @@ jobs:
         fi
         
         echo "Updated packages repo structure:"
-        find . -name "*.deb" | head -10
-        find . -name "Packages*" | head -10
-        find . -name "Release*" | head -10
+        # Avoid SIGPIPE failures under 'set -o pipefail' when using head
+        set +o pipefail
+        find . -name "*.deb" -print 2>/dev/null | head -10 || true
+        find . -name "Packages*" -print 2>/dev/null | head -10 || true
+        find . -name "Release*" -print 2>/dev/null | head -10 || true
+        set -o pipefail
         
         # Configure git
         git config user.name "GitHub Actions"
