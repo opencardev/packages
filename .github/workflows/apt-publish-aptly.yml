@@ -309,6 +309,17 @@ jobs:
           tar -xzf "./apt-artifacts/opencardev-bookworm-apt-repo-main.tar.gz" -C .
         fi
         
+        # Move APT repository files from apt-artifacts to root if they exist
+        if [ -d "./apt-artifacts/dists" ]; then
+          echo "Moving dists/ from apt-artifacts to root..."
+          cp -r ./apt-artifacts/dists ./
+        fi
+        
+        if [ -d "./apt-artifacts/pool" ]; then
+          echo "Moving pool/ from apt-artifacts to root..."
+          cp -r ./apt-artifacts/pool ./
+        fi
+        
         # Ensure GPG public key is available in the repository
         if [ ! -f "opencardev.gpg.key" ]; then
           echo "Exporting GPG public key..."
