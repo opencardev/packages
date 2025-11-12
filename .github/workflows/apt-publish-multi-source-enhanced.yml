@@ -19,12 +19,12 @@ on:
       aasdk_workflow:
         description: 'AASDK workflow name'
         required: false
-        default: 'Build Packages'
+        default: 'AASDK Build and Test'
         type: string
       openauto_workflow:
         description: 'OpenAuto workflow name'
         required: false
-        default: 'Build Release Package'
+        default: 'OpenAuto Build and Test'
         type: string
       distribution:
         description: 'Distribution to publish to'
