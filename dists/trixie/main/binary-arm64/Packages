@@ -52,21 +52,3 @@ Description: OpenAuto head unit application using libaasdk
  OpenAuto is an AndroidAuto head unit emulator designed for Raspberry Pi and other embedded platforms.
 Homepage: https://github.com/opencardev/openauto
 
-Package: openauto
-Priority: optional
-Section: utils
-Installed-Size: 99451
-Maintainer: OpenCarDev Team <opencardevuk@gmail.com>
-Architecture: arm64
-Version: 2025.11.05-1+deb13u1
-Depends: libqt5multimedia5, libqt5multimedia5-plugins, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-libav, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, libboost-log1.83.0 (>= 1.83.0), libc6 (>= 2.38), libgcc-s1 (>= 3.0), libgps30t64 (>= 3.3), libprotobuf32t64 (>= 3.21.12), libqt5bluetooth5 (>= 5.6.0), libqt5core5t64 (>= 5.15.1), libqt5gui5t64 (>= 5.0.2) | libqt5gui5-gles (>= 5.0.2), libqt5multimedia5 (>= 5.14.1), libqt5multimediawidgets5 (>= 5.6.0~beta), libqt5network5t64 (>= 5.0.2), libqt5widgets5t64 (>= 5.2.0~alpha1), librtaudio7 (>= 6.0.1~ds), libstdc++6 (>= 14), libtag2 (>= 2.0), libusb-1.0-0 (>= 2:1.0.9)
-Filename: pool/trixie/main/o/openauto/openauto_2025.11.05_deb13u1_arm64.deb
-Size: 19250832
-MD5sum: bd4132af4e05491f615f4dd454b7817c
-SHA1: c39ac69fc716826bbd3af2e0e6d826c82ce99bf2
-SHA256: 3c936ce786a6e7422059fd42232e719cae18e9e1b97aa19fcd666e58884876de
-SHA512: a8cf62daefa8afebc3fea7fc0566e6cc5edb41002c98020948eed939945bbabc9e4b0db85af40ac5a93812583e5377881bd9eed63bf071468c0e58392a0273a3
-Description: OpenAuto head unit application using libaasdk
- OpenAuto is an AndroidAuto head unit emulator designed for Raspberry Pi and other embedded platforms.
-Homepage: https://github.com/opencardev/openauto
-
