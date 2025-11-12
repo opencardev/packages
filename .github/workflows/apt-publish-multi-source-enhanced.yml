@@ -73,26 +73,26 @@ jobs:
           local workflow=$2
           local run_id
           
-          echo "Getting latest successful run for workflow '$workflow' in $repo..."
+          echo "Getting latest successful run for workflow '$workflow' in $repo..." >&2
           workflow_id=$(gh api "/repos/$repo/actions/workflows" \
             --jq ".workflows[] | select(.name == \"$workflow\") | .id" | head -1)
           
           if [ -z "$workflow_id" ]; then
-            echo "Error: Could not find workflow '$workflow' in $repo"
+            echo "Error: Could not find workflow '$workflow' in $repo" >&2
             return 1
           fi
           
-          echo "Found workflow ID: $workflow_id"
+          echo "Found workflow ID: $workflow_id" >&2
           
           latest_run_id=$(gh api "/repos/$repo/actions/workflows/$workflow_id/runs?status=success&per_page=1" \
             --jq '.workflow_runs[0].id // empty')
           
           if [ -z "$latest_run_id" ]; then
-            echo "Error: No successful runs found for workflow '$workflow' in $repo"
+            echo "Error: No successful runs found for workflow '$workflow' in $repo" >&2
             return 1
           fi
           
-          echo "Latest successful run ID: $latest_run_id"
+          echo "Latest successful run ID: $latest_run_id" >&2
           echo "$latest_run_id"
         }
         
@@ -100,14 +100,14 @@ jobs:
         if [ "${{ inputs.include_aasdk }}" = "true" ]; then
           if [ -n "${{ inputs.aasdk_run_id }}" ]; then
             AASDK_RUN_ID="${{ inputs.aasdk_run_id }}"
-            echo "Using specified AASDK run ID: $AASDK_RUN_ID"
+            echo "Using specified AASDK run ID: $AASDK_RUN_ID" >&2
           else
             AASDK_RUN_ID=$(get_latest_run_id "opencardev/aasdk" "${{ inputs.aasdk_workflow }}")
-            echo "Using latest AASDK run ID: $AASDK_RUN_ID"
+            echo "Using latest AASDK run ID: $AASDK_RUN_ID" >&2
           fi
           echo "aasdk_run_id=$AASDK_RUN_ID" >> $GITHUB_OUTPUT
         else
-          echo "AASDK packages disabled"
+          echo "AASDK packages disabled" >&2
           echo "aasdk_run_id=" >> $GITHUB_OUTPUT
         fi
         
@@ -115,14 +115,14 @@ jobs:
         if [ "${{ inputs.include_openauto }}" = "true" ]; then
           if [ -n "${{ inputs.openauto_run_id }}" ]; then
             OPENAUTO_RUN_ID="${{ inputs.openauto_run_id }}"
-            echo "Using specified OpenAuto run ID: $OPENAUTO_RUN_ID"
+            echo "Using specified OpenAuto run ID: $OPENAUTO_RUN_ID" >&2
           else
             OPENAUTO_RUN_ID=$(get_latest_run_id "opencardev/openauto" "${{ inputs.openauto_workflow }}")
-            echo "Using latest OpenAuto run ID: $OPENAUTO_RUN_ID"
+            echo "Using latest OpenAuto run ID: $OPENAUTO_RUN_ID" >&2
           fi
           echo "openauto_run_id=$OPENAUTO_RUN_ID" >> $GITHUB_OUTPUT
         else
-          echo "OpenAuto packages disabled"
+          echo "OpenAuto packages disabled" >&2
           echo "openauto_run_id=" >> $GITHUB_OUTPUT
         fi
       env:
