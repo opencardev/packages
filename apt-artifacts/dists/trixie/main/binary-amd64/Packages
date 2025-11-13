@@ -1,6 +1,24 @@
 Package: libaasdk
 Priority: optional
 Section: libs
+Installed-Size: 273845
+Maintainer: AASDK <opencardevuk@gmail.com>
+Architecture: amd64
+Version: 2025.11.13-1+deb13u1
+Depends: libc6 (>= 2.38), libgcc-s1 (>= 3.0), libprotobuf32t64 (>= 3.21.12), libssl3t64 (>= 3.0.0), libstdc++6 (>= 14), libusb-1.0-0 (>= 2:1.0.16)
+Filename: pool/trixie/main/liba/libaasdk/libaasdk_2025.11.13_deb13u1_amd64.deb
+Size: 37516792
+MD5sum: 271f1c2f09ea0faf4a6db37a9836401e
+SHA1: 1239e36d9cd484dd80dd10ad86fd3e09101ec2fe
+SHA256: 536f5a0aafcbf2a423f59d3371b3daaa056972e8b0d9801a76e59d8c0101953e
+SHA512: cc0a8b9500c076b8b646db1f5b7da60d8b27d3f38e9e8b475c271fb5034ad4a2afb9965803d92daa6204c5bae710902ded231ba8771cad67bee3eaba9fb7558f
+Description: Android Auto SDK Library
+ Runtime libraries for Android Auto SDK on amd64 architecture
+Homepage: https://github.com/opencardev/aasdk
+
+Package: libaasdk
+Priority: optional
+Section: libs
 Installed-Size: 273829
 Maintainer: AASDK <opencardevuk@gmail.com>
 Architecture: amd64
@@ -22,6 +40,24 @@ Section: libdevel
 Installed-Size: 4106
 Maintainer: AASDK <opencardevuk@gmail.com>
 Architecture: amd64
+Version: 2025.11.13-1+deb13u1
+Depends: libaasdk (= 2025.11.13-1+deb13u1)
+Filename: pool/trixie/main/liba/libaasdk-dev/libaasdk-dev_2025.11.13_deb13u1_amd64.deb
+Size: 304942
+MD5sum: d973b8a644b23c539d92b87be8d132cf
+SHA1: 75a9218367e3bec60247dd6b111c63b06a00d258
+SHA256: 1ca2d7c7514ff47b38f11078535858fdb53fb42323bcdcdf6899835854fc6c8e
+SHA512: f6ba954aabbc18c0ac75bc8745a9806f6495604ff7b9573c0b439a30bc02edbb86dca8bc1e216605b409893a4cf05b52f52b66d0e01fc1e3693c2e8bee3b4b6a
+Description: Android Auto SDK Library
+ Development headers and CMake files for Android Auto SDK on amd64 architecture
+Homepage: https://github.com/opencardev/aasdk
+
+Package: libaasdk-dev
+Priority: optional
+Section: libdevel
+Installed-Size: 4106
+Maintainer: AASDK <opencardevuk@gmail.com>
+Architecture: amd64
 Version: 2025.11.11-1+deb13u1
 Depends: libaasdk (= 2025.11.11-1+deb13u1)
 Filename: pool/trixie/main/liba/libaasdk-dev/libaasdk-dev_2025.11.11_deb13u1_amd64.deb
@@ -33,24 +69,6 @@ SHA512: def3aa8cdb6ee350947095c4dbbf739bd595e229a87fb4909412abf7fa06622d519581f7
 Description: Android Auto SDK Library
  Development headers and CMake files for Android Auto SDK on amd64 architecture
 Homepage: https://github.com/opencardev/aasdk
-
-Package: openauto
-Priority: optional
-Section: utils
-Installed-Size: 101836
-Maintainer: OpenCarDev Team <opencardevuk@gmail.com>
-Architecture: amd64
-Version: 2025.11.13-1+deb13u1
-Depends: libqt5multimedia5, libqt5multimedia5-plugins, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-libav, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, libboost-log1.83.0 (>= 1.83.0), libc6 (>= 2.38), libgcc-s1 (>= 3.0), libgps30t64 (>= 3.3), libprotobuf32t64 (>= 3.21.12), libqt5bluetooth5 (>= 5.6.0), libqt5core5t64 (>= 5.15.1), libqt5gui5t64 (>= 5.0.2) | libqt5gui5-gles (>= 5.0.2), libqt5multimedia5 (>= 5.14.1), libqt5multimediawidgets5 (>= 5.6.0~beta), libqt5network5t64 (>= 5.0.2), libqt5widgets5t64 (>= 5.2.0~alpha1), librtaudio7 (>= 6.0.1~ds), libstdc++6 (>= 14), libtag2 (>= 2.0), libusb-1.0-0 (>= 2:1.0.9)
-Filename: pool/trixie/main/o/openauto/openauto_2025.11.13_deb13u1_amd64.deb
-Size: 19815656
-MD5sum: d082140f0597e37c5ec51802aca663ba
-SHA1: 9c85c509f9c72e6acdfe753ae969c2f93a2e3e35
-SHA256: 1027d1bd1a43a03c2bcef092b22efdacbb8b5211d12ec583bffdfb9031888f61
-SHA512: fea126d98765e1980f6953025df77576757a0ab374d1dfb4f60fe2a233e6fca6cc359dee818e76a4c054888871ef68ace807f6a01ac404566d767ad260a2d5b9
-Description: OpenAuto head unit application using libaasdk
- OpenAuto is an AndroidAuto head unit emulator designed for Raspberry Pi and other embedded platforms.
-Homepage: https://github.com/opencardev/openauto
 
 Package: openauto
 Priority: optional
