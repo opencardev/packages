@@ -40,6 +40,24 @@ Section: utils
 Installed-Size: 100426
 Maintainer: OpenCarDev Team <opencardevuk@gmail.com>
 Architecture: arm64
+Version: 2025.11.14-1+deb13u1
+Depends: libqt5multimedia5, libqt5multimedia5-plugins, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-libav, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, libboost-log1.83.0 (>= 1.83.0), libc6 (>= 2.38), libgcc-s1 (>= 3.0), libgps30t64 (>= 3.3), libprotobuf32t64 (>= 3.21.12), libqt5bluetooth5 (>= 5.6.0), libqt5core5t64 (>= 5.15.1), libqt5gui5t64 (>= 5.0.2) | libqt5gui5-gles (>= 5.0.2), libqt5multimedia5 (>= 5.14.1), libqt5multimediawidgets5 (>= 5.6.0~beta), libqt5network5t64 (>= 5.0.2), libqt5widgets5t64 (>= 5.2.0~alpha1), librtaudio7 (>= 6.0.1~ds), libstdc++6 (>= 14), libtag2 (>= 2.0), libusb-1.0-0 (>= 2:1.0.9)
+Filename: pool/trixie/main/o/openauto/openauto_2025.11.14_deb13u1_arm64.deb
+Size: 19437106
+MD5sum: ec55ee7a7b0b074c64540b0fef91d23d
+SHA1: fee27a6c561d8261908bf7836a6ca97eabb9399f
+SHA256: 581927b0c5c813808d94573c6fcd9e45296af426747af2cde9e17311f6b1f458
+SHA512: 38dd9b42e3045c9a70c238366e893c1a8d834e614db0ef837634f880b351b0d061ab526f8faa832d4b564520e25907ec6129117895bc7ed92b4bc0616e6575d1
+Description: OpenAuto head unit application using libaasdk
+ OpenAuto is an AndroidAuto head unit emulator designed for Raspberry Pi and other embedded platforms.
+Homepage: https://github.com/opencardev/openauto
+
+Package: openauto
+Priority: optional
+Section: utils
+Installed-Size: 100426
+Maintainer: OpenCarDev Team <opencardevuk@gmail.com>
+Architecture: arm64
 Version: 2025.11.13-1+deb13u1
 Depends: libqt5multimedia5, libqt5multimedia5-plugins, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-libav, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, libboost-log1.83.0 (>= 1.83.0), libc6 (>= 2.38), libgcc-s1 (>= 3.0), libgps30t64 (>= 3.3), libprotobuf32t64 (>= 3.21.12), libqt5bluetooth5 (>= 5.6.0), libqt5core5t64 (>= 5.15.1), libqt5gui5t64 (>= 5.0.2) | libqt5gui5-gles (>= 5.0.2), libqt5multimedia5 (>= 5.14.1), libqt5multimediawidgets5 (>= 5.6.0~beta), libqt5network5t64 (>= 5.0.2), libqt5widgets5t64 (>= 5.2.0~alpha1), librtaudio7 (>= 6.0.1~ds), libstdc++6 (>= 14), libtag2 (>= 2.0), libusb-1.0-0 (>= 2:1.0.9)
 Filename: pool/trixie/main/o/openauto/openauto_2025.11.13_deb13u1_arm64.deb
