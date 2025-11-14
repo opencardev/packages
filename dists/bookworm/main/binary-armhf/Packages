@@ -37,17 +37,17 @@ Homepage: https://github.com/opencardev/aasdk
 Package: openauto
 Priority: optional
 Section: utils
-Installed-Size: 93196
+Installed-Size: 93221
 Maintainer: OpenCarDev Team <opencardevuk@gmail.com>
 Architecture: armhf
 Version: 2025.11.13-1+deb12u1
 Depends: libqt5multimedia5, libqt5multimedia5-plugins, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-libav, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, libboost-log1.74.0 (>= 1.74.0+ds1), libc6 (>= 2.34), libgcc-s1 (>= 3.5), libgps28 (>= 3.3), libprotobuf32 (>= 3.21.12), libqt5bluetooth5 (>= 5.6.0), libqt5core5a (>= 5.15.1), libqt5gui5 (>= 5.0.2) | libqt5gui5-gles (>= 5.0.2), libqt5multimedia5 (>= 5.14.1), libqt5multimediawidgets5 (>= 5.6.0~beta), libqt5network5 (>= 5.0.2), libqt5widgets5 (>= 5.2.0~alpha1), librtaudio6 (>= 5.2.0~ds1), libstdc++6 (>= 11), libtag1v5 (>= 1.9.1-2.2~), libusb-1.0-0 (>= 2:1.0.9)
 Filename: pool/bookworm/main/o/openauto/openauto_2025.11.13_deb12u1_armhf.deb
-Size: 19234780
-MD5sum: 9bdad71eb16568ba797f957a3470afe8
-SHA1: 93473bbc76cbab6bdb3176ae3e216319ad98c23b
-SHA256: afdba53627ef1bd73dcb64cb54dce8d3e37571486388de5d47cf104f97181ab2
-SHA512: a980569628fe94fc26c88950dbb6694d0f6becc9e6f3c7307737c249c0d1a357a357630ec1cdded7bbe07dbf1b35939e2c1b100b5fc1d8413c8a0ba3913a614c
+Size: 19236706
+MD5sum: e3e9d0ffd39e37db8bcdcfea2fb667d6
+SHA1: 3a96f905105f4cf139561f410fd7e49386de5c13
+SHA256: 466e6a0e01a55e3929152968b4efcfe2e7b3f9eb7a9404ffc1c3d39276b355f1
+SHA512: f51dc16e08229422d3de44ca3eca554cda30e010cf37c3b3874b91d90fb16a2673a83a99da39939fb63d4e67094ee18bbbaab3e06818b7ca97f8cc8d533ca380
 Description: OpenAuto head unit application using libaasdk
  OpenAuto is an AndroidAuto head unit emulator designed for Raspberry Pi and other embedded platforms.
 Homepage: https://github.com/opencardev/openauto
