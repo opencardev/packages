@@ -4,6 +4,24 @@ Section: libs
 Installed-Size: 290765
 Maintainer: AASDK <opencardevuk@gmail.com>
 Architecture: amd64
+Version: 2025.11.14-1+deb12u1
+Depends: libc6 (>= 2.32), libgcc-s1 (>= 3.0), libprotobuf32 (>= 3.21.12), libssl3 (>= 3.0.0), libstdc++6 (>= 12), libusb-1.0-0 (>= 2:1.0.16)
+Filename: pool/bookworm/main/liba/libaasdk/libaasdk_2025.11.14_deb12u1_amd64.deb
+Size: 39567704
+MD5sum: 30be8418f2607d38ffd276c756ee330c
+SHA1: 2cfa0d021ed7836cd9563330ca3b2dd1b6dee59e
+SHA256: 910b54c171d6933c9f7040eb7d708b7b90ee617466ea93786bca1d21d95a9da2
+SHA512: 8d106cd4230ab9886fd9760a7de6aacb55f798b19f0c05dd95f053199e0c71d5715cb767055d5e4823188605da27cfa27b5072833fdee188bd365e2523c9947c
+Description: Android Auto SDK Library
+ Runtime libraries for Android Auto SDK on amd64 architecture
+Homepage: https://github.com/opencardev/aasdk
+
+Package: libaasdk
+Priority: optional
+Section: libs
+Installed-Size: 290765
+Maintainer: AASDK <opencardevuk@gmail.com>
+Architecture: amd64
 Version: 2025.11.13-1+deb12u1
 Depends: libc6 (>= 2.32), libgcc-s1 (>= 3.0), libprotobuf32 (>= 3.21.12), libssl3 (>= 3.0.0), libstdc++6 (>= 12), libusb-1.0-0 (>= 2:1.0.16)
 Filename: pool/bookworm/main/liba/libaasdk/libaasdk_2025.11.13_deb12u1_amd64.deb
@@ -14,6 +32,24 @@ SHA256: 80fe9a37ec00f5fb5e0fe75478b5c35b975f0ae9f01ffb83d10839775d4e101a
 SHA512: e39f77e9a58256c85bf42683ad87b07c776947982010cf0847ed067c79a7211fda8fff87c6fa7a5d5095e9c6820112d0208a37ae2bab572208fe18c82e5be686
 Description: Android Auto SDK Library
  Runtime libraries for Android Auto SDK on amd64 architecture
+Homepage: https://github.com/opencardev/aasdk
+
+Package: libaasdk-dev
+Priority: optional
+Section: libdevel
+Installed-Size: 4106
+Maintainer: AASDK <opencardevuk@gmail.com>
+Architecture: amd64
+Version: 2025.11.14-1+deb12u1
+Depends: libaasdk (= 2025.11.14-1+deb12u1)
+Filename: pool/bookworm/main/liba/libaasdk-dev/libaasdk-dev_2025.11.14_deb12u1_amd64.deb
+Size: 304996
+MD5sum: b4c1530cecef2085bbdbc234bedabbb9
+SHA1: 589b9ee52a7ef7a1442039fd1ce480fd3507af31
+SHA256: d0f6110cd4462df3f716c80c7067cf6047bd6c1e648dc789e7601567b8bfc8aa
+SHA512: 68dc991735f46676db08de63dff9e9c7b858118319c3015f8397f9e753247d43e1b63d2c84dc5a68ec6e5b786366bc1bffb8978ed9630b0127038056096cd7ad
+Description: Android Auto SDK Library
+ Development headers and CMake files for Android Auto SDK on amd64 architecture
 Homepage: https://github.com/opencardev/aasdk
 
 Package: libaasdk-dev
@@ -33,24 +69,6 @@ SHA512: 486c83f75550cccdb816e8efdb27940aef9520253299a61a4a4d1224c4e3a854df93f419
 Description: Android Auto SDK Library
  Development headers and CMake files for Android Auto SDK on amd64 architecture
 Homepage: https://github.com/opencardev/aasdk
-
-Package: openauto
-Priority: optional
-Section: utils
-Installed-Size: 105359
-Maintainer: OpenCarDev Team <opencardevuk@gmail.com>
-Architecture: amd64
-Version: 2025.11.14-1+deb12u1
-Depends: libqt5multimedia5, libqt5multimedia5-plugins, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-libav, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, libboost-log1.74.0 (>= 1.74.0+ds1), libc6 (>= 2.34), libgcc-s1 (>= 3.0), libgps28 (>= 3.3), libprotobuf32 (>= 3.21.12), libqt5bluetooth5 (>= 5.6.0), libqt5core5a (>= 5.15.1), libqt5gui5 (>= 5.0.2) | libqt5gui5-gles (>= 5.0.2), libqt5multimedia5 (>= 5.14.1), libqt5multimediawidgets5 (>= 5.6.0~beta), libqt5network5 (>= 5.0.2), libqt5widgets5 (>= 5.2.0~alpha1), librtaudio6 (>= 5.2.0~ds1), libstdc++6 (>= 11), libtag1v5 (>= 1.9.1-2.2~), libusb-1.0-0 (>= 2:1.0.9)
-Filename: pool/bookworm/main/o/openauto/openauto_2025.11.14_deb12u1_amd64.deb
-Size: 20630372
-MD5sum: 4f40a561bd0c15fd00d559aa9ee9685d
-SHA1: 93aac73f47e915101073b9f681e5e51396fd0a15
-SHA256: 6467925ab55f90088e39df5b49411ef51bebad01ed6402a328c788992d31f7cf
-SHA512: 59cb6cb0b08ec46221a49245ba2e1de5c6b5f6eabe9d9ea74274607a1f78ba5401bb019e231645d522d844c553db50bfb708a4d0d425b622f9e8a311a1784c62
-Description: OpenAuto head unit application using libaasdk
- OpenAuto is an AndroidAuto head unit emulator designed for Raspberry Pi and other embedded platforms.
-Homepage: https://github.com/opencardev/openauto
 
 Package: openauto
 Priority: optional

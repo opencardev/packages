@@ -4,6 +4,24 @@ Section: libs
 Installed-Size: 276235
 Maintainer: AASDK <opencardevuk@gmail.com>
 Architecture: arm64
+Version: 2025.11.14-1+deb13u1
+Depends: libc6 (>= 2.38), libgcc-s1 (>= 3.0), libprotobuf32t64 (>= 3.21.12), libssl3t64 (>= 3.0.0), libstdc++6 (>= 14), libusb-1.0-0 (>= 2:1.0.16)
+Filename: pool/trixie/main/liba/libaasdk/libaasdk_2025.11.14_deb13u1_arm64.deb
+Size: 37457806
+MD5sum: 914a3659c07145e18b4c803282f2f0ac
+SHA1: bd2ef9e1f066ceb8b3eff2028512c9ac661edd36
+SHA256: b3c4ab23fa7d395fb00153faf7cba0c6a3765100dfa8f6be308a6ddc002f1c0a
+SHA512: ad2a93de93bfd32739ec1536e02ba1c23fca20af8b6bfb834191a84bb59337681a6466ae7cc22f1b7b7978cba58ffbafe3a28565313b5c5bc75206f1d5728955
+Description: Android Auto SDK Library
+ Runtime libraries for Android Auto SDK on arm64 architecture
+Homepage: https://github.com/opencardev/aasdk
+
+Package: libaasdk
+Priority: optional
+Section: libs
+Installed-Size: 276235
+Maintainer: AASDK <opencardevuk@gmail.com>
+Architecture: arm64
 Version: 2025.11.13-1+deb13u1
 Depends: libc6 (>= 2.38), libgcc-s1 (>= 3.0), libprotobuf32t64 (>= 3.21.12), libssl3t64 (>= 3.0.0), libstdc++6 (>= 14), libusb-1.0-0 (>= 2:1.0.16)
 Filename: pool/trixie/main/liba/libaasdk/libaasdk_2025.11.13_deb13u1_arm64.deb
@@ -14,6 +32,24 @@ SHA256: d2d9476b1cac9618dc714442230effadff2b4b18d8e4b1eeb148c696a70460ee
 SHA512: b137f454d9dd7ce8fea7f9eba1fc6ca411c92a86ea8bb59f2884c522c334a9fc5ad84e3317ef386257b0cbe0c56c3e4788ba2f0c4d9b7bf046c645b7303cfb3e
 Description: Android Auto SDK Library
  Runtime libraries for Android Auto SDK on arm64 architecture
+Homepage: https://github.com/opencardev/aasdk
+
+Package: libaasdk-dev
+Priority: optional
+Section: libdevel
+Installed-Size: 4106
+Maintainer: AASDK <opencardevuk@gmail.com>
+Architecture: arm64
+Version: 2025.11.14-1+deb13u1
+Depends: libaasdk (= 2025.11.14-1+deb13u1)
+Filename: pool/trixie/main/liba/libaasdk-dev/libaasdk-dev_2025.11.14_deb13u1_arm64.deb
+Size: 305140
+MD5sum: a893d71b404e991bd13d1a5d4ac9963f
+SHA1: d0c859cce6ca70203b74ae085b188e325eaf4ab2
+SHA256: e82b26622659818ab6b9daab6c8ccfae57dded9334e454251016a9faaee427e6
+SHA512: 248a91b5684a85a47508a4522f7731244e14b91e9325df0d389d5263aff495a51bcd0d721faea5763e1b7f08eb2f5edafa40588b65c902da2f182fcbfaebfede
+Description: Android Auto SDK Library
+ Development headers and CMake files for Android Auto SDK on arm64 architecture
 Homepage: https://github.com/opencardev/aasdk
 
 Package: libaasdk-dev
@@ -33,24 +69,6 @@ SHA512: 86e38d72442cc93fac2dec199bbf5d06725aa0b1f88ba1c4f45738000c1744dc2b21d7c4
 Description: Android Auto SDK Library
  Development headers and CMake files for Android Auto SDK on arm64 architecture
 Homepage: https://github.com/opencardev/aasdk
-
-Package: openauto
-Priority: optional
-Section: utils
-Installed-Size: 100426
-Maintainer: OpenCarDev Team <opencardevuk@gmail.com>
-Architecture: arm64
-Version: 2025.11.14-1+deb13u1
-Depends: libqt5multimedia5, libqt5multimedia5-plugins, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-libav, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, libboost-log1.83.0 (>= 1.83.0), libc6 (>= 2.38), libgcc-s1 (>= 3.0), libgps30t64 (>= 3.3), libprotobuf32t64 (>= 3.21.12), libqt5bluetooth5 (>= 5.6.0), libqt5core5t64 (>= 5.15.1), libqt5gui5t64 (>= 5.0.2) | libqt5gui5-gles (>= 5.0.2), libqt5multimedia5 (>= 5.14.1), libqt5multimediawidgets5 (>= 5.6.0~beta), libqt5network5t64 (>= 5.0.2), libqt5widgets5t64 (>= 5.2.0~alpha1), librtaudio7 (>= 6.0.1~ds), libstdc++6 (>= 14), libtag2 (>= 2.0), libusb-1.0-0 (>= 2:1.0.9)
-Filename: pool/trixie/main/o/openauto/openauto_2025.11.14_deb13u1_arm64.deb
-Size: 19437106
-MD5sum: ec55ee7a7b0b074c64540b0fef91d23d
-SHA1: fee27a6c561d8261908bf7836a6ca97eabb9399f
-SHA256: 581927b0c5c813808d94573c6fcd9e45296af426747af2cde9e17311f6b1f458
-SHA512: 38dd9b42e3045c9a70c238366e893c1a8d834e614db0ef837634f880b351b0d061ab526f8faa832d4b564520e25907ec6129117895bc7ed92b4bc0616e6575d1
-Description: OpenAuto head unit application using libaasdk
- OpenAuto is an AndroidAuto head unit emulator designed for Raspberry Pi and other embedded platforms.
-Homepage: https://github.com/opencardev/openauto
 
 Package: openauto
 Priority: optional
