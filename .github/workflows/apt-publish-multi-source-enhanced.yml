@@ -20,6 +20,10 @@ on:
         description: 'OpenAuto build run ID (leave empty to use latest successful run)'
         required: false
         type: string
+      crankshaftcore_run_id:
+        description: 'Crankshaft Core build run ID (leave empty to use latest successful run)'
+        required: false
+        type: string
       aasdk_workflow:
         description: 'AASDK workflow name'
         required: false
@@ -30,10 +34,15 @@ on:
         required: false
         default: 'OpenAuto Build and Test'
         type: string
+      crankshaftcore_workflow:
+        description: 'Crankshaft Core workflow name'
+        required: false
+        default: 'Crankshaft Core Build and Test'
+        type: string
       distribution:
         description: 'Distribution to publish to'
         required: false
-        default: 'all'
+        default: 'trixie'
         type: choice
         options:
           - trixie
@@ -54,6 +63,12 @@ on:
         required: false
         default: true
         type: boolean
+      include_crankshaftcore:
+        description: 'Include Crankshaft Core packages'
+        required: false
+        default: true
+        type: boolean
+
 
 jobs:
   fetch-artifacts:
@@ -61,6 +76,7 @@ jobs:
     outputs:
       aasdk_run_id: ${{ steps.resolve-runs.outputs.aasdk_run_id }}
       openauto_run_id: ${{ steps.resolve-runs.outputs.openauto_run_id }}
+      crankshaftcore_run_id: ${{ steps.resolve-runs.outputs.crankshaftcore_run_id }}
     
     steps:
     - name: Checkout packages repository
@@ -129,6 +145,21 @@ jobs:
           echo "OpenAuto packages disabled" >&2
           echo "openauto_run_id=" >> $GITHUB_OUTPUT
         fi
+                
+        # Resolve Crankshaft Core run ID
+        if [ "${{ inputs.include_crankshaftcore }}" = "true" ]; then
+          if [ -n "${{ inputs.crankshaftcore_run_id }}" ]; then
+            CRANKSHAFTCORE_RUN_ID="${{ inputs.crankshaftcore_run_id }}"
+            echo "Using specified Crankshaft Core run ID: $CRANKSHAFTCORE_RUN_ID" >&2
+          else
+            CRANKSHAFTCORE_RUN_ID=$(get_latest_run_id "opencardev/crankshaftcore" "${{ inputs.crankshaftcore_workflow }}")
+            echo "Using latest Crankshaft Core run ID: $CRANKSHAFTCORE_RUN_ID" >&2
+          fi
+          echo "crankshaftcore_run_id=$CRANKSHAFTCORE_RUN_ID" >> $GITHUB_OUTPUT
+        else
+          echo "Crankshaft Core packages disabled" >&2
+          echo "crankshaftcore_run_id=" >> $GITHUB_OUTPUT
+        fi
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -156,6 +187,19 @@ jobs:
         # Avoid SIGPIPE failures under 'set -o pipefail' when using head
         set +o pipefail
         find ./openauto-artifacts -type f -name "*.deb" 2>/dev/null | head -20 || true
+        set -o pipefail
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Download Crankshaft Core artifacts
+      if: ${{ inputs.include_crankshaftcore == true && steps.resolve-runs.outputs.crankshaftcore_run_id != '' }}
+      run: |
+        echo "Downloading Crankshaft Core artifacts from run ID: ${{ steps.resolve-runs.outputs.crankshaftcore_run_id }}"
+        gh run download ${{ steps.resolve-runs.outputs.crankshaftcore_run_id }} --repo opencardev/crankshaftcore --dir ./crankshaftcore-artifacts
+        
+        echo "Crankshaft Core artifacts structure:"
+        # Avoid SIGPIPE failures under 'set -o pipefail' when using head
+        set +o pipefail
+        find ./crankshaftcore-artifacts -type f -name "*.deb" 2>/dev/null | head -20 || true
         set -o pipefail
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -244,6 +288,10 @@ jobs:
         
         if [ "${{ inputs.include_openauto }}" = "true" ]; then
           organize_packages "./openauto-artifacts" "OpenAuto"
+        fi
+        
+        if [ "${{ inputs.include_crankshaftcore }}" = "true" ]; then
+          organize_packages "./crankshaftcore-artifacts" "CrankshaftCore"
         fi
         
         echo "Final debs structure:"
