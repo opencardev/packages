@@ -1,0 +1,7 @@
+Origin: debian trixie
+Label: debian trixie
+Archive: trixie
+Suite: trixie
+Codename: trixie
+Architecture: armhf
+Component: stable
