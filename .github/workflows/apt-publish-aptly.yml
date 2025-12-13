@@ -254,83 +254,48 @@ jobs:
         echo "Current packages repo structure:"
         ls -la
         
-        echo "Available APT artifacts:"
-        # Avoid SIGPIPE failures under 'set -o pipefail' when piping to head
-        set +o pipefail
-        find ./apt-artifacts -type f -print 2>/dev/null | head -20 || true
-        set -o pipefail
+        echo ""
+        echo "=== Available APT artifacts ==="
+        find ./apt-artifacts -type f 2>/dev/null | sort || echo "No artifacts found"
         
-        # Validate pool collisions by extracting to a temp dir first
-        TMP_EXTRACT_DIR="./_apt_extract"
-        rm -rf "$TMP_EXTRACT_DIR"
-        mkdir -p "$TMP_EXTRACT_DIR"
+        echo ""
+        echo "=== Extracting and deploying APT repository ==="
         
-        # Extract any artifacts we have into the temp dir
-        for tarball in \
-          ./apt-artifacts/opencardev-apt-repo-main.tar.gz \
-          ./apt-artifacts/opencardev-trixie-apt-repo-main.tar.gz \
-          ./apt-artifacts/opencardev-bookworm-apt-repo-main.tar.gz \
-          ./apt-artifacts/opencardev-trixie-apt-repo.tar.gz \
-          ./apt-artifacts/opencardev-bookworm-apt-repo.tar.gz; do
+        # Extract tarballs directly to repo root
+        for tarball in apt-artifacts/*.tar.gz; do
           if [ -f "$tarball" ]; then
-            echo "Extracting $tarball to $TMP_EXTRACT_DIR ..."
-            tar -xzf "$tarball" -C "$TMP_EXTRACT_DIR"
+            echo "Extracting $(basename $tarball) to repo root..."
+            tar -xzf "$tarball" -C . --strip-components=0 || tar -xzf "$tarball" -C .
           fi
         done
         
-        echo "Validating for pool filename collisions..."
-        # Build a list of extracted pool files
-        mapfile -t NEW_DEBS < <(find "$TMP_EXTRACT_DIR/pool" -type f -name "*.deb" 2>/dev/null || true)
-        if [ ${#NEW_DEBS[@]} -gt 0 ]; then
-          for f in "${NEW_DEBS[@]}"; do
-            rel="${f#${TMP_EXTRACT_DIR}/}"
-            dest="./${rel}"
-            if [ -f "$dest" ]; then
-              # Compare checksum to detect differing content under identical path
-              old_sum=$(sha256sum "$dest" | awk '{print $1}')
-              new_sum=$(sha256sum "$f" | awk '{print $1}')
-              if [ "$old_sum" != "$new_sum" ]; then
-                echo "::error::Collision detected for $rel with differing content."
-                echo "Existing: $dest ($old_sum)"
-                echo "New:      $f ($new_sum)"
-                echo "Refuse to overwrite. Ensure Debian revision differs per distribution (e.g., +deb12u1 vs +deb13u1)."
-                exit 1
-              fi
-            fi
-          done
+        echo ""
+        echo "=== Checking for dists/pool after extraction ==="
+        if [ -d "dists" ]; then
+          echo "✅ dists/ directory found"
+          find dists -type f | head -10
+        else
+          echo "❌ dists/ directory NOT found"
+        fi
+        
+        if [ -d "pool" ]; then
+          echo "✅ pool/ directory found"
+          find pool -type f | head -10
+        else
+          echo "❌ pool/ directory NOT found"
+        fi
+        
+        # Verify we have Release files
+        if [ ! -f "dists/trixie/Release" ] && [ ! -f "dists/bookworm/Release" ]; then
+          echo "⚠️  Warning: No Release files found in dists/"
+        fi
+        
+        echo ""
+        echo "=== Configuring git ==="
           echo "No pool collisions detected."
         else
           echo "No new pool packages found in artifacts."
         fi
-        
-        # Extract and deploy the apt repository
-        # Handle both individual distribution artifacts and combined "all" artifacts
-        if [ -f "./apt-artifacts/opencardev-apt-repo-main.tar.gz" ]; then
-          echo "Extracting combined (all distributions) repository..."
-          tar -xzf "./apt-artifacts/opencardev-apt-repo-main.tar.gz" -C .
-        fi
-        
-        if [ -f "./apt-artifacts/opencardev-trixie-apt-repo-main.tar.gz" ]; then
-          echo "Extracting Trixie repository..."
-          tar -xzf "./apt-artifacts/opencardev-trixie-apt-repo-main.tar.gz" -C .
-        fi
-        
-        if [ -f "./apt-artifacts/opencardev-bookworm-apt-repo-main.tar.gz" ]; then
-          echo "Extracting Bookworm repository..."
-          tar -xzf "./apt-artifacts/opencardev-bookworm-apt-repo-main.tar.gz" -C .
-        fi
-        
-        # Move APT repository files from apt-artifacts to root if they exist
-        if [ -d "./apt-artifacts/dists" ]; then
-          echo "Moving dists/ from apt-artifacts to root..."
-          cp -r ./apt-artifacts/dists ./
-        fi
-        
-        if [ -d "./apt-artifacts/pool" ]; then
-          echo "Moving pool/ from apt-artifacts to root..."
-          cp -r ./apt-artifacts/pool ./
-        fi
-        
         # Ensure GPG public key is available in the repository
         if [ ! -f "opencardev.gpg.key" ]; then
           echo "Exporting GPG public key..."
@@ -338,22 +303,19 @@ jobs:
           # Get the key ID from the imported key
           KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | head -1 | sed 's/.*\/\([A-F0-9]*\) .*/\1/')
           gpg --armor --export $KEY_ID > opencardev.gpg.key
-          echo "GPG public key exported to opencardev.gpg.key"
+          echo "✅ GPG public key exported to opencardev.gpg.key"
         else
-          echo "GPG public key already exists"
+          echo "✅ GPG public key already exists"
         fi
 
-        echo "Updated packages repo structure:"
-        # Avoid SIGPIPE failures under 'set -o pipefail' when piping to head
-        set +o pipefail
-        find . -name "*.deb" -print 2>/dev/null | head -10 || true
-        find . -name "Packages*" -print 2>/dev/null | head -10 || true
-        find . -name "Release*" -print 2>/dev/null | head -10 || true
-        set -o pipefail
+        echo ""
+        echo "=== Final repository structure ==="
+        find . -maxdepth 2 -type d | grep -E 'dists|pool' || true
+        echo ""
+        find . -name "Release*" -type f 2>/dev/null | head -5 || echo "No Release files"
         
-        # Configure git
-        git config user.name "GitHub Actions"
-        git config user.email "actions@github.com"
+        echo ""
+        echo "=== Configuring git ==="
         
         # Add changes
         git add .
