@@ -233,23 +233,23 @@ jobs:
         
         echo ""
         echo "=== Checking for dists/pool after extraction ==="
-        if [ -d "dists" ]; then
-          echo "✅ dists/ directory found"
-          find dists -type f | head -10
+        if [ -d "apt-artifacts/dists" ]; then
+          echo "✅ apt-artifacts/dists/ directory found"
+          find apt-artifacts/dists -type f | head -10
         else
-          echo "❌ dists/ directory NOT found"
+          echo "❌ apt-artifacts/dists/ directory NOT found"
         fi
         
-        if [ -d "pool" ]; then
-          echo "✅ pool/ directory found"
-          find pool -type f | head -10
+        if [ -d "apt-artifacts/pool" ]; then
+          echo "✅ apt-artifacts/pool/ directory found"
+          find apt-artifacts/pool -type f | head -10
         else
-          echo "❌ pool/ directory NOT found"
+          echo "❌ apt-artifacts/pool/ directory NOT found"
         fi
         
         # Verify we have Release files
-        if [ ! -f "dists/trixie/Release" ] && [ ! -f "dists/bookworm/Release" ]; then
-          echo "⚠️  Warning: No Release files found in dists/"
+        if [ ! -f "apt-artifacts/dists/trixie/Release" ] && [ ! -f "apt-artifacts/dists/bookworm/Release" ]; then
+          echo "⚠️  Warning: No Release files found in apt-artifacts/dists/"
         fi
         
         echo ""
