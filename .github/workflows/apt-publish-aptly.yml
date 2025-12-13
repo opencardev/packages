@@ -240,20 +240,20 @@ jobs:
         echo "=== Checking for dists/pool after extraction ==="
         if [ -d "dists" ]; then
           echo "✅ dists/ directory found"
-          find dists -type f | head -10 || true
+          (find dists -type f | head -10) 2>/dev/null || true
         else
           echo "❌ dists/ directory NOT found"
         fi
         
         if [ -d "pool" ]; then
           echo "✅ pool/ directory found"
-          find pool -type f | head -10 || true
+          (find pool -type f | head -10) 2>/dev/null || true
         else
           echo "❌ pool/ directory NOT found"
         fi
         
         # Verify we have Release files
-        if [ -z "$(find dists -name Release -o -name InRelease 2>/dev/null | head -1)" ]; then
+        if [ -z "$(find dists -name Release -o -name InRelease 2>/dev/null | head -1 2>/dev/null || true)" ]; then
           echo "⚠️  Warning: No Release or InRelease files found in dists/"
         fi
         
