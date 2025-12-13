@@ -142,16 +142,20 @@ jobs:
           # If suite or arch not detected, try to extract from path
           if [[ "$suite" == "unknown" || "$arch_dir" == "unknown" ]]; then
             # Example: ./downloaded-artifacts/aasdk-packages-trixie-amd64/libaasdk_2025.10.28_amd64.deb
+            echo "Attempting to detect suite/arch from path for $filename"
             parent_dir=$(basename $(dirname "$deb_file"))
             # Try to match <suite>-<arch> in parent_dir
-            if [[ "$parent_dir" =~ ([a-zA-Z0-9]+)-([a-zA-Z0-9]+)$ ]]; then
+            # Matches: trixie-amd64, bookworm-arm64, deb13-armhf, ubuntu22.04-amd64, etc.
+            if [[ "$parent_dir" =~ ([a-z]+[0-9]+(u[0-9]+)?|ubuntu[0-9]+\.[0-9]+|jammy|noble|bookworm|bullseye|trixie)-(amd64|arm64|armhf|i386)$ ]]; then
               suite_candidate="${BASH_REMATCH[1]}"
               arch_candidate="${BASH_REMATCH[2]}"
               # Only update if not already detected
               if [[ "$suite" == "unknown" ]]; then
+                echo "Suite detected from path: $suite_candidate"
                 suite="$suite_candidate"
               fi
               if [[ "$arch_dir" == "unknown" ]]; then
+                echo "Arch detected from path: $arch_candidate"
                 arch_dir="$arch_candidate"
               fi
             fi
@@ -159,6 +163,7 @@ jobs:
 
           # Only copy if suite and arch are detected
           if [[ "$suite" != "unknown" && "$arch_dir" != "unknown" ]]; then
+            echo "Organizing $filename into debs/$suite/$arch_dir/"
             mkdir -p "./debs/$suite/$arch_dir"
             cp "$deb_file" "./debs/$suite/$arch_dir/"
             echo "Copied $filename to debs/$suite/$arch_dir/"
