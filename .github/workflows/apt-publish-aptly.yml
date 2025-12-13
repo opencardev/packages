@@ -240,14 +240,14 @@ jobs:
         echo "=== Checking for dists/pool after extraction ==="
         if [ -d "dists" ]; then
           echo "✅ dists/ directory found"
-          find dists -type f | head -10
+          find dists -type f | head -10 || true
         else
           echo "❌ dists/ directory NOT found"
         fi
         
         if [ -d "pool" ]; then
           echo "✅ pool/ directory found"
-          find pool -type f | head -10
+          find pool -type f | head -10 || true
         else
           echo "❌ pool/ directory NOT found"
         fi
