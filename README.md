@@ -10,8 +10,11 @@ This repository hosts the official APT packages for OpenCarDev projects, includi
 # Add the GPG key
 curl -fsSL https://opencardev.github.io/packages/opencardev.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/opencardev-archive-keyring.gpg
 
-# Add the repository
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/opencardev.list
+# Add the repository (stable component)
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/opencardev.list
+
+# Optional: enable nightly component alongside stable
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages $(lsb_release -cs) nightly" | sudo tee -a /etc/apt/sources.list.d/opencardev.list
 
 # Update package lists
 sudo apt update
@@ -49,8 +52,8 @@ sudo apt update
 
 | Distribution | Codename | Status |
 |--------------|----------|---------|
-| Debian 13    | trixie   | ✅ Active |
-| Debian 12    | bookworm | ✅ Active |
+| Debian 13    | trixie   | ✅ Active (components: stable, nightly) |
+| Debian 12    | bookworm | ✅ Active (components: stable, nightly) |
 
 ## Supported Architectures
 
@@ -197,7 +200,10 @@ DISTRO=$(lsb_release -cs)
 ARCH=$(dpkg --print-architecture)
 
 # Create the source list file
-echo "deb [arch=$ARCH signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages $DISTRO main" | sudo tee /etc/apt/sources.list.d/opencardev.list
+echo "deb [arch=$ARCH signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages $DISTRO stable" | sudo tee /etc/apt/sources.list.d/opencardev.list
+
+# Optional: nightly channel
+echo "deb [arch=$ARCH signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages $DISTRO nightly" | sudo tee -a /etc/apt/sources.list.d/opencardev.list
 
 # Update package cache
 sudo apt update
