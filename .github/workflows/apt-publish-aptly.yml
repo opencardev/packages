@@ -206,7 +206,7 @@ jobs:
     - name: Download APT repository artifacts
       uses: actions/download-artifact@v5
       with:
-        pattern: opencardev-apt-repo
+        pattern: opencardev-apt-repo*
         path: ./apt-artifacts
         merge-multiple: true
 
@@ -223,33 +223,38 @@ jobs:
         echo ""
         echo "=== Extracting and deploying APT repository ==="
         
-        # Extract tarballs directly to repo root
-        for tarball in apt-artifacts/*.tar.gz; do
-          if [ -f "$tarball" ]; then
-            echo "Extracting $(basename $tarball) to repo root..."
-            tar -xzf "$tarball" -C . --strip-components=0 || tar -xzf "$tarball" -C .
-          fi
-        done
+        # Aptly action outputs directory tree under apt-artifacts/debian; move into repo root
+        if [ -d "apt-artifacts/debian/dists" ]; then
+          echo "Moving dists/ to repo root..."
+          rm -rf dists
+          cp -a apt-artifacts/debian/dists ./
+        fi
+
+        if [ -d "apt-artifacts/debian/pool" ]; then
+          echo "Moving pool/ to repo root..."
+          rm -rf pool
+          cp -a apt-artifacts/debian/pool ./
+        fi
         
         echo ""
         echo "=== Checking for dists/pool after extraction ==="
-        if [ -d "apt-artifacts/debian/dists" ]; then
-          echo "✅ apt-artifacts/debian/dists/ directory found"
-          find apt-artifacts/debian/dists -type f | head -10
+        if [ -d "dists" ]; then
+          echo "✅ dists/ directory found"
+          find dists -type f | head -10
         else
-          echo "❌ apt-artifacts/debian/dists/ directory NOT found"
+          echo "❌ dists/ directory NOT found"
         fi
         
-        if [ -d "apt-artifacts/debian/pool" ]; then
-          echo "✅ apt-artifacts/debian/pool/ directory found"
-          find apt-artifacts/debian/pool -type f | head -10
+        if [ -d "pool" ]; then
+          echo "✅ pool/ directory found"
+          find pool -type f | head -10
         else
-          echo "❌ apt-artifacts/debian/pool/ directory NOT found"
+          echo "❌ pool/ directory NOT found"
         fi
         
         # Verify we have Release files
-        if [ ! -f "apt-artifacts/debian/dists/trixie/Release" ] ; then
-          echo "⚠️  Warning: No Release files found in apt-artifacts/debian/dists/"
+        if [ -z "$(find dists -name Release -o -name InRelease 2>/dev/null | head -1)" ]; then
+          echo "⚠️  Warning: No Release or InRelease files found in dists/"
         fi
         
         echo ""
