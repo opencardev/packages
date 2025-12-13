@@ -391,17 +391,21 @@ jobs:
           echo ""
           
           if [ "$DISTRIBUTION" = "trixie" ]; then
-            echo "# Add Trixie repository"
-            echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages trixie main" | sudo tee /etc/apt/sources.list.d/opencardev.list'
+            echo "# Add Trixie repositories (stable + optional nightly)"
+            echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages trixie stable" | sudo tee /etc/apt/sources.list.d/opencardev.list'
+            echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages trixie nightly" | sudo tee -a /etc/apt/sources.list.d/opencardev.list'
           elif [ "$DISTRIBUTION" = "bookworm" ]; then
-            echo "# Add Bookworm repository"
-            echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages bookworm main" | sudo tee /etc/apt/sources.list.d/opencardev.list'
+            echo "# Add Bookworm repositories (stable + optional nightly)"
+            echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages bookworm stable" | sudo tee /etc/apt/sources.list.d/opencardev.list'
+            echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages bookworm nightly" | sudo tee -a /etc/apt/sources.list.d/opencardev.list'
           elif [ "$DISTRIBUTION" = "all" ]; then
             echo "# Add repositories (choose your distribution)"
-            echo "# For Trixie (Debian 13):"
-            echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages trixie main" | sudo tee /etc/apt/sources.list.d/opencardev.list'
-            echo "# For Bookworm (Debian 12):"
-            echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages bookworm main" | sudo tee /etc/apt/sources.list.d/opencardev.list'
+            echo "# For Trixie (Debian 13)"
+            echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages trixie stable" | sudo tee /etc/apt/sources.list.d/opencardev-trixie.list'
+            echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages trixie nightly" | sudo tee -a /etc/apt/sources.list.d/opencardev-trixie.list'
+            echo "# For Bookworm (Debian 12)"
+            echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages bookworm stable" | sudo tee /etc/apt/sources.list.d/opencardev-bookworm.list'
+            echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages bookworm nightly" | sudo tee -a /etc/apt/sources.list.d/opencardev-bookworm.list'
           fi
           
           echo ""
