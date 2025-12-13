@@ -316,6 +316,8 @@ jobs:
         
         echo ""
         echo "=== Configuring git ==="
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
         
         # Add changes
         git add .
@@ -332,7 +334,7 @@ jobs:
           echo "Pushing changes..."
           git push
           
-          echo "APT repository successfully updated!"
+          echo "✅ APT repository successfully updated!"
         fi
 
     - name: Trigger GitHub Pages deployment
