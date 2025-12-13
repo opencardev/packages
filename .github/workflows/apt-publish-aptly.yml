@@ -23,11 +23,20 @@ on:
         required: false
         default: 'false'
         type: string
-        apt_category:
+      apt_category:
         description: 'APT category/component (e.g., main, contrib)'
         required: false
         default: 'main'
         type: string
+      distribution:
+        description: 'Distribution to publish to'
+        required: false
+        default: 'trixie'
+        type: choice
+        options:
+          - trixie
+          - bookworm
+          - all
   
   repository_dispatch:
     types: [publish-apt-packages]
