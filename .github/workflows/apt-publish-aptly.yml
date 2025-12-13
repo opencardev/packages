@@ -240,16 +240,16 @@ jobs:
           echo "❌ apt-artifacts/dists/ directory NOT found"
         fi
         
-        if [ -d "apt-artifacts/pool" ]; then
-          echo "✅ apt-artifacts/pool/ directory found"
-          find apt-artifacts/pool -type f | head -10
+        if [ -d "apt-artifacts/debian/pool" ]; then
+          echo "✅ apt-artifacts/debian/pool/ directory found"
+          find apt-artifacts/debian/pool -type f | head -10
         else
-          echo "❌ apt-artifacts/pool/ directory NOT found"
+          echo "❌ apt-artifacts/debian/pool/ directory NOT found"
         fi
         
         # Verify we have Release files
-        if [ ! -f "apt-artifacts/dists/trixie/Release" ] && [ ! -f "apt-artifacts/dists/bookworm/Release" ]; then
-          echo "⚠️  Warning: No Release files found in apt-artifacts/dists/"
+        if [ ! -f "apt-artifacts/debian/dists/trixie/Release" ] ; then
+          echo "⚠️  Warning: No Release files found in apt-artifacts/debian/dists/"
         fi
         
         echo ""
