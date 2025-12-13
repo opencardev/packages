@@ -147,8 +147,14 @@ jobs:
           if [[ "$suite" != "unknown" && "$arch_dir" != "unknown" ]]; then
             echo "Organizing $filename into debs/$suite/$arch_dir/"
             mkdir -p "./debs/$suite/$arch_dir"
-            cp "$deb_file" "./debs/nightly-$suite/$arch_dir/"
+            cp "$deb_file" "./debs/$suite/$arch_dir/"
             echo "Copied $filename to debs/$suite/$arch_dir/"
+            if [[ ! -f "./debs/nightly-$suite/$arch_dir/$filename" ]]; then
+              echo "Organizing $filename into debs/$suite/$arch_dir/"
+              mkdir -p "./debs/nightly-$suite/$arch_dir"
+              cp "$deb_file" "./debs/nightly-$suite/$arch_dir/"
+              echo "Copied $filename to debs/nightly-$suite/$arch_dir/"
+            fi
           else
             echo "Skipping $filename (suite or arch not detected)"
           fi
