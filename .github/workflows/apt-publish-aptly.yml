@@ -254,10 +254,6 @@ jobs:
         
         echo ""
         echo "=== Configuring git ==="
-          echo "No pool collisions detected."
-        else
-          echo "No new pool packages found in artifacts."
-        fi
         # Ensure GPG public key is available in the repository
         if [ ! -f "opencardev.gpg.key" ]; then
           echo "Exporting GPG public key..."
