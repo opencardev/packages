@@ -61,10 +61,8 @@ jobs:
         prefix:
           - name: debian
             repos: |
-              bookworm,stable,\"amd64,arm64,armhf\",true,debs/stable-debian-12-*/*.deb
-              bookworm,nightly,\"amd64,arm64,armhf\",false,debs/nightly-debian-12-*/*.deb
               trixie,stable,\"amd64,arm64,armhf\",true,debs/deb13*/*.deb
-              trixie,nightly,\"amd64,arm64,armhf\",false,debs/nightly-debian-13-*-unknown-linux-gnu/*.deb
+              trixie,nightly,\"amd64,arm64,armhf\",false,debs/nightly-deb13*/*.deb
     steps:
     - name: Checkout packages repository
       uses: actions/checkout@v4
@@ -176,8 +174,7 @@ jobs:
           echo "⚠️  APT_SIGNING_PASSPHRASE secret is missing (may not be required)"
         fi
 
-    - name: Create APT Repository for All Distributions
-      if: ${{ (inputs.distribution == 'all') || (github.event.client_payload.distribution == 'all') }}
+    - name: Create APT Repository
       uses: jinnatar/actions-aptly-repo@v2
       with:
         name: opencardev-apt
