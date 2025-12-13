@@ -233,11 +233,11 @@ jobs:
         
         echo ""
         echo "=== Checking for dists/pool after extraction ==="
-        if [ -d "apt-artifacts/dists" ]; then
-          echo "✅ apt-artifacts/dists/ directory found"
-          find apt-artifacts/dists -type f | head -10
+        if [ -d "apt-artifacts/debian/dists" ]; then
+          echo "✅ apt-artifacts/debian/dists/ directory found"
+          find apt-artifacts/debian/dists -type f | head -10
         else
-          echo "❌ apt-artifacts/dists/ directory NOT found"
+          echo "❌ apt-artifacts/debian/dists/ directory NOT found"
         fi
         
         if [ -d "apt-artifacts/debian/pool" ]; then
