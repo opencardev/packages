@@ -1,0 +1,5 @@
+# You probably want to use only one of the examples below!
+# Example for enabling only the stable component on trixie: 
+deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/opencardev-apt.asc] https://opencardev.github.io/packages/debian trixie stable
+# Example for enabling only the nightly component on trixie: 
+deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/opencardev-apt.asc] https://opencardev.github.io/packages/debian trixie nightly
