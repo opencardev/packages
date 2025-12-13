@@ -119,18 +119,24 @@ jobs:
           suite="unknown"
           arch_dir="unknown"
 
-          # Try to extract suite from filename (_<suite>_)
-          if [[ "$filename" =~ _([a-zA-Z0-9]+)_ ]]; then
+          # Try to extract suite from filename: format is *_<suite>_<arch>.deb
+          # Matches patterns like: package_version_suite_arch.deb
+          # Supports: deb11, deb12, deb13, deb13u2, ubuntu22.04, jammy, noble, bookworm, bullseye, trixie
+          if [[ "$filename" =~ _([a-z]+[0-9]+(u[0-9]+)?|ubuntu[0-9]+\.[0-9]+|jammy|noble|bookworm|bullseye|trixie)_[a-z0-9]+\.deb$ ]]; then
             suite="${BASH_REMATCH[1]}"
+            echo "Suite detected from filename: $suite"
           fi
 
           # Try to extract arch from filename
           if [[ "$filename" == *"amd64"* ]]; then
             arch_dir="amd64"
+            echo "Arch detected from filename: $arch_dir"
           elif [[ "$filename" == *"arm64"* ]]; then
             arch_dir="arm64"
+            echo "Arch detected from filename: $arch_dir"
           elif [[ "$filename" == *"armhf"* ]]; then
             arch_dir="armhf"
+            echo "Arch detected from filename: $arch_dir"
           fi
 
           # If suite or arch not detected, try to extract from path
