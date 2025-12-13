@@ -409,31 +409,16 @@ jobs:
       run: |
         git pull origin main
         
-    - name: Extract APT repository to root for Pages
+    - name: Verify APT repository structure
       run: |
-        echo "=== Before extraction ==="
+        echo "=== Repository contents ==="
         ls -la
-        
-        # Move APT repository files from apt-artifacts to root
-        if [ -d "apt-artifacts/dists" ]; then
-          echo "Moving dists/ to root..."
-          mv apt-artifacts/dists/ ./
-        fi
-        
-        if [ -d "apt-artifacts/pool" ]; then
-          echo "Moving pool/ to root..."
-          mv apt-artifacts/pool/ ./
-        fi
-        
-        # Clean up the apt-artifacts directory for Pages
-        rm -rf apt-artifacts/
-        
-        echo "=== After extraction - Repository contents for Pages ==="
-        ls -la
-        find . -name "dists" -type d
-        find . -name "pool" -type d  
-        find . -name "Release*" | head -5
-        echo "=== End repository contents ==="
+        echo ""
+        echo "=== Checking for dists and pool directories ==="
+        find . -maxdepth 2 -type d -name "dists" -o -name "pool" 2>/dev/null || echo "Not found in root"
+        echo ""
+        echo "=== Checking for Release files ==="
+        find . -maxdepth 3 -name "Release*" 2>/dev/null | head -10 || echo "No Release files found"
         
     - name: Setup Pages
       uses: actions/configure-pages@v5
