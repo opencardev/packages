@@ -61,8 +61,8 @@ jobs:
         prefix:
           - name: debian
             repos: |
-              trixie,stable,\"amd64,arm64,armhf\",false,debs/deb13*/*.deb
-              trixie,nightly,\"amd64,arm64,armhf\",false,debs/nightly-deb13*/*.deb
+              trixie,stable,\"amd64,arm64,armhf\",false,debs/deb13/*.deb
+              trixie,nightly,\"amd64,arm64,armhf\",false,debs/nightly-deb13/*.deb
     steps:
     - name: Checkout packages repository
       uses: actions/checkout@v4
