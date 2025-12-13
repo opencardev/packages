@@ -17,29 +17,16 @@ on:
         description: 'Build run ID to publish to APT repo'
         required: true
         type: string
-      distribution:
-        description: 'Distribution to publish to'
+      # left for backward support
+      apt_import:
+        description: 'Whether to import packages into the APT repo (true/false)'
         required: false
-        default: 'all'
-        type: choice
-        options:
-          - trixie
-          - bookworm
-          - all
-      apt_category:
-        description: 'APT category (e.g., main, contrib, non-free)'
+        default: 'false'
+        type: string
+        apt_category:
+        description: 'APT category/component (e.g., main, contrib)'
         required: false
         default: 'main'
-        type: string
-      apt_import:
-        description: 'Use APT import (true/false)'
-        required: false
-        default: true
-        type: boolean
-      apt_glob:
-        description: 'Glob pattern for selecting .deb files'
-        required: false
-        default: './debs/**/*.deb'
         type: string
   
   repository_dispatch:
@@ -56,31 +43,19 @@ on:
         description: 'Build run ID to publish to APT repo'
         required: true
         type: string
-      distribution:
-        description: 'Distribution to publish to'
-        required: false
-        default: 'all'
-        type: string
-      apt_category:
-        description: 'APT category (e.g., main, contrib, non-free)'
-        required: false
-        default: 'main'
-        type: string
-      apt_import:
-        description: 'Use APT import (true/false)'
-        required: false
-        default: true
-        type: boolean
-      apt_glob:
-        description: 'Glob pattern for selecting .deb files'
-        required: false
-        default: './debs/**/*.deb'
-        type: string
 
 jobs:
   create-apt-repo:
     runs-on: ubuntu-latest
-    
+    strategy:
+      matrix:
+        prefix:
+          - name: debian
+            repos: |
+              bookworm,stable,\"amd64,arm64,armhf\",true,debs/stable-debian-12-*/*.deb
+              bookworm,nightly,\"amd64,arm64,armhf\",false,debs/nightly-debian-12-*/*.deb
+              trixie,stable,\"amd64,arm64,armhf\",true,debs/deb13*/*.deb
+              trixie,nightly,\"amd64,arm64,armhf\",false,debs/nightly-debian-13-*-unknown-linux-gnu/*.deb
     steps:
     - name: Checkout packages repository
       uses: actions/checkout@v4
@@ -192,42 +167,17 @@ jobs:
           echo "⚠️  APT_SIGNING_PASSPHRASE secret is missing (may not be required)"
         fi
 
-    - name: Create APT Repository for Trixie
-      if: ${{ (inputs.distribution == 'trixie') || (github.event.client_payload.distribution == 'trixie') }}
-      uses: jinnatar/actions-aptly-repo@v2
-      with:
-        name: opencardev-trixie
-        repo_url: https://opencardev.github.io/packages
-        repos: |
-          trixie,${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }},"amd64 arm64 armhf",${{ inputs.apt_import || github.event.client_payload.apt_import || false }},./debs/deb13*/*/*.deb
-        gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
-        gpg_passphrase: ${{ secrets.APT_SIGNING_PASSPHRASE }}
-        artifact_name: opencardev-trixie-apt-repo-${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }}
-
-    - name: Create APT Repository for Bookworm
-      if: ${{ (inputs.distribution == 'bookworm') || (github.event.client_payload.distribution == 'bookworm') }}
-      uses: jinnatar/actions-aptly-repo@v2
-      with:
-        name: opencardev-bookworm
-        repo_url: https://opencardev.github.io/packages
-        repos: |
-          bookworm,${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }},"amd64 arm64 armhf",${{ inputs.apt_import || github.event.client_payload.apt_import || false }},./debs/deb12*/*/*.deb
-        gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
-        gpg_passphrase: ${{ secrets.APT_SIGNING_PASSPHRASE }}
-        artifact_name: opencardev-bookworm-apt-repo-${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }}
-
     - name: Create APT Repository for All Distributions
       if: ${{ (inputs.distribution == 'all') || (github.event.client_payload.distribution == 'all') }}
       uses: jinnatar/actions-aptly-repo@v2
       with:
         name: opencardev-apt
         repo_url: https://opencardev.github.io/packages
-        repos: |
-          trixie,${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }},"amd64 arm64 armhf",${{ inputs.apt_import || github.event.client_payload.apt_import || false }},./debs/deb13*/*/*.deb
-          bookworm,${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }},"amd64 arm64 armhf",${{ inputs.apt_import || github.event.client_payload.apt_import || false }},./debs/deb12*/*/*.deb
+        prefix: "${{ matrix.prefix.name }}"
+        repos: "${{ matrix.prefix.repos }}"
         gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
         gpg_passphrase: ${{ secrets.APT_SIGNING_PASSPHRASE }}
-        artifact_name: opencardev-apt-repo-${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }}
+        artifact_name: opencardev-apt-repo
 
   deploy-apt-repo:
     needs: create-apt-repo
@@ -244,7 +194,7 @@ jobs:
     - name: Download APT repository artifacts
       uses: actions/download-artifact@v5
       with:
-        pattern: opencardev-apt-repo-*
+        pattern: opencardev-apt-repo
         path: ./apt-artifacts
         merge-multiple: true
 
