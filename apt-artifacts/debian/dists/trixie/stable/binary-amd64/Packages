@@ -4,30 +4,30 @@ Section: devel
 Installed-Size: 1590
 Maintainer: OpenCarDev Team <opencardevuk@gmail.com>
 Architecture: amd64
-Version: 2026.01.09+git.1f09776-deb13
-Depends: libaasdk0 (>= 2026.01.09), libqt6core6t64, libqt6network6, libqt6websockets6, libqt6dbus6, libqt6bluetooth6, libgstreamer1.0-0, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, gstreamer1.0-libav, libdbus-1-3, libusb-1.0-0, gstreamer1.0-libav, gstreamer1.0-tools
-Filename: pool/trixie/stable/c/crankshaft-core/crankshaft-core_2026.01.09+git.1f09776-deb13_amd64.deb
-Size: 401230
-MD5sum: e899c1508531abf9e92773f3c141ea26
-SHA1: 5f4105bdae6f604a8064bf8df7de947d526ace80
-SHA256: f2b61a313d7ec2a8c061c04caafc278533b0b93156f3dc31a5996cbcb933b1c6
-SHA512: 0f9f01d022198bc2c715432aaa87a7047c4365ca36bc7a9acc3245a435a42df9055dc7d8979fbae421419f0b66ea82f4ce1214e0caec1870bb6bf081032fe77d
+Version: 2026.01.10+git.fa44d28-deb13
+Depends: libaasdk0 (>= 2026.01.10), libqt6core6t64, libqt6network6, libqt6websockets6, libqt6dbus6, libqt6bluetooth6, libgstreamer1.0-0, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, gstreamer1.0-libav, libdbus-1-3, libusb-1.0-0, gstreamer1.0-libav, gstreamer1.0-tools
+Filename: pool/trixie/stable/c/crankshaft-core/crankshaft-core_2026.01.10+git.fa44d28-deb13_amd64.deb
+Size: 401838
+MD5sum: da26cab58a4d161a4f161558f9a9e4e4
+SHA1: a5f0e795315de14daba175364a30e41586917416
+SHA256: 9de53c345aa8694384ca39e4146cff7a7b69ffd5ccc25a897f08a362984e71e5
+SHA512: 5d639cdaade99821ed99793572870a7eae3f5c89f2c5550b9ad2a9a2729c02d005de6aaeffe54c9ea3554d7e26cef2781e35ec2c742cc3028ff76c385f8d196d
 Description: Crankshaft core service with WebSocket server and event bus
 
 Package: crankshaft-ui
 Priority: optional
 Section: devel
-Installed-Size: 3863
+Installed-Size: 4118
 Maintainer: OpenCarDev Team <opencardevuk@gmail.com>
 Architecture: amd64
-Version: 2026.01.09+git.1f09776-deb13
-Depends: crankshaft-core (>= 2026.01.09), libqt6core6t64, libqt6gui6, libqt6qml6, libqt6quick6, libqt6websockets6, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-window, qt6-qpa-plugins
-Filename: pool/trixie/stable/c/crankshaft-ui/crankshaft-ui_2026.01.09+git.1f09776-deb13_amd64.deb
-Size: 724788
-MD5sum: 7305d2e7b9ca34cc9aef6c7695c71350
-SHA1: 036b5b14796d94f74c8fbc9297e14042ae4425b9
-SHA256: 835b9eb2b63661c1ae5e666fe6f133a8fc4401067bf24ad66acdb366b7b904c4
-SHA512: f25016f5e0d17cc69e4763ae50201207574860144c273a934139e2295bd25b4cbf61f20e864b75078aaf762ee0dc7fe0cd729407ee46db73c373b456e77f299f
+Version: 2026.01.10+git.fa44d28-deb13
+Depends: crankshaft-core (>= 2026.01.10), libqt6core6t64, libqt6gui6, libqt6qml6, libqt6quick6, libqt6websockets6, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-window, qt6-qpa-plugins
+Filename: pool/trixie/stable/c/crankshaft-ui/crankshaft-ui_2026.01.10+git.fa44d28-deb13_amd64.deb
+Size: 765506
+MD5sum: ca07e456aa3cfa8b5f5be148eb135586
+SHA1: 0c952f62b711020c050d24e16e704fbea9c5d17c
+SHA256: 768512a65c74788cf537e78667844cb88a7ebc2843e44cc9fa5aadf1023c496d
+SHA512: 901482d5a06bdeb9cd7ca25a14391a30b11c2d77f0616f0880a6a782ba18f3bba9d75eef89aabb9c13dfb3305aecfaa14e526fec7e2d653152141f5567daea5b
 Description: Crankshaft QML-based user interface
 
 Package: libaasdk-dev
@@ -36,29 +36,29 @@ Section: libdevel
 Installed-Size: 4110
 Maintainer: OpenCarDev Team <opencardevuk@gmail.com>
 Architecture: amd64
-Version: 2026.01.09+git.1f09776-deb13
-Depends: libaasdk0 (>= 2026.01.09), libssl-dev, libprotobuf-dev, libusb-1.0-0-dev
-Filename: pool/trixie/stable/liba/libaasdk-dev/libaasdk-dev_2026.01.09+git.1f09776-deb13_amd64.deb
-Size: 205640
-MD5sum: 69f3665f911db62ad21e79f86c2bcb36
-SHA1: 905ed4ccd9b9d4e387027bfe635aedc5eeec9067
-SHA256: f0fa1998eb8414e6857c6be36b2b1c31cdeba05b01eb1092bae14901c13ad4de
-SHA512: dd1eb99a03e9381094989641cbd057a1f1697c7bd2bcb909cab08a5aa4f9d48311744560712695bfdf76c373b790fb7f3724f79b3335bc59489ee275396d88cd
+Version: 2026.01.10+git.fa44d28-deb13
+Depends: libaasdk0 (>= 2026.01.10), libssl-dev, libprotobuf-dev, libusb-1.0-0-dev
+Filename: pool/trixie/stable/liba/libaasdk-dev/libaasdk-dev_2026.01.10+git.fa44d28-deb13_amd64.deb
+Size: 205766
+MD5sum: 51e28b48ee5548790e8c762821d82b2a
+SHA1: 4472118a91f155a2cbb256648b1465b378e31458
+SHA256: 1b4fac5a3158986764d7cc7c1bfc5e2be81d9a0aeb91d117611670a2eae6ecfd
+SHA512: 8575173535b9a081facefd7a1260fa29d300059233983cfbffdc5523011a0710a51a996f7bf33519b1a92896f47c93e8465c3d721130f5daf3fe9a2e10d28473
 Description: Android Auto SDK headers and development files
 
 Package: libaasdk0
 Priority: optional
 Section: libs
-Installed-Size: 275338
+Installed-Size: 275341
 Maintainer: OpenCarDev Team <opencardevuk@gmail.com>
 Architecture: amd64
-Version: 2026.01.09+git.1f09776-deb13
+Version: 2026.01.10+git.fa44d28-deb13
 Depends: libssl3t64, libusb-1.0-0
-Filename: pool/trixie/stable/liba/libaasdk0/libaasdk0_2026.01.09+git.1f09776-deb13_amd64.deb
-Size: 14244098
-MD5sum: 63130781d5d18854ea74432a9710401b
-SHA1: 0c6af572a4a7a8e9049f6235545583f01d313492
-SHA256: 9320f7800f02db8375f10511b6dba433058157ae7baa4c02c03df607ab15c50d
-SHA512: ca696b7554865a4c6333d6224746c09346aa838f6c0ea1b264601328ce4d1665f23c1f13a2d76c46cdb316269acc8ddcb1411684b0cd8f17f673e8ca55738ce8
+Filename: pool/trixie/stable/liba/libaasdk0/libaasdk0_2026.01.10+git.fa44d28-deb13_amd64.deb
+Size: 14247332
+MD5sum: 43fabf474fbc4d47a19dfc71b962e109
+SHA1: df92ac77ae22f32c40e42278a93c8ec769fda5d9
+SHA256: a254efe881fca54d5f7f0d2a459829201c720557b2d5eb622c012084ad904114
+SHA512: ce9c9b4db5c1b15ef5492a8531f34086550d40ca5cbdc0ad437428fec39932ae97c5bab8ee237c6a837a0f6107f7d00389944a062bac3a68270ed49b361be1b1
 Description: Android Auto SDK runtime libraries and SSL certificates
 
