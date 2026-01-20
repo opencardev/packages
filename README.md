@@ -82,6 +82,17 @@ This repository uses **Aptly** via GitHub Actions to create properly structured,
 - Deploys to GitHub Pages for public access
 - Supports multiple architectures (amd64, arm64, armhf)
 
+### Automatic Package Cleanup
+
+To prevent unlimited repository growth, an automated cleanup workflow runs daily:
+
+- **Nightly packages**: Keeps last 10 versions per package
+- **Stable packages**: Keeps last 20 versions per package
+- **Schedule**: Runs daily at 03:00 UTC
+- **Manual trigger**: Can be run manually with custom settings
+
+For more details, see [Package Cleanup Documentation](docs/PACKAGE_CLEANUP.md).
+
 ### Triggering Repository Updates
 
 The APT repository can be updated in several ways:
