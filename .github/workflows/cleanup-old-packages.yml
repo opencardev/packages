@@ -5,7 +5,6 @@ permissions:
 
 on:
   schedule:
-    # Run daily at 03:00 UTC
     - cron: '0 3 * * *'
   
   workflow_dispatch:
@@ -37,8 +36,6 @@ jobs:
     steps:
     - name: Checkout packages repository
       uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Cleanup old package versions
       run: |
@@ -54,10 +51,6 @@ jobs:
         echo "Target repository: $TARGET_REPO"
         echo "======================================"
         
-        total_removed=0
-        total_space_saved=0
-        
-        # Function to cleanup packages in a specific path
         cleanup_packages() {
           local pool_path=$1
           local repo_type=$2
@@ -71,14 +64,11 @@ jobs:
           echo "Cleaning up packages in: $pool_path ($repo_type)"
           echo "=================================================="
           
-          # Find all package directories
           find "$pool_path" -mindepth 3 -maxdepth 3 -type d | while read -r pkg_dir; do
             pkg_name=$(basename "$pkg_dir")
-            
             echo ""
             echo "Processing package: $pkg_name"
             
-            # Count total packages
             total_pkgs=$(find "$pkg_dir" -name "*.deb" | wc -l)
             echo "  Total packages found: $total_pkgs"
             
@@ -87,12 +77,7 @@ jobs:
               continue
             fi
             
-            # List packages sorted by modification time (newest first)
-            # and get the ones to remove (skip the first KEEP_VERSIONS)
-            packages_to_remove=$(find "$pkg_dir" -name "*.deb" -type f -printf '%T@ %p\n' | \
-              sort -rn | \
-              tail -n +$((KEEP_VERSIONS + 1)) | \
-              cut -d' ' -f2-)
+            packages_to_remove=$(find "$pkg_dir" -name "*.deb" -type f -printf '%T@ %p\n' | sort -rn | tail -n +$((KEEP_VERSIONS + 1)) | cut -d' ' -f2-)
             
             if [ -z "$packages_to_remove" ]; then
               echo "  No packages to remove"
@@ -104,47 +89,37 @@ jobs:
             
             echo "$packages_to_remove" | while read -r pkg_file; do
               if [ -f "$pkg_file" ]; then
-                pkg_size=$(stat -f%z "$pkg_file" 2>/dev/null || stat -c%s "$pkg_file" 2>/dev/null || echo "0")
+                pkg_size=$(stat -c%s "$pkg_file" 2>/dev/null || echo "0")
                 space_saved=$((space_saved + pkg_size))
                 removed_count=$((removed_count + 1))
                 
                 if [ "$DRY_RUN" = "true" ]; then
-                  echo "  [DRY RUN] Would remove: $(basename "$pkg_file") ($(numfmt --to=iec-i --suffix=B $pkg_size))"
+                  echo "  [DRY RUN] Would remove: $(basename "$pkg_file") ($pkg_size bytes)"
                 else
-                  echo "  Removing: $(basename "$pkg_file") ($(numfmt --to=iec-i --suffix=B $pkg_size))"
+                  echo "  Removing: $(basename "$pkg_file") ($pkg_size bytes)"
                   rm -f "$pkg_file"
                 fi
               fi
             done
             
-            # Calculate summary
             remaining_pkgs=$(find "$pkg_dir" -name "*.deb" | wc -l)
             echo "  Packages removed: $removed_count"
             echo "  Packages remaining: $remaining_pkgs"
-            echo "  Space saved: $(numfmt --to=iec-i --suffix=B $space_saved)"
+            echo "  Space saved: $space_saved bytes"
           done
         }
         
-        # Cleanup nightly packages
         if [ "$TARGET_REPO" = "nightly" ] || [ "$TARGET_REPO" = "both" ]; then
           cleanup_packages "pool/trixie/nightly" "nightly"
-          
-          # Also cleanup apt-artifacts/debian/pool/trixie/nightly if it exists
           if [ -d "apt-artifacts/debian/pool/trixie/nightly" ]; then
             cleanup_packages "apt-artifacts/debian/pool/trixie/nightly" "nightly (apt-artifacts)"
           fi
         fi
         
-        # Cleanup stable packages (be more conservative with stable)
         if [ "$TARGET_REPO" = "stable" ] || [ "$TARGET_REPO" = "both" ]; then
-          # Keep more versions for stable (20 instead of 10)
-          STABLE_KEEP=$((KEEP_VERSIONS * 2))
           echo ""
-          echo "Note: Keeping $STABLE_KEEP versions for stable repository (double of nightly)"
-          
+          echo "Note: Keeping $((KEEP_VERSIONS * 2)) versions for stable repository"
           cleanup_packages "pool/trixie/stable" "stable"
-          
-          # Also cleanup apt-artifacts/debian/pool/trixie/stable if it exists
           if [ -d "apt-artifacts/debian/pool/trixie/stable" ]; then
             cleanup_packages "apt-artifacts/debian/pool/trixie/stable" "stable (apt-artifacts)"
           fi
@@ -160,8 +135,6 @@ jobs:
           echo "Dry run completed - no files were actually deleted"
         fi
         echo "======================="
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Regenerate package indices
       if: ${{ inputs.dry_run != true && inputs.dry_run != 'true' }}
@@ -173,11 +146,9 @@ jobs:
         echo ""
         echo "=== Regenerating Package Indices ==="
         
-        # Install required tools
-        sudo apt-get update
-        sudo apt-get install -y dpkg-dev
+        sudo apt-get update > /dev/null 2>&1
+        sudo apt-get install -y dpkg-dev > /dev/null 2>&1
         
-        # Function to regenerate Packages file
         regenerate_packages() {
           local repo_path=$1
           local arch=$2
@@ -189,20 +160,16 @@ jobs:
           
           echo "Regenerating Packages for: $repo_path (arch: $arch)"
           
-          # Find pool directory relative to dists
           pool_dir="pool"
-          
-          # Generate Packages file
           packages_file="$repo_path/Packages"
           temp_packages="${packages_file}.tmp"
           
-          # Find all .deb files and generate package information
           if [ -d "$pool_dir" ]; then
             dpkg-scanpackages --multiversion "$pool_dir" /dev/null > "$temp_packages" 2>/dev/null || true
             
             if [ -s "$temp_packages" ]; then
               mv "$temp_packages" "$packages_file"
-              gzip -9 -k -f "$packages_file"
+              gzip -9 -k -f "$packages_file" 2>/dev/null
               echo "  Generated: $packages_file"
             else
               echo "  Warning: No packages found for $repo_path"
@@ -211,7 +178,6 @@ jobs:
           fi
         }
         
-        # Regenerate indices for affected repositories
         if [ "$TARGET_REPO" = "nightly" ] || [ "$TARGET_REPO" = "both" ]; then
           for arch in amd64 arm64 armhf; do
             regenerate_packages "dists/trixie/nightly/binary-$arch" "$arch"
@@ -225,57 +191,43 @@ jobs:
         fi
         
         echo "Package indices regenerated"
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Commit and push changes
       if: ${{ inputs.dry_run != true && inputs.dry_run != 'true' }}
       run: |
         set -euo pipefail
         
-        # Configure git
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         
-        # Check if there are changes
         if [ -n "$(git status --porcelain)" ]; then
           echo "Changes detected, committing..."
-          
-          # Add all changes
           git add -A
           
-          # Commit with detailed message
           KEEP_VERSIONS="${{ inputs.keep_versions || '10' }}"
           TARGET_REPO="${{ inputs.target_repo || 'nightly' }}"
           
-          git commit -m "chore: cleanup old packages
-
-- Repository: $TARGET_REPO
-- Kept versions per package: $KEEP_VERSIONS
-- Automated cleanup by GitHub Actions"
-          
-          # Push changes
+          git commit -m "chore: cleanup old packages (keep $KEEP_VERSIONS versions, target: $TARGET_REPO)"
           git push origin main
           
           echo "Changes committed and pushed successfully"
         else
           echo "No changes to commit"
         fi
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Summary
       if: always()
       run: |
-        echo "## Package Cleanup Summary" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "- **Keep Versions**: ${{ inputs.keep_versions || '10' }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Dry Run**: ${{ inputs.dry_run || 'false' }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Target**: ${{ inputs.target_repo || 'nightly' }}" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        
-        if [ "${{ inputs.dry_run || 'false' }}" = "true" ]; then
-          echo "⚠️ **This was a dry run - no files were actually deleted**" >> $GITHUB_STEP_SUMMARY
-        else
-          echo "✅ **Cleanup completed successfully**" >> $GITHUB_STEP_SUMMARY
-        fi
+        {
+          echo "## Package Cleanup Summary"
+          echo ""
+          echo "- **Keep Versions**: ${{ inputs.keep_versions || '10' }}"
+          echo "- **Dry Run**: ${{ inputs.dry_run || 'false' }}"
+          echo "- **Target**: ${{ inputs.target_repo || 'nightly' }}"
+          echo ""
+          if [ "${{ inputs.dry_run || 'false' }}" = "true" ]; then
+            echo "⚠️ **This was a dry run - no files were actually deleted**"
+          else
+            echo "✅ **Cleanup completed successfully**"
+          fi
+        } >> $GITHUB_STEP_SUMMARY
