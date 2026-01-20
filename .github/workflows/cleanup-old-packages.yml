@@ -12,7 +12,7 @@ on:
       keep_versions:
         description: 'Number of versions to keep per package'
         required: false
-        default: '10'
+        default: '5'
         type: string
       dry_run:
         description: 'Dry run (show what would be deleted without deleting)'
@@ -22,7 +22,7 @@ on:
       target_repo:
         description: 'Target repository path (nightly, stable, or both)'
         required: false
-        default: 'nightly'
+        default: 'both'
         type: choice
         options:
           - nightly
@@ -41,9 +41,9 @@ jobs:
       run: |
         set -euo pipefail
         
-        KEEP_VERSIONS="${{ inputs.keep_versions || '10' }}"
+        KEEP_VERSIONS="${{ inputs.keep_versions || '5' }}"
         DRY_RUN="${{ inputs.dry_run || 'false' }}"
-        TARGET_REPO="${{ inputs.target_repo || 'nightly' }}"
+        TARGET_REPO="${{ inputs.target_repo || 'both' }}"
         
         echo "=== Package Cleanup Configuration ==="
         echo "Keep versions: $KEEP_VERSIONS"
