@@ -249,7 +249,7 @@ jobs:
           TARGET_REPO="${{ inputs.target_repo || 'nightly' }}"
           
           git commit -m "chore: cleanup old packages
-          
+
 - Repository: $TARGET_REPO
 - Kept versions per package: $KEEP_VERSIONS
 - Automated cleanup by GitHub Actions"
