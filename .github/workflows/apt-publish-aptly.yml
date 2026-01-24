@@ -95,68 +95,80 @@ jobs:
         # Create a consolidated debs directory with organized structure
         mkdir -p ./debs
         
-        # Copy and organize .deb files by suite and architecture (supports debian, ubuntu, raspbian, etc.)
+        # Copy and organize .deb files by suite and architecture (supports multiple projects: aasdk, openauto, crankshaft-mvp)
+        # Flexible parsing handles different naming conventions across projects
         find ./downloaded-artifacts -name "*.deb" -type f | while read -r deb_file; do
           filename=$(basename "$deb_file")
           suite="unknown"
           arch_dir="unknown"
-
-          # Try to extract suite from filename: format is *[-_]<suite>_<arch>.deb
-          # Matches patterns like: package_version_suite_arch.deb or package_version-suite_arch.deb
-          # Supports: deb11, deb12, deb13, deb13u2, ubuntu22.04, jammy, noble, bookworm, bullseye, trixie
-          if [[ "$filename" =~ [-_]([a-z]+[0-9]+(u[0-9]+)?|ubuntu[0-9]+\.[0-9]+|jammy|noble|bookworm|bullseye|trixie)_[a-z0-9]+\.deb$ ]]; then
+          parent_dir=$(basename "$(dirname "$deb_file")")
+          
+          # PRIORITY 1: Extract from path first (most reliable for packages with consistent artifact folder naming)
+          # Path patterns: <project>-packages-<suite>-<arch>, <suite>-<arch>, <project>-<suite>-<arch>
+          if [[ "$parent_dir" =~ ([a-z0-9]+)-packages-([a-z0-9]+)-(amd64|arm64|armhf|i386|arm) ]]; then
+            suite="${BASH_REMATCH[2]}"
+            arch_dir="${BASH_REMATCH[3]}"
+            echo "✓ Suite/arch from project path: $suite, $arch_dir"
+          elif [[ "$parent_dir" =~ ^(deb1[0-3]|deb13u[0-9]|bookworm|bullseye|trixie|jammy|noble|focal|ubuntu[0-9]+\.[0-9]+)-(amd64|arm64|armhf|i386|arm)$ ]]; then
             suite="${BASH_REMATCH[1]}"
-            echo "Suite detected from filename: $suite"
+            arch_dir="${BASH_REMATCH[2]}"
+            echo "✓ Suite/arch from generic path: $suite, $arch_dir"
           fi
-
-          # Try to extract arch from filename
-          if [[ "$filename" == *"amd64"* ]]; then
-            arch_dir="amd64"
-            echo "Arch detected from filename: $arch_dir"
-          elif [[ "$filename" == *"arm64"* ]]; then
-            arch_dir="arm64"
-            echo "Arch detected from filename: $arch_dir"
-          elif [[ "$filename" == *"armhf"* ]]; then
-            arch_dir="armhf"
-            echo "Arch detected from filename: $arch_dir"
-          fi
-
-          # If suite or arch not detected, try to extract from path
-          if [[ "$suite" == "unknown" || "$arch_dir" == "unknown" ]]; then
-            # Example: ./downloaded-artifacts/aasdk-packages-trixie-amd64/libaasdk_2025.10.28_amd64.deb
-            echo "Attempting to detect suite/arch from path for $filename"
-            parent_dir=$(basename $(dirname "$deb_file"))
-            # Try to match <suite>-<arch> in parent_dir
-            # Matches: trixie-amd64, bookworm-arm64, deb13-armhf, ubuntu22.04-amd64, etc.
-            if [[ "$parent_dir" =~ ([a-z]+[0-9]+(u[0-9]+)?|ubuntu[0-9]+\.[0-9]+|jammy|noble|bookworm|bullseye|trixie)-(amd64|arm64|armhf|i386)$ ]]; then
+          
+          # PRIORITY 2: Extract from filename if path didn't yield results
+          # Filename patterns: package_version_suite_arch.deb, package_version-arch.deb
+          if [[ "$suite" == "unknown" ]]; then
+            # Multi-suite pattern: deb13u1_amd64, bookworm_arm64, trixie_armhf, etc.
+            if [[ "$filename" =~ _([a-z0-9]+)_(amd64|arm64|armhf|i386|arm)\.deb$ ]]; then
               suite_candidate="${BASH_REMATCH[1]}"
-              arch_candidate="${BASH_REMATCH[2]}"
-              # Only update if not already detected
-              if [[ "$suite" == "unknown" ]]; then
-                echo "Suite detected from path: $suite_candidate"
+              # Validate suite candidate (looks like deb*, bookworm, etc.)
+              if [[ "$suite_candidate" =~ ^(deb1[0-3]|deb13u[0-9]|bookworm|bullseye|trixie|jammy|noble|focal)$ ]]; then
                 suite="$suite_candidate"
-              fi
-              if [[ "$arch_dir" == "unknown" ]]; then
-                echo "Arch detected from path: $arch_candidate"
-                arch_dir="$arch_candidate"
+                echo "✓ Suite from filename: $suite"
               fi
             fi
           fi
-
-          # Only copy if suite and arch are detected
-          if [[ "$suite" != "unknown" && "$arch_dir" != "unknown" ]]; then
-            echo "Organizing $filename into debs/$suite/$arch_dir/"
-            mkdir -p "./debs/$suite/$arch_dir"
-            cp "$deb_file" "./debs/$suite/$arch_dir/"
-            echo "Copied $filename to debs/$suite/$arch_dir/"
-            if [[ ! -f "./debs/nightly-$suite/$arch_dir/$filename" ]]; then
-              echo "Organizing $filename into debs/$suite/$arch_dir/"
-              mkdir -p "./debs/nightly-$suite/$arch_dir"
-              cp "$deb_file" "./debs/nightly-$suite/$arch_dir/"
-              echo "Copied $filename to debs/nightly-$suite/$arch_dir/"
+          
+          # Extract architecture from filename if not already found
+          if [[ "$arch_dir" == "unknown" ]]; then
+            if [[ "$filename" =~ _(amd64|arm64|armhf|i386|arm)\.deb$ ]] || [[ "$filename" =~ (amd64|arm64|armhf|i386|arm) ]]; then
+              for arch in amd64 arm64 armhf i386 arm; do
+                if [[ "$filename" == *"$arch"* ]]; then
+                  arch_dir="$arch"
+                  echo "✓ Arch from filename: $arch_dir"
+                  break
+                fi
+              done
             fi
+          fi
+          
+          # FALLBACK: If suite still unknown, use generic "stable" + infer from parent folder if possible
+          if [[ "$suite" == "unknown" ]]; then
+            # Last resort: check if parent contains known suite names
+            if [[ "$parent_dir" =~ (deb1[0-9]|bookworm|bullseye|trixie|jammy|noble|focal) ]]; then
+              suite="${BASH_REMATCH[1]}"
+              echo "✓ Suite from fallback: $suite"
+            else
+              # Default to trixie if absolutely no pattern match
+              suite="trixie"
+              echo "⚠ Suite defaulting to: $suite"
+            fi
+          fi
+          
+          # Normalize arm to armhf for consistency
+          if [[ "$arch_dir" == "arm" ]]; then
+            arch_dir="armhf"
+          fi
+          
+          # Only skip if arch is still unknown (we can tolerate unknown suite)
+          if [[ "$arch_dir" != "unknown" ]]; then
+            echo "→ Organizing $filename into debs/$suite/$arch_dir/ and debs/nightly-$suite/$arch_dir/"
+            mkdir -p "./debs/$suite/$arch_dir"
+            mkdir -p "./debs/nightly-$suite/$arch_dir"
+            cp "$deb_file" "./debs/$suite/$arch_dir/" 2>/dev/null && echo "  ✓ Copied to stable"
+            cp "$deb_file" "./debs/nightly-$suite/$arch_dir/" 2>/dev/null && echo "  ✓ Copied to nightly"
           else
-            echo "Skipping $filename (suite or arch not detected)"
+            echo "⚠ Skipping $filename (unable to determine architecture)"
           fi
         done
 
