@@ -215,7 +215,7 @@ jobs:
           
           echo "Suite '$suite' has architectures: $ARCHS"
           
-          # Create repo entries for stable and nightly
+          # Create repo entries for stable and nightly (keep quoted arch list for Aptly)
           STABLE_REPOS="${STABLE_REPOS}${suite},stable,\"${ARCHS}\",false,debs/${suite}/**/*.deb"$'\n'
           NIGHTLY_REPOS="${NIGHTLY_REPOS}nightly-${suite},nightly,\"${ARCHS}\",false,debs/nightly-${suite}/**/*.deb"$'\n'
         done
@@ -224,15 +224,17 @@ jobs:
         REPOS="${STABLE_REPOS}${NIGHTLY_REPOS}"
         
         # Remove trailing newline
-        REPOS=$(echo "$REPOS" | sed '/^$/d')
+        REPOS=$(printf '%s\n' "$REPOS" | sed '/^$/d')
         
         echo "Generated repos configuration:"
-        echo "$REPOS"
+        printf '%s\n' "$REPOS"
         
-        # Output as multiline string for use in matrix
-        echo "repos<<EOF" >> $GITHUB_OUTPUT
-        echo "$REPOS" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
+        # Output as multiline string for use in matrix - preserve quoting for Aptly
+        {
+          printf 'repos<<EOF\n'
+          printf '%s\n' "$REPOS"
+          printf 'EOF\n'
+        } >> $GITHUB_OUTPUT
 
     - name: Debug GPG Configuration
       run: |
