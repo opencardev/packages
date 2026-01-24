@@ -60,9 +60,7 @@ jobs:
       matrix:
         prefix:
           - name: debian
-            repos: |
-              trixie,stable,\"amd64,arm64,armhf\",false,debs/deb13/**/*.deb
-              trixie,nightly,\"amd64,arm64,armhf\",false,debs/nightly-deb13/**/*.deb
+            repos: ""
     steps:
     - name: Checkout packages repository
       uses: actions/checkout@v4
@@ -185,6 +183,57 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Generate Aptly Repos Configuration
+      id: generate-repos
+      run: |
+        # Generate repos configuration dynamically based on discovered suites
+        REPOS=""
+        
+        # Find all unique suites in the debs directory
+        SUITES=$(find ./debs -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort | uniq)
+        
+        if [ -z "$SUITES" ]; then
+          echo "❌ Error: No suites found in debs directory"
+          exit 1
+        fi
+        
+        echo "Discovered suites: $SUITES"
+        
+        # For each suite, generate stable and nightly repo entries
+        for suite in $SUITES; do
+          if [[ "$suite" == nightly-* ]]; then
+            continue  # Skip nightly entries as we'll handle them separately
+          fi
+          
+          # Find all architectures for this suite
+          ARCHS=$(find "./debs/$suite" -mindepth 1 -maxdepth 1 -type d -printf '%f,' | sed 's/,$//')
+          
+          if [ -z "$ARCHS" ]; then
+            echo "⚠ No architectures found for suite: $suite"
+            continue
+          fi
+          
+          echo "Suite '$suite' has architectures: $ARCHS"
+          
+          # Create repo entries for stable and nightly
+          STABLE_REPOS="${STABLE_REPOS}${suite},stable,\"${ARCHS}\",false,debs/${suite}/**/*.deb"$'\n'
+          NIGHTLY_REPOS="${NIGHTLY_REPOS}nightly-${suite},nightly,\"${ARCHS}\",false,debs/nightly-${suite}/**/*.deb"$'\n'
+        done
+        
+        # Combine repos configuration
+        REPOS="${STABLE_REPOS}${NIGHTLY_REPOS}"
+        
+        # Remove trailing newline
+        REPOS=$(echo "$REPOS" | sed '/^$/d')
+        
+        echo "Generated repos configuration:"
+        echo "$REPOS"
+        
+        # Output as multiline string for use in matrix
+        echo "repos<<EOF" >> $GITHUB_OUTPUT
+        echo "$REPOS" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
     - name: Debug GPG Configuration
       run: |
         echo "Checking GPG configuration..."
@@ -206,7 +255,7 @@ jobs:
         name: opencardev-apt
         repo_url: https://opencardev.github.io/packages
         prefix: "${{ matrix.prefix.name }}"
-        repos: "${{ matrix.prefix.repos }}"
+        repos: "${{ steps.generate-repos.outputs.repos }}"
         gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
         gpg_passphrase: ${{ secrets.APT_SIGNING_PASSPHRASE }}
         artifact_name: opencardev-apt-repo
