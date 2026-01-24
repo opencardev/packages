@@ -87,17 +87,19 @@ jobs:
         find ./downloaded-artifacts -type f -name "*.deb" | head -20
         
         # Verify we have packages
-        if [ ! "$(find ./downloaded-artifacts -name "*.deb" 2>/dev/null)" ]; then
+        DEB_COUNT=$(find ./downloaded-artifacts -name "*.deb" 2>/dev/null | wc -l)
+        if [ "$DEB_COUNT" -eq 0 ]; then
           echo "Error: No .deb packages found in build run $BUILD_RUN_ID"
           exit 1
         fi
+        echo "✓ Found $DEB_COUNT .deb packages to process"
         
         # Create a consolidated debs directory with organized structure
         mkdir -p ./debs
         
         # Copy and organize .deb files by suite and architecture (supports multiple projects: aasdk, openauto, crankshaft-mvp)
-        # Flexible parsing handles different naming conventions across projects
-        find ./downloaded-artifacts -name "*.deb" -type f | while read -r deb_file; do
+        # Use process substitution to avoid subshell issues with variable persistence
+        while IFS= read -r deb_file; do
           filename=$(basename "$deb_file")
           suite="unknown"
           arch_dir="unknown"
@@ -170,7 +172,13 @@ jobs:
           else
             echo "⚠ Skipping $filename (unable to determine architecture)"
           fi
-        done
+        done < <(find ./downloaded-artifacts -name "*.deb" -type f)
+        
+        echo ""
+        echo "=== Final debs structure ==="
+        find ./debs -type f -name "*.deb" | sort
+        FINAL_COUNT=$(find ./debs -name "*.deb" 2>/dev/null | wc -l)
+        echo "✓ Organised $FINAL_COUNT .deb packages into repository structure"
 
         echo "Final debs structure:"
         find ./debs -type f -name "*.deb"
