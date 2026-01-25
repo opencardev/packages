@@ -228,37 +228,23 @@ jobs:
         # Store repos file path for next step
         echo "repos_file=$REPOS_FILE" >> $GITHUB_OUTPUT
 
-    - name: Create APT repository with Aptly (file-based repos)
-      env:
-        REPOS_FILE: ${{ steps.generate-repos.outputs.repos_file }}
+    - name: Verify repos configuration
       run: |
-        set -euo pipefail
+        echo "Generated repos configuration:"
+        cat repos-config.txt
 
-        if [ -z "${REPOS_FILE:-}" ] || [ ! -f "$REPOS_FILE" ]; then
-          echo "❌ repos-config.txt not found; generated: '${REPOS_FILE:-missing}'"
-          exit 1
-        fi
-
-        echo "Using repos configuration file: $REPOS_FILE"
-        cat "$REPOS_FILE"
-
-        # Write signing key to a file to preserve formatting
-        printf "%s" "${{ secrets.APT_SIGNING_KEY }}" > apt-signing.key
-        chmod 600 apt-signing.key
-
-        # Run the Aptly action container directly to avoid GitHub Actions string mangling
-        docker run --rm \
-          -e GNUPGHOME=/workspace/.gnupg \
-          -e REPOS_FILE="$REPOS_FILE" \
-          -v "$(pwd)":/workspace \
-          jinnatar/actions-aptly-repo:v2 \
-          /bin/bash -lc '
-            set -eo pipefail
-            cd /workspace
-            mkdir -p "$GNUPGHOME" && chmod 700 "$GNUPGHOME"
-            gpg --batch --yes --import apt-signing.key
-            cat "$REPOS_FILE" | create-aptly-repos.sh "opencardev-apt" "debian"
-          '
+    - name: Create APT Repository with Aptly
+      uses: jinnatar/actions-aptly-repo@v2
+      with:
+        repo_name: 'opencardev-apt'
+        repo_type: 'debian'
+        repos: |
+          bookworm,stable,"amd64,arm64,armhf",false,debs/bookworm/**/*.deb
+          nightly-bookworm,nightly,"amd64,arm64,armhf",false,debs/nightly-bookworm/**/*.deb
+          trixie,stable,"amd64,arm64,armhf",false,debs/trixie/**/*.deb
+          nightly-trixie,nightly,"amd64,arm64,armhf",false,debs/nightly-trixie/**/*.deb
+        signkey: ${{ secrets.APT_SIGNING_KEY }}
+        gpgdir: ~/.gnupg
 
     - name: Upload APT Repository artifacts
       if: always()
