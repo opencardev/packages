@@ -236,15 +236,14 @@ jobs:
     - name: Create APT Repository with Aptly
       uses: jinnatar/actions-aptly-repo@v2
       with:
-        repo_name: 'opencardev-apt'
-        repo_type: 'debian'
+        name: 'opencardev-apt'
+        prefix: 'debian'
         repos: |
-          bookworm,stable,"amd64,arm64,armhf",false,debs/bookworm/**/*.deb
-          nightly-bookworm,nightly,"amd64,arm64,armhf",false,debs/nightly-bookworm/**/*.deb
-          trixie,stable,"amd64,arm64,armhf",false,debs/trixie/**/*.deb
-          nightly-trixie,nightly,"amd64,arm64,armhf",false,debs/nightly-trixie/**/*.deb
-        signkey: ${{ secrets.APT_SIGNING_KEY }}
-        gpgdir: ~/.gnupg
+          bookworm,stable,"amd64 arm64 armhf",false,debs/bookworm/**/*.deb
+          nightly-bookworm,nightly,"amd64 arm64 armhf",false,debs/nightly-bookworm/**/*.deb
+          trixie,stable,"amd64 arm64 armhf",false,debs/trixie/**/*.deb
+          nightly-trixie,nightly,"amd64 arm64 armhf",false,debs/nightly-trixie/**/*.deb
+        gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
 
     - name: Upload APT Repository artifacts
       if: always()
