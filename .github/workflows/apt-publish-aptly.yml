@@ -243,9 +243,7 @@ jobs:
         cat "$REPOS_FILE"
 
         # Write signing key to a file to preserve formatting
-        cat <<'EOF' > apt-signing.key
-${{ secrets.APT_SIGNING_KEY }}
-EOF
+        printf "%s" "${{ secrets.APT_SIGNING_KEY }}" > apt-signing.key
         chmod 600 apt-signing.key
 
         # Run the Aptly action container directly to avoid GitHub Actions string mangling
