@@ -247,14 +247,18 @@ jobs:
         chmod 600 apt-signing.key
 
         # Run the Aptly action container directly to avoid GitHub Actions string mangling
-        docker run --rm -v "$(pwd)":/workspace jinnatar/actions-aptly-repo:v2 /bin/bash -lc "
-          set -euo pipefail
-          cd /workspace
-          export GNUPGHOME=/workspace/.gnupg
-          mkdir -p \"$GNUPGHOME\" && chmod 700 \"$GNUPGHOME\"
-          gpg --batch --yes --import apt-signing.key
-          cat \"$REPOS_FILE\" | create-aptly-repos.sh 'opencardev-apt' 'debian'
-        "
+        docker run --rm \
+          -e GNUPGHOME=/workspace/.gnupg \
+          -e REPOS_FILE="$REPOS_FILE" \
+          -v "$(pwd)":/workspace \
+          jinnatar/actions-aptly-repo:v2 \
+          /bin/bash -lc '
+            set -eo pipefail
+            cd /workspace
+            mkdir -p "$GNUPGHOME" && chmod 700 "$GNUPGHOME"
+            gpg --batch --yes --import apt-signing.key
+            cat "$REPOS_FILE" | create-aptly-repos.sh "opencardev-apt" "debian"
+          '
 
     - name: Upload APT Repository artifacts
       if: always()
