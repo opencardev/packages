@@ -233,41 +233,37 @@ jobs:
         echo "Generated repos configuration:"
         cat repos-config.txt
 
+    - name: Install Aptly and dependencies
+      run: |
+        set -euo pipefail
+        sudo apt-get update
+        sudo apt-get install -y aptly gnupg dirmngr
+
     - name: Set up GPG key for signing
       run: |
+        set -euo pipefail
         # Import GPG signing key
-        echo "${{ secrets.APT_SIGNING_KEY }}" | gpg --import --batch --yes
+        echo "${{ secrets.APT_SIGNING_KEY }}" | gpg --import --batch --yes 2>&1 | grep -E "imported|key"
         
-        # Get the key ID from the imported key
-        export KEYID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | head -1 | awk '{print $3}' | awk -F'/' '{print $2}')
+        # Get the key ID from the imported key (format: "sec   rsa4096/KEYID")
+        export KEYID=$(gpg --list-secret-keys --keyid-format SHORT 2>/dev/null | grep "^sec" | awk '{print $2}' | cut -d'/' -f2 | head -1)
+        if [ -z "$KEYID" ]; then
+          echo "❌ Error: Failed to extract GPG key ID"
+          exit 1
+        fi
         echo "GPG_KEYID=$KEYID" >> $GITHUB_ENV
-        echo "Using GPG key ID: $KEYID"
-
-    - name: Install Aptly
-      run: |
-        apt-get update
-        apt-get install -y aptly gnupg
+        echo "✅ Using GPG key ID: $KEYID"
 
     - name: Create APT Repository with Aptly (CLI)
+      env:
+        GNUPGHOME: ~/.gnupg
       run: |
         set -euo pipefail
         
-        export HOME=/tmp/aptly-home
-        mkdir -p $HOME
-        export GNUPGHOME=$HOME/.gnupg
-        mkdir -p $GNUPGHOME
-        chmod 700 $GNUPGHOME
-        
         echo "=== Creating Aptly repositories ==="
+        echo "GPG Key ID: $GPG_KEYID"
         
-        # Import GPG key in aptly's context
-        echo "${{ secrets.APT_SIGNING_KEY }}" | gpg --import --batch --yes 2>&1 | head -5
-        
-        # Get key ID
-        KEYID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | head -1 | awk '{print $3}' | awk -F'/' '{print $2}')
-        echo "GPG Key ID: $KEYID"
-        
-        # Initialize aptly config
+        # Initialize aptly config  
         mkdir -p ~/.aptly
         cat > ~/.aptly/aptly.conf << 'APTLY_EOF'
         {
@@ -292,6 +288,8 @@ jobs:
         }
         APTLY_EOF
         
+        echo "✅ Aptly config initialised"
+        
         # Create repositories and add packages
         echo ""
         echo "--- Processing suites ---"
@@ -311,7 +309,7 @@ jobs:
           # Create stable repository
           STABLE_REPO="${suite}-stable"
           echo "  Creating repository: $STABLE_REPO"
-          aptly repo create -architectures="$ARCH_STR" -distribution="$suite" "$STABLE_REPO" || echo "  (Repository may already exist)"
+          aptly repo create -architectures="$ARCH_STR" -distribution="$suite" "$STABLE_REPO" 2>&1 || echo "  (Repository may already exist)"
           
           # Add packages to stable
           echo "  Adding packages to stable repository..."
@@ -325,7 +323,7 @@ jobs:
           
           if [ -d "./debs/$NIGHTLY_SUITE" ]; then
             echo "  Creating repository: $NIGHTLY_REPO"
-            aptly repo create -architectures="$ARCH_STR" -distribution="$NIGHTLY_SUITE" "$NIGHTLY_REPO" || echo "  (Repository may already exist)"
+            aptly repo create -architectures="$ARCH_STR" -distribution="$NIGHTLY_SUITE" "$NIGHTLY_REPO" 2>&1 || echo "  (Repository may already exist)"
             
             echo "  Adding packages to nightly repository..."
             find "./debs/$NIGHTLY_SUITE" -name "*.deb" -type f | while read deb; do
@@ -336,7 +334,7 @@ jobs:
         
         echo ""
         echo "=== Listing all repositories ==="
-        aptly repo list
+        aptly repo list -raw
         
         echo ""
         echo "=== Publishing repositories ==="
@@ -349,44 +347,46 @@ jobs:
           echo ""
           echo "Publishing for suite: $suite"
           
+          # Check if nightly directory exists
           if [ -d "./debs/nightly-$suite" ]; then
             # Publish both stable and nightly under the same distribution
-            echo "  Publishing both stable and nightly..."
+            echo "  Publishing both stable and nightly to debian/$suite..."
             aptly publish drop "$suite" 2>/dev/null || true
-            aptly publish repo -architectures="amd64,arm64,armhf" -component="stable,nightly" "$STABLE_REPO" "$NIGHTLY_REPO" "debian/$suite" || true
+            aptly publish repo -architectures="amd64,arm64,armhf" -component="stable,nightly" "$STABLE_REPO" "$NIGHTLY_REPO" "debian/$suite" 2>&1 | head -5 || true
           else
             # Publish stable only
-            echo "  Publishing stable only..."
+            echo "  Publishing stable only to debian/$suite..."
             aptly publish drop "$suite" 2>/dev/null || true
-            aptly publish repo -architectures="amd64,arm64,armhf" -component="stable" "$STABLE_REPO" "debian/$suite" || true
+            aptly publish repo -architectures="amd64,arm64,armhf" -component="stable" "$STABLE_REPO" "debian/$suite" 2>&1 | head -5 || true
           fi
         done
         
         echo ""
         echo "=== Listing published repositories ==="
-        aptly publish list -raw
+        aptly publish list -raw || echo "(No published repositories)"
         
         echo ""
         echo "=== Exporting repository to debian/ directory ==="
-        
-        # Export published repositories
-        aptly publish show "debian/bookworm" 2>/dev/null | head -5 || echo "(bookworm not published)"
-        aptly publish show "debian/trixie" 2>/dev/null | head -5 || echo "(trixie not published)"
         
         # Copy aptly-generated files to debian/ directory for artifact upload
         mkdir -p debian
         
         # Find and copy the public directory from aptly
         if [ -d ~/.aptly/public ]; then
-          echo "Copying aptly public directory..."
-          cp -a ~/.aptly/public/* debian/ 2>/dev/null || true
+          echo "  Copying aptly public directory..."
+          cp -a ~/.aptly/public/* debian/ 2>/dev/null || echo "  (No files in public directory)"
+        else
+          echo "  ⚠️  ~/.aptly/public not found"
         fi
         
         echo ""
         echo "=== Final debian/ directory contents ==="
-        find debian -type f | head -20 || echo "(debian/ is empty)"
-        echo ""
-        echo "✅ Aptly repository creation complete"
+        if [ -d debian ] && [ "$(find debian -type f | wc -l)" -gt 0 ]; then
+          find debian -type f | sort | head -20
+          echo "✅ Aptly repository creation complete"
+        else
+          echo "⚠️  Warning: debian/ directory is empty or missing"
+        fi
 
     - name: Upload APT Repository artifacts
       if: always()
