@@ -352,12 +352,14 @@ jobs:
             # Publish both stable and nightly under the same distribution
             echo "  Publishing both stable and nightly to debian/$suite..."
             aptly publish drop "$suite" 2>/dev/null || true
-            aptly publish repo -architectures="amd64,arm64,armhf" -component="stable,nightly" "$STABLE_REPO" "$NIGHTLY_REPO" "debian/$suite" 2>&1 | head -5 || true
+            aptly publish repo -distribution="$suite" -component="stable" "$STABLE_REPO" "debian/$suite" 2>&1 | head -10 || echo "  (publish failed, continuing...)"
+            # Note: For multiple components, we need separate publish operations or use snapshots
+            aptly publish repo -distribution="$suite" -component="nightly" "$NIGHTLY_REPO" "debian/$suite" 2>&1 | head -10 || echo "  (publish failed, continuing...)"
           else
             # Publish stable only
             echo "  Publishing stable only to debian/$suite..."
             aptly publish drop "$suite" 2>/dev/null || true
-            aptly publish repo -architectures="amd64,arm64,armhf" -component="stable" "$STABLE_REPO" "debian/$suite" 2>&1 | head -5 || true
+            aptly publish repo -distribution="$suite" -component="stable" "$STABLE_REPO" "debian/$suite" 2>&1 | head -10 || echo "  (publish failed, continuing...)"
           fi
         done
         
