@@ -253,6 +253,26 @@ jobs:
         fi
         echo "GPG_KEYID=$KEYID" >> $GITHUB_ENV
         echo "✅ Using GPG key ID: $KEYID"
+        
+        # Configure GPG for batch/non-interactive mode
+        mkdir -p ~/.gnupg
+        chmod 700 ~/.gnupg
+        cat >> ~/.gnupg/gpg.conf << 'GPG_EOF'
+        use-agent
+        pinentry-mode loopback
+        batch
+        yes
+        GPG_EOF
+        
+        cat >> ~/.gnupg/gpg-agent.conf << 'AGENT_EOF'
+        allow-loopback-pinentry
+        AGENT_EOF
+        chmod 600 ~/.gnupg/gpg.conf ~/.gnupg/gpg-agent.conf
+        
+        # Restart GPG agent to load new config
+        gpg-connect-agent reloadagent /bye || true
+        
+        echo "✅ GPG configured for batch mode"
 
     - name: Create APT Repository with Aptly (CLI)
       env:
@@ -352,20 +372,32 @@ jobs:
             # Publish both stable and nightly under the same distribution
             echo "  Publishing both stable and nightly to debian/$suite..."
             aptly publish drop "$suite" 2>/dev/null || true
-            aptly publish repo -distribution="$suite" -component="stable" "$STABLE_REPO" "debian/$suite" 2>&1 | head -10 || echo "  (publish failed, continuing...)"
+            aptly publish repo -skip-signing -distribution="$suite" -component="stable" "$STABLE_REPO" "debian/$suite" 2>&1 | head -10 || echo "  (publish failed, continuing...)"
             # Note: For multiple components, we need separate publish operations or use snapshots
-            aptly publish repo -distribution="$suite" -component="nightly" "$NIGHTLY_REPO" "debian/$suite" 2>&1 | head -10 || echo "  (publish failed, continuing...)"
+            aptly publish repo -skip-signing -distribution="$suite" -component="nightly" "$NIGHTLY_REPO" "debian/$suite" 2>&1 | head -10 || echo "  (publish failed, continuing...)"
           else
             # Publish stable only
             echo "  Publishing stable only to debian/$suite..."
             aptly publish drop "$suite" 2>/dev/null || true
-            aptly publish repo -distribution="$suite" -component="stable" "$STABLE_REPO" "debian/$suite" 2>&1 | head -10 || echo "  (publish failed, continuing...)"
+            aptly publish repo -skip-signing -distribution="$suite" -component="stable" "$STABLE_REPO" "debian/$suite" 2>&1 | head -10 || echo "  (publish failed, continuing...)"
           fi
         done
         
         echo ""
         echo "=== Listing published repositories ==="
         aptly publish list -raw || echo "(No published repositories)"
+        
+        echo ""
+        echo "=== Signing Release files ==="
+        # Find and sign all Release files in the aptly public directory
+        find ~/.aptly/public -name "Release" -type f | while read release_file; do
+          echo "  Signing: $release_file"
+          # Use GPG in batch mode with no passphrase (CI keys should be unprotected)
+          gpg --batch --yes --pinentry-mode loopback --armor --detach-sign --output "${release_file}.gpg" "$release_file" 2>&1 | head -5 || echo "    (signing failed)"
+          # Also create InRelease (clearsigned)
+          gpg --batch --yes --pinentry-mode loopback --armor --clearsign --output "$(dirname "$release_file")/InRelease" "$release_file" 2>&1 | head -5 || echo "    (clearsign failed)"
+        done
+        echo "✅ Release file signing complete"
         
         echo ""
         echo "=== Exporting repository to debian/ directory ==="
