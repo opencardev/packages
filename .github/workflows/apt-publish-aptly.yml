@@ -233,17 +233,160 @@ jobs:
         echo "Generated repos configuration:"
         cat repos-config.txt
 
-    - name: Create APT Repository with Aptly
-      uses: jinnatar/actions-aptly-repo@v2
-      with:
-        name: 'opencardev-apt'
-        prefix: 'debian'
-        repos: |
-          bookworm,stable,"amd64 arm64 armhf",false,debs/bookworm/**/*.deb
-          nightly-bookworm,nightly,"amd64 arm64 armhf",false,debs/nightly-bookworm/**/*.deb
-          trixie,stable,"amd64 arm64 armhf",false,debs/trixie/**/*.deb
-          nightly-trixie,nightly,"amd64 arm64 armhf",false,debs/nightly-trixie/**/*.deb
-        gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
+    - name: Set up GPG key for signing
+      run: |
+        # Import GPG signing key
+        echo "${{ secrets.APT_SIGNING_KEY }}" | gpg --import --batch --yes
+        
+        # Get the key ID from the imported key
+        export KEYID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | head -1 | awk '{print $3}' | awk -F'/' '{print $2}')
+        echo "GPG_KEYID=$KEYID" >> $GITHUB_ENV
+        echo "Using GPG key ID: $KEYID"
+
+    - name: Install Aptly
+      run: |
+        apt-get update
+        apt-get install -y aptly gnupg
+
+    - name: Create APT Repository with Aptly (CLI)
+      run: |
+        set -euo pipefail
+        
+        export HOME=/tmp/aptly-home
+        mkdir -p $HOME
+        export GNUPGHOME=$HOME/.gnupg
+        mkdir -p $GNUPGHOME
+        chmod 700 $GNUPGHOME
+        
+        echo "=== Creating Aptly repositories ==="
+        
+        # Import GPG key in aptly's context
+        echo "${{ secrets.APT_SIGNING_KEY }}" | gpg --import --batch --yes 2>&1 | head -5
+        
+        # Get key ID
+        KEYID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | head -1 | awk '{print $3}' | awk -F'/' '{print $2}')
+        echo "GPG Key ID: $KEYID"
+        
+        # Initialize aptly config
+        mkdir -p ~/.aptly
+        cat > ~/.aptly/aptly.conf << 'APTLY_EOF'
+        {
+          "architectures": ["amd64", "arm64", "armhf", "i386"],
+          "dependencyFollowSuggests": false,
+          "dependencyFollowRecommends": false,
+          "dependencyFollowAllVariants": false,
+          "dependencyFollowSource": false,
+          "gpgDisableSign": false,
+          "gpgDisableVerify": false,
+          "gpgProvider": "gpg",
+          "downloadSourcePackages": false,
+          "skipLegacyUrgencyProcessing": true,
+          "ppaDistributorID": "ubuntu",
+          "ppaCodename": "",
+          "skipContentsOnPull": true,
+          "filesystemScheme": "flat",
+          "downloadLimit": 0,
+          "packageControlExtra": "",
+          "verbose": false,
+          "debug": false
+        }
+        APTLY_EOF
+        
+        # Create repositories and add packages
+        echo ""
+        echo "--- Processing suites ---"
+        
+        # Find all suites
+        SUITES=$(find ./debs -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | grep -v '^nightly-' | sort | uniq)
+        
+        for suite in $SUITES; do
+          echo ""
+          echo "Processing suite: $suite"
+          
+          # Get architectures for this suite
+          ARCHS=$(find "./debs/$suite" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort)
+          ARCH_STR=$(echo $ARCHS | tr '\n' ' ' | sed 's/ $//')
+          echo "  Architectures: $ARCH_STR"
+          
+          # Create stable repository
+          STABLE_REPO="${suite}-stable"
+          echo "  Creating repository: $STABLE_REPO"
+          aptly repo create -architectures="$ARCH_STR" -distribution="$suite" "$STABLE_REPO" || echo "  (Repository may already exist)"
+          
+          # Add packages to stable
+          echo "  Adding packages to stable repository..."
+          find "./debs/$suite" -name "*.deb" -type f | while read deb; do
+            aptly repo add "$STABLE_REPO" "$deb" 2>&1 | grep -v "Loading packages" || true
+          done
+          
+          # Create nightly repository
+          NIGHTLY_SUITE="nightly-$suite"
+          NIGHTLY_REPO="${NIGHTLY_SUITE}-nightly"
+          
+          if [ -d "./debs/$NIGHTLY_SUITE" ]; then
+            echo "  Creating repository: $NIGHTLY_REPO"
+            aptly repo create -architectures="$ARCH_STR" -distribution="$NIGHTLY_SUITE" "$NIGHTLY_REPO" || echo "  (Repository may already exist)"
+            
+            echo "  Adding packages to nightly repository..."
+            find "./debs/$NIGHTLY_SUITE" -name "*.deb" -type f | while read deb; do
+              aptly repo add "$NIGHTLY_REPO" "$deb" 2>&1 | grep -v "Loading packages" || true
+            done
+          fi
+        done
+        
+        echo ""
+        echo "=== Listing all repositories ==="
+        aptly repo list
+        
+        echo ""
+        echo "=== Publishing repositories ==="
+        
+        # Group repositories by distribution for publishing
+        for suite in $SUITES; do
+          STABLE_REPO="${suite}-stable"
+          NIGHTLY_REPO="nightly-${suite}-nightly"
+          
+          echo ""
+          echo "Publishing for suite: $suite"
+          
+          if [ -d "./debs/nightly-$suite" ]; then
+            # Publish both stable and nightly under the same distribution
+            echo "  Publishing both stable and nightly..."
+            aptly publish drop "$suite" 2>/dev/null || true
+            aptly publish repo -architectures="amd64,arm64,armhf" -component="stable,nightly" "$STABLE_REPO" "$NIGHTLY_REPO" "debian/$suite" || true
+          else
+            # Publish stable only
+            echo "  Publishing stable only..."
+            aptly publish drop "$suite" 2>/dev/null || true
+            aptly publish repo -architectures="amd64,arm64,armhf" -component="stable" "$STABLE_REPO" "debian/$suite" || true
+          fi
+        done
+        
+        echo ""
+        echo "=== Listing published repositories ==="
+        aptly publish list -raw
+        
+        echo ""
+        echo "=== Exporting repository to debian/ directory ==="
+        
+        # Export published repositories
+        aptly publish show "debian/bookworm" 2>/dev/null | head -5 || echo "(bookworm not published)"
+        aptly publish show "debian/trixie" 2>/dev/null | head -5 || echo "(trixie not published)"
+        
+        # Copy aptly-generated files to debian/ directory for artifact upload
+        mkdir -p debian
+        
+        # Find and copy the public directory from aptly
+        if [ -d ~/.aptly/public ]; then
+          echo "Copying aptly public directory..."
+          cp -a ~/.aptly/public/* debian/ 2>/dev/null || true
+        fi
+        
+        echo ""
+        echo "=== Final debian/ directory contents ==="
+        find debian -type f | head -20 || echo "(debian/ is empty)"
+        echo ""
+        echo "✅ Aptly repository creation complete"
 
     - name: Upload APT Repository artifacts
       if: always()
