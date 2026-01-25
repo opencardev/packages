@@ -187,7 +187,8 @@ jobs:
       id: generate-repos
       run: |
         # Generate repos configuration dynamically based on discovered suites
-        REPOS=""
+        REPOS_FILE="repos-config.txt"
+        > "$REPOS_FILE"  # Clear file
         
         # Find all unique suites in the debs directory
         SUITES=$(find ./debs -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort | uniq)
@@ -215,53 +216,55 @@ jobs:
           
           echo "Suite '$suite' has architectures: $ARCHS"
           
-          # Create repo entries for stable and nightly (keep quoted arch list for Aptly)
-          STABLE_REPOS="${STABLE_REPOS}${suite},stable,\"${ARCHS}\",false,debs/${suite}/**/*.deb"$'\n'
-          NIGHTLY_REPOS="${NIGHTLY_REPOS}nightly-${suite},nightly,\"${ARCHS}\",false,debs/nightly-${suite}/**/*.deb"$'\n'
+          # Write repos to file with proper quoting for Aptly
+          # Format: suite,channel,"arch1,arch2,arch3",signed,glob_pattern
+          echo "${suite},stable,\"${ARCHS}\",false,debs/${suite}/**/*.deb" >> "$REPOS_FILE"
+          echo "nightly-${suite},nightly,\"${ARCHS}\",false,debs/nightly-${suite}/**/*.deb" >> "$REPOS_FILE"
         done
         
-        # Combine repos configuration
-        REPOS="${STABLE_REPOS}${NIGHTLY_REPOS}"
-        
-        # Remove trailing newline
-        REPOS=$(printf '%s\n' "$REPOS" | sed '/^$/d')
-        
         echo "Generated repos configuration:"
-        printf '%s\n' "$REPOS"
+        cat "$REPOS_FILE"
         
-        # Output as multiline string for use in matrix - preserve quoting for Aptly
-        {
-          printf 'repos<<EOF\n'
-          printf '%s\n' "$REPOS"
-          printf 'EOF\n'
-        } >> $GITHUB_OUTPUT
+        # Store repos file path for next step
+        echo "repos_file=$REPOS_FILE" >> $GITHUB_OUTPUT
 
-    - name: Debug GPG Configuration
+    - name: Create APT repository with Aptly (file-based repos)
+      env:
+        REPOS_FILE: ${{ steps.generate-repos.outputs.repos_file }}
       run: |
-        echo "Checking GPG configuration..."
-        if [ -n "${{ secrets.APT_SIGNING_KEY }}" ]; then
-          echo "✅ APT_SIGNING_KEY secret is present (length: $(echo '${{ secrets.APT_SIGNING_KEY }}' | wc -c))"
-        else
-          echo "❌ APT_SIGNING_KEY secret is missing or empty"
-        fi
-        
-        if [ -n "${{ secrets.APT_SIGNING_PASSPHRASE }}" ]; then
-          echo "✅ APT_SIGNING_PASSPHRASE secret is present"
-        else
-          echo "⚠️  APT_SIGNING_PASSPHRASE secret is missing (may not be required)"
+        set -euo pipefail
+
+        if [ -z "${REPOS_FILE:-}" ] || [ ! -f "$REPOS_FILE" ]; then
+          echo "❌ repos-config.txt not found; generated: '${REPOS_FILE:-missing}'"
+          exit 1
         fi
 
-    - name: Create APT Repository
-      uses: jinnatar/actions-aptly-repo@v2
+        echo "Using repos configuration file: $REPOS_FILE"
+        cat "$REPOS_FILE"
+
+        # Write signing key to a file to preserve formatting
+        cat <<'EOF' > apt-signing.key
+${{ secrets.APT_SIGNING_KEY }}
+EOF
+        chmod 600 apt-signing.key
+
+        # Run the Aptly action container directly to avoid GitHub Actions string mangling
+        docker run --rm -v "$(pwd)":/workspace jinnatar/actions-aptly-repo:v2 /bin/bash -lc "
+          set -euo pipefail
+          cd /workspace
+          export GNUPGHOME=/workspace/.gnupg
+          mkdir -p \"$GNUPGHOME\" && chmod 700 \"$GNUPGHOME\"
+          gpg --batch --yes --import apt-signing.key
+          cat \"$REPOS_FILE\" | create-aptly-repos.sh 'opencardev-apt' 'debian'
+        "
+
+    - name: Upload APT Repository artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
       with:
-        name: opencardev-apt
-        repo_url: https://opencardev.github.io/packages
-        prefix: "${{ matrix.prefix.name }}"
-        repos: "${{ steps.generate-repos.outputs.repos }}"
-        gpg_private_key: ${{ secrets.APT_SIGNING_KEY }}
-        gpg_passphrase: ${{ secrets.APT_SIGNING_PASSPHRASE }}
-        artifact_name: opencardev-apt-repo
-
+        name: opencardev-apt-repo-${{ runner.os }}-${{ github.run_id }}
+        path: debian/
+        retention-days: 5
   deploy-apt-repo:
     needs: create-apt-repo
     runs-on: ubuntu-latest
