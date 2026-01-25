@@ -1,0 +1,9 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Origin: debian/bookworm bookworm
+Label: debian/bookworm bookworm
+Archive: bookworm
+Suite: bookworm
+Architecture: armhf
+Component: stable
