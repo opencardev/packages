@@ -11,23 +11,16 @@ on:
       source_repo:
         description: 'Source repository (owner/repo)'
         required: true
-        type: choice
-        options:
-          - opencardev/aasdk
-          - opencardev/openauto
-          - opencardev/crankshaft-core
+        type: string
+        default: 'opencardev/aasdk'
       build_run_id:
         description: 'Build run ID'
         required: true
         type: string
       channel:
-        description: 'Release channel'
+        description: 'Release channel (stable/nightly/unstable)'
         required: true
-        type: choice
-        options:
-          - stable
-          - nightly
-          - unstable
+        type: string
         default: 'unstable'
   
   workflow_call:
