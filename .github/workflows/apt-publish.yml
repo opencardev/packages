@@ -92,14 +92,22 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Organize packages by distribution and architecture
+        id: organize
       run: |
         set -euo pipefail
         
         mkdir -p ./staging
         
+          # Track published packages for summary
+          > /tmp/published_packages.txt
+        
         # Process each .deb file
         while IFS= read -r deb_file; do
           filename=$(basename "$deb_file")
+          
+            # Extract package name and version using dpkg
+            pkg_name=$(dpkg-deb -f "$deb_file" Package 2>/dev/null || echo "unknown")
+            pkg_version=$(dpkg-deb -f "$deb_file" Version 2>/dev/null || echo "unknown")
           
           # Extract suite from package name (deb12u1 → bookworm, deb13u1 → trixie)
           if echo "$filename" | grep -q "deb12"; then
@@ -128,11 +136,25 @@ jobs:
           mkdir -p "$dest_dir"
           cp "$deb_file" "$dest_dir/"
           echo "  ✓ $filename → $suite/$CHANNEL/$arch"
+          
+            # Track for summary: suite|channel|package|version|arch
+            echo "${suite}|${CHANNEL}|${pkg_name}|${pkg_version}|${arch}" >> /tmp/published_packages.txt
         done < <(find ./downloaded-artifacts -name "*.deb" -type f)
         
         echo ""
         echo "📁 Staging structure:"
         find ./staging -name "*.deb" | sort
+        
+          # Generate summary stats
+          TOTAL_PACKAGES=$(wc -l < /tmp/published_packages.txt)
+          SUITES=$(cut -d'|' -f1 /tmp/published_packages.txt | sort -u | tr '\n' ' ')
+          ARCHS=$(cut -d'|' -f5 /tmp/published_packages.txt | sort -u | tr '\n' ' ')
+        
+          echo ""
+          echo "📊 Summary: $TOTAL_PACKAGES packages across suites [$SUITES] and architectures [$ARCHS]"
+          echo "total_packages=$TOTAL_PACKAGES" >> $GITHUB_OUTPUT
+          echo "suites=$SUITES" >> $GITHUB_OUTPUT
+          echo "architectures=$ARCHS" >> $GITHUB_OUTPUT
 
     - name: Set up GPG key
       run: |
@@ -329,6 +351,14 @@ jobs:
         echo "📁 Repository structure:"
         find ./repo-export -type f | head -30 | sort
 
+      - name: Upload published packages list
+        uses: actions/upload-artifact@v4
+        with:
+          name: published-packages-${{ github.run_id }}
+          path: /tmp/published_packages.txt
+          retention-days: 7
+        continue-on-error: true
+
     - name: Commit and push to repository
       run: |
         set -euo pipefail
@@ -364,12 +394,20 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Download published packages list
+        if: needs.publish.result == 'success'
+        uses: actions/download-artifact@v5
+        with:
+          pattern: published-packages-*
+          path: ./artifacts
+        continue-on-error: true
+
     - name: Job Summary
       run: |
         echo "# APT Repository Publish Summary" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Source**: ${{ inputs.source_repo }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Build**: #${{ inputs.build_run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Source Repository**: ${{ inputs.source_repo }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Build Run**: #${{ inputs.build_run_id }}" >> $GITHUB_STEP_SUMMARY
         echo "**Channel**: \`${{ inputs.channel }}\`" >> $GITHUB_STEP_SUMMARY
         echo "**Status**: ${{ needs.publish.result }}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
@@ -377,7 +415,50 @@ jobs:
         if [ "${{ needs.publish.result }}" == "success" ]; then
           echo "✅ **Repository successfully updated**" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Repository URL: https://opencardev.github.io/packages" >> $GITHUB_STEP_SUMMARY
+          
+            # Show published packages details if available
+            if [ -f ./artifacts/published-packages-*/published_packages.txt ]; then
+              PKG_FILE=$(find ./artifacts -name "published_packages.txt" | head -1)
+            
+              echo "## 📦 Published Packages" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            
+              # Group by suite
+              for suite in $(cut -d'|' -f1 "$PKG_FILE" | sort -u); do
+                echo "### Distribution: $suite" >> $GITHUB_STEP_SUMMARY
+                echo "" >> $GITHUB_STEP_SUMMARY
+                echo "| Package | Version | Architectures |" >> $GITHUB_STEP_SUMMARY
+                echo "|---------|---------|---------------|" >> $GITHUB_STEP_SUMMARY
+              
+                # Group by package name
+                for pkg in $(grep "^${suite}|" "$PKG_FILE" | cut -d'|' -f3 | sort -u); do
+                  version=$(grep "^${suite}|.*|${pkg}|" "$PKG_FILE" | cut -d'|' -f4 | head -1)
+                  archs=$(grep "^${suite}|.*|${pkg}|" "$PKG_FILE" | cut -d'|' -f5 | tr '\n' ', ' | sed 's/,$//')
+                  echo "| \`$pkg\` | $version | $archs |" >> $GITHUB_STEP_SUMMARY
+                done
+                echo "" >> $GITHUB_STEP_SUMMARY
+              done
+            
+              # Overall stats
+              TOTAL=$(wc -l < "$PKG_FILE")
+              UNIQUE_PKGS=$(cut -d'|' -f3 "$PKG_FILE" | sort -u | wc -l)
+              echo "---" >> $GITHUB_STEP_SUMMARY
+              echo "**Total**: $TOTAL package files published" >> $GITHUB_STEP_SUMMARY
+              echo "**Unique packages**: $UNIQUE_PKGS" >> $GITHUB_STEP_SUMMARY
+            fi
+          
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Repository URL**: https://opencardev.github.io/packages" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📥 Installation" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+            echo "# Add repository (Debian Trixie example)" >> $GITHUB_STEP_SUMMARY
+            echo "curl -fsSL https://opencardev.github.io/packages/opencardev.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/opencardev-archive-keyring.gpg" >> $GITHUB_STEP_SUMMARY
+            echo "echo \\\"deb [arch=\\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages trixie ${{ inputs.channel }}\\\" | sudo tee /etc/apt/sources.list.d/opencardev.list" >> $GITHUB_STEP_SUMMARY
+            echo "sudo apt update" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
         else
           echo "❌ **Repository update failed**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Check the job logs above for details." >> $GITHUB_STEP_SUMMARY
         fi

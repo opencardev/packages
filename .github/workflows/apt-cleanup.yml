@@ -19,6 +19,9 @@ on:
 jobs:
   cleanup:
     runs-on: ubuntu-latest
+      outputs:
+        has_removals: ${{ steps.analyze.outputs.has_removals }}
+        remove_count: ${{ steps.analyze.outputs.remove_count }}
     
     steps:
     - name: Checkout packages repository
@@ -43,6 +46,7 @@ jobs:
         
         # Track packages to remove
         PACKAGES_TO_REMOVE=""
+          > /tmp/cleanup_stats.txt
         
         # For each component (stable, nightly, unstable)
         for component in stable nightly unstable; do
@@ -63,6 +67,7 @@ jobs:
           esac
           
           echo "  Retention policy: Keep last $KEEP_COUNT version(s)"
+            echo "component=$component|policy=$KEEP_COUNT" >> /tmp/cleanup_stats.txt
           
           # Find all packages in this component across all suites
           if [ ! -d "dists" ]; then
@@ -93,19 +98,26 @@ jobs:
                 grep "^Version:" | awk '{print $2}' | sort -V -r)
               
               VERSION_COUNT=$(echo "$VERSIONS" | wc -l)
+                [ "$VERSION_COUNT" -eq 0 ] && continue
+              
+                KEPT_VERSIONS=$(echo "$VERSIONS" | head -n $KEEP_COUNT | tr '\n' ',' | sed 's/,$//')
               
               if [ "$VERSION_COUNT" -gt "$KEEP_COUNT" ]; then
                 # Mark old versions for removal
                 OLD_VERSIONS=$(echo "$VERSIONS" | tail -n +$((KEEP_COUNT + 1)))
+                  REMOVE_COUNT=$((VERSION_COUNT - KEEP_COUNT))
                 
-                echo "    📦 $package: Found $VERSION_COUNT versions, removing $((VERSION_COUNT - KEEP_COUNT)) old version(s)"
+                  echo "    📦 $package: Found $VERSION_COUNT versions, removing $REMOVE_COUNT old version(s)"
+                  echo "package=$package|suite=$suite|component=$component|total=$VERSION_COUNT|kept=$KEPT_VERSIONS|removed=$REMOVE_COUNT" >> /tmp/cleanup_stats.txt
                 
                 for old_version in $OLD_VERSIONS; do
+                    [ -z "$old_version" ] && continue
                   echo "      🗑️  Marking for removal: $package $old_version"
                   PACKAGES_TO_REMOVE="$PACKAGES_TO_REMOVE\n${suite}|${component}|${package}|${old_version}"
                 done
               else
                 echo "    ✅ $package: $VERSION_COUNT version(s) (within retention policy)"
+                  echo "package=$package|suite=$suite|component=$component|total=$VERSION_COUNT|kept=$KEPT_VERSIONS|removed=0" >> /tmp/cleanup_stats.txt
               fi
             done
           done
@@ -118,10 +130,12 @@ jobs:
           echo ""
           echo "📋 Total packages marked for removal: $REMOVE_COUNT"
           echo "has_removals=true" >> $GITHUB_OUTPUT
+            echo "remove_count=$REMOVE_COUNT" >> $GITHUB_OUTPUT
         else
           echo ""
           echo "✅ No packages need to be removed"
           echo "has_removals=false" >> $GITHUB_OUTPUT
+            echo "remove_count=0" >> $GITHUB_OUTPUT
         fi
 
     - name: Set up GPG key
@@ -190,6 +204,17 @@ jobs:
         echo ""
         echo "✅ Cleanup complete"
 
+      - name: Upload cleanup report
+        if: steps.analyze.outputs.has_removals == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cleanup-report-${{ github.run_id }}
+          path: |
+            /tmp/cleanup_stats.txt
+            /tmp/packages_to_remove.txt
+          retention-days: 30
+        continue-on-error: true
+
     - name: Commit and push changes
       if: steps.analyze.outputs.has_removals == 'true' && inputs.dry_run != 'true'
       run: |
@@ -213,14 +238,56 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Download cleanup artifacts
+        if: needs.cleanup.outputs.has_removals == 'true'
+        uses: actions/download-artifact@v5
+        with:
+          name: cleanup-report-${{ github.run_id }}
+          path: ./artifacts
+        continue-on-error: true
+
     - name: Summary
       run: |
         echo "# APT Repository Cleanup Summary" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Status**: ${{ needs.cleanup.result }}" >> $GITHUB_STEP_SUMMARY
         echo "**Dry Run**: ${{ inputs.dry_run || 'false' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Packages Removed**: ${{ needs.cleanup.outputs.remove_count || '0' }}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Retention Policy**:" >> $GITHUB_STEP_SUMMARY
-        echo "- Stable: Keep last 2 versions" >> $GITHUB_STEP_SUMMARY
-        echo "- Nightly: Keep last 1 version" >> $GITHUB_STEP_SUMMARY
-        echo "- Unstable: Keep last 1 version" >> $GITHUB_STEP_SUMMARY
+          echo "## Retention Policy" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Channel | Retention |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Stable | Keep last 2 versions |" >> $GITHUB_STEP_SUMMARY
+          echo "| Nightly | Keep last 1 version |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unstable | Keep last 1 version |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+        
+          # Show cleanup details if available
+          if [ -f ./artifacts/cleanup_stats.txt ]; then
+            echo "## 🗑️ Cleanup Details" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          
+            # Parse and display package cleanup info
+            while IFS='|' read -r key value; do
+              if [ "$key" = "package" ]; then
+                # Parse package line: package=name|suite=X|component=Y|total=N|kept=versions|removed=N
+                pkg_name=$(echo "$value" | cut -d'|' -f1)
+                suite=$(echo "$value" | cut -d'|' -f2 | cut -d'=' -f2)
+                component=$(echo "$value" | cut -d'|' -f3 | cut -d'=' -f2)
+                total=$(echo "$value" | cut -d'|' -f4 | cut -d'=' -f2)
+                kept=$(echo "$value" | cut -d'|' -f5 | cut -d'=' -f2)
+                removed=$(echo "$value" | cut -d'|' -f6 | cut -d'=' -f2)
+              
+                if [ "$removed" != "0" ]; then
+                  echo "- **$pkg_name** ($suite/$component): Removed $removed version(s), kept: $kept" >> $GITHUB_STEP_SUMMARY
+                fi
+              fi
+            done < ./artifacts/cleanup_stats.txt
+          elif [ "${{ needs.cleanup.outputs.remove_count || '0' }}" != "0" ]; then
+            echo "## Packages Removed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "${{ needs.cleanup.outputs.remove_count }} old package version(s) were removed." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No packages required cleanup. All packages are within retention policy." >> $GITHUB_STEP_SUMMARY
+          fi

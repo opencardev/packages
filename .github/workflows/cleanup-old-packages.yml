@@ -12,7 +12,7 @@ on:
       keep_versions:
         description: 'Number of versions to keep per package'
         required: false
-        default: '5'
+        default: '2'
         type: string
       dry_run:
         description: 'Dry run (show what would be deleted without deleting)'

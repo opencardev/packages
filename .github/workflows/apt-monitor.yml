@@ -139,9 +139,29 @@ jobs:
       run: |
         echo "# APT Auto-Publish Monitor Summary" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "Checked repositories:" >> $GITHUB_STEP_SUMMARY
-        echo "- opencardev/aasdk" >> $GITHUB_STEP_SUMMARY
-        echo "- opencardev/openauto" >> $GITHUB_STEP_SUMMARY
-        echo "- opencardev/crankshaft-core" >> $GITHUB_STEP_SUMMARY
+          echo "**Run Date**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "**Status**: ${{ needs.monitor.result }}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "Monitor Status: ${{ needs.monitor.result }}" >> $GITHUB_STEP_SUMMARY
+        
+          echo "## Monitored Repositories" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Repository | Main Branch | Dev Branch |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------|-------------|------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| opencardev/aasdk | development → stable | development → nightly |" >> $GITHUB_STEP_SUMMARY
+          echo "| opencardev/openauto | main → stable | develop → nightly |" >> $GITHUB_STEP_SUMMARY
+          echo "| opencardev/crankshaft-core | main → stable | development → nightly |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+        
+          if [ "${{ needs.monitor.result }}" == "success" ]; then
+            echo "✅ All repositories checked successfully" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "*Note: Check individual job logs to see which builds were detected and triggered for publishing.*" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Some repository checks may have failed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Check the job logs above for details." >> $GITHUB_STEP_SUMMARY
+          fi
+        
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "*Next scheduled run: Every 6 hours*" >> $GITHUB_STEP_SUMMARY
