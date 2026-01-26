@@ -43,17 +43,17 @@ jobs:
         id: check_builds
         run: |
           set -euo pipefail
-
+          
           OWNER="${{ matrix.repo.owner }}"
           REPO="${{ matrix.repo.name }}"
           MAIN_BRANCH="${{ matrix.repo.main_branch }}"
           DEV_BRANCH="${{ matrix.repo.dev_branch }}"
-
+          
           echo "🔍 Checking $OWNER/$REPO for new builds"
-
+          
           # Get the last published build ID from our state file (if exists)
           # For now, just check the last successful run on each branch
-
+          
           # Check main branch for stable
           echo "Checking $MAIN_BRANCH branch (stable channel)..."
           MAIN_RUN=$(gh run list --repo "$OWNER/$REPO" \
@@ -62,7 +62,7 @@ jobs:
             --status completed \
             --json databaseId,conclusion,headBranch \
             --limit 1 | jq -r '.[0] | select(.conclusion == "success") | .databaseId')
-
+          
           if [ -n "$MAIN_RUN" ] && [ "$MAIN_RUN" != "null" ]; then
             echo "✅ Found stable build: $MAIN_RUN"
             echo "main_run=$MAIN_RUN" >> $GITHUB_OUTPUT
@@ -71,7 +71,7 @@ jobs:
             echo "ℹ️  No successful main branch build found"
             echo "has_main=false" >> $GITHUB_OUTPUT
           fi
-
+          
           # Check dev branch for nightly
           if [ "$DEV_BRANCH" != "$MAIN_BRANCH" ]; then
             echo "Checking $DEV_BRANCH branch (nightly channel)..."
@@ -81,7 +81,7 @@ jobs:
               --status completed \
               --json databaseId,conclusion,headBranch \
               --limit 1 | jq -r '.[0] | select(.conclusion == "success") | .databaseId')
-
+          
             if [ -n "$DEV_RUN" ] && [ "$DEV_RUN" != "null" ]; then
               echo "✅ Found nightly build: $DEV_RUN"
               echo "dev_run=$DEV_RUN" >> $GITHUB_OUTPUT
@@ -94,7 +94,7 @@ jobs:
             echo "ℹ️  Dev branch same as main, skipping nightly check"
             echo "has_dev=false" >> $GITHUB_OUTPUT
           fi
-
+          
           # Store repo info
           echo "repo_full=$OWNER/$REPO" >> $GITHUB_OUTPUT
         env:
@@ -104,13 +104,13 @@ jobs:
         if: steps.check_builds.outputs.has_main == 'true'
         run: |
           echo "🚀 Triggering publish for stable channel"
-
+          
           gh workflow run apt-publish.yml \
             --repo opencardev/packages \
             -f source_repo="${{ steps.check_builds.outputs.repo_full }}" \
             -f build_run_id="${{ steps.check_builds.outputs.main_run }}" \
             -f channel="stable"
-
+          
           echo "✅ Triggered stable publish for build ${{ steps.check_builds.outputs.main_run }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -119,13 +119,13 @@ jobs:
         if: steps.check_builds.outputs.has_dev == 'true'
         run: |
           echo "🚀 Triggering publish for nightly channel"
-
+          
           gh workflow run apt-publish.yml \
             --repo opencardev/packages \
             -f source_repo="${{ steps.check_builds.outputs.repo_full }}" \
             -f build_run_id="${{ steps.check_builds.outputs.dev_run }}" \
             -f channel="nightly"
-
+          
           echo "✅ Triggered nightly publish for build ${{ steps.check_builds.outputs.dev_run }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -143,7 +143,7 @@ jobs:
           echo "**Run Date**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
           echo "**Status**: ${{ needs.monitor.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-
+          
           echo "## Monitored Repositories" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Repository | Main Branch | Dev Branch |" >> $GITHUB_STEP_SUMMARY
@@ -152,7 +152,7 @@ jobs:
           echo "| opencardev/openauto | main → stable | develop → nightly |" >> $GITHUB_STEP_SUMMARY
           echo "| opencardev/crankshaft-core | main → stable | development → nightly |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-
+          
           if [ "${{ needs.monitor.result }}" == "success" ]; then
             echo "✅ All repositories checked successfully" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
@@ -162,7 +162,7 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "Check the job logs above for details." >> $GITHUB_STEP_SUMMARY
           fi
-
+          
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
           echo "*Next scheduled run: Every 6 hours*" >> $GITHUB_STEP_SUMMARY
