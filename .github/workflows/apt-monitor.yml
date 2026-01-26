@@ -135,14 +135,14 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Summary
-      run: |
-        echo "# APT Auto-Publish Monitor Summary" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
+      - name: Summary
+        run: |
+          echo "# APT Auto-Publish Monitor Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Run Date**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
           echo "**Status**: ${{ needs.monitor.result }}" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
           echo "## Monitored Repositories" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Repository | Main Branch | Dev Branch |" >> $GITHUB_STEP_SUMMARY
@@ -151,7 +151,7 @@ jobs:
           echo "| opencardev/openauto | main → stable | develop → nightly |" >> $GITHUB_STEP_SUMMARY
           echo "| opencardev/crankshaft-core | main → stable | development → nightly |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-        
+          
           if [ "${{ needs.monitor.result }}" == "success" ]; then
             echo "✅ All repositories checked successfully" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
@@ -161,7 +161,7 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "Check the job logs above for details." >> $GITHUB_STEP_SUMMARY
           fi
-        
+          
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
           echo "*Next scheduled run: Every 6 hours*" >> $GITHUB_STEP_SUMMARY
