@@ -1,3 +1,4 @@
+---
 name: opencardev APT Repository Upload (Aptly)
 
 permissions:
@@ -37,10 +38,10 @@ on:
           - trixie
           - bookworm
           - all
-  
+
   repository_dispatch:
     types: [publish-apt-packages]
-  
+
   workflow_call:
     inputs:
       source_repo:
@@ -62,10 +63,10 @@ jobs:
           - name: debian
             repos: ""
     steps:
-    - name: Checkout packages repository
+        - name: Checkout packages repository
       uses: actions/checkout@v4
 
-    - name: Download artifacts from build run
+        - name: Download artifacts from build run
       run: |
         # Handle inputs from different trigger types
         SOURCE_REPO="${{ inputs.source_repo || github.event.client_payload.source_repo || 'opencardev/aasdk' }}"
@@ -74,16 +75,16 @@ jobs:
         APT_CATEGORY="${{ inputs.apt_category || github.event.client_payload.apt_category || 'main' }}"
         APT_IMPORT="${{ inputs.apt_import || github.event.client_payload.apt_import || './debs/*/*.deb' }}"
         APT_GLOB="${{ inputs.apt_glob || github.event.client_payload.apt_glob || '' }}"
-            
+
         echo "Downloading artifacts from run ID: $BUILD_RUN_ID in repository: $SOURCE_REPO"
         echo "Distribution: $DISTRIBUTION"
-        
+
         # Download all artifacts from the specified run
         gh run download $BUILD_RUN_ID --repo $SOURCE_REPO --dir ./downloaded-artifacts
-        
+
         echo "Downloaded artifacts structure:"
         find ./downloaded-artifacts -type f -name "*.deb" | head -20
-        
+
         # Verify we have packages
         DEB_COUNT=$(find ./downloaded-artifacts -name "*.deb" 2>/dev/null | wc -l)
         if [ "$DEB_COUNT" -eq 0 ]; then
@@ -91,10 +92,10 @@ jobs:
           exit 1
         fi
         echo "✓ Found $DEB_COUNT .deb packages to process"
-        
+
         # Create a consolidated debs directory with organized structure
         mkdir -p ./debs
-        
+
         # Copy and organize .deb files by suite and architecture (supports multiple projects: aasdk, openauto, crankshaft-mvp)
         # Use process substitution to avoid subshell issues with variable persistence
         while IFS= read -r deb_file; do
@@ -102,7 +103,7 @@ jobs:
           suite="unknown"
           arch_dir="unknown"
           parent_dir=$(basename "$(dirname "$deb_file")")
-          
+
           # PRIORITY 1: Extract from path first (most reliable for packages with consistent artifact folder naming)
           # Path patterns: <project>-packages-<suite>-<arch>, <suite>-<arch>, <project>-<suite>-<arch>
           if [[ "$parent_dir" =~ ([a-z0-9]+)-packages-([a-z0-9]+)-(amd64|arm64|armhf|i386|arm) ]]; then
@@ -114,7 +115,7 @@ jobs:
             arch_dir="${BASH_REMATCH[2]}"
             echo "✓ Suite/arch from generic path: $suite, $arch_dir"
           fi
-          
+
           # PRIORITY 2: Extract from filename if path didn't yield results
           # Filename patterns: package_version_suite_arch.deb, package_version-arch.deb
           if [[ "$suite" == "unknown" ]]; then
@@ -128,7 +129,7 @@ jobs:
               fi
             fi
           fi
-          
+
           # Extract architecture from filename if not already found
           if [[ "$arch_dir" == "unknown" ]]; then
             if [[ "$filename" =~ _(amd64|arm64|armhf|i386|arm)\.deb$ ]] || [[ "$filename" =~ (amd64|arm64|armhf|i386|arm) ]]; then
@@ -141,7 +142,7 @@ jobs:
               done
             fi
           fi
-          
+
           # FALLBACK: If suite still unknown, use generic "stable" + infer from parent folder if possible
           if [[ "$suite" == "unknown" ]]; then
             # Last resort: check if parent contains known suite names
@@ -154,12 +155,12 @@ jobs:
               echo "⚠ Suite defaulting to: $suite"
             fi
           fi
-          
+
           # Normalize arm to armhf for consistency
           if [[ "$arch_dir" == "arm" ]]; then
             arch_dir="armhf"
           fi
-          
+
           # Only skip if arch is still unknown (we can tolerate unknown suite)
           if [[ "$arch_dir" != "unknown" ]]; then
             echo "→ Organizing $filename into debs/$suite/$arch_dir/ and debs/nightly-$suite/$arch_dir/"
@@ -171,7 +172,7 @@ jobs:
             echo "⚠ Skipping $filename (unable to determine architecture)"
           fi
         done < <(find ./downloaded-artifacts -name "*.deb" -type f)
-        
+
         echo ""
         echo "=== Final debs structure ==="
         find ./debs -type f -name "*.deb" | sort
@@ -180,71 +181,71 @@ jobs:
 
         echo "Final debs structure:"
         find ./debs -type f -name "*.deb"
-      env:
+        env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Generate Aptly Repos Configuration
+        - name: Generate Aptly Repos Configuration
       id: generate-repos
       run: |
         # Generate repos configuration dynamically based on discovered suites
         REPOS_FILE="repos-config.txt"
         > "$REPOS_FILE"  # Clear file
-        
+
         # Find all unique suites in the debs directory
         SUITES=$(find ./debs -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort | uniq)
-        
+
         if [ -z "$SUITES" ]; then
           echo "❌ Error: No suites found in debs directory"
           exit 1
         fi
-        
+
         echo "Discovered suites: $SUITES"
-        
+
         # For each suite, generate stable and nightly repo entries
         for suite in $SUITES; do
           if [[ "$suite" == nightly-* ]]; then
             continue  # Skip nightly entries as we'll handle them separately
           fi
-          
+
           # Find all architectures for this suite
           ARCHS=$(find "./debs/$suite" -mindepth 1 -maxdepth 1 -type d -printf '%f,' | sed 's/,$//')
-          
+
           if [ -z "$ARCHS" ]; then
             echo "⚠ No architectures found for suite: $suite"
             continue
           fi
-          
+
           echo "Suite '$suite' has architectures: $ARCHS"
-          
+
           # Write repos to file with proper quoting for Aptly
           # Format: suite,channel,"arch1,arch2,arch3",signed,glob_pattern
           echo "${suite},stable,\"${ARCHS}\",false,debs/${suite}/**/*.deb" >> "$REPOS_FILE"
           echo "nightly-${suite},nightly,\"${ARCHS}\",false,debs/nightly-${suite}/**/*.deb" >> "$REPOS_FILE"
         done
-        
+
         echo "Generated repos configuration:"
         cat "$REPOS_FILE"
-        
+
         # Store repos file path for next step
         echo "repos_file=$REPOS_FILE" >> $GITHUB_OUTPUT
 
-    - name: Verify repos configuration
+        - name: Verify repos configuration
       run: |
         echo "Generated repos configuration:"
         cat repos-config.txt
 
-    - name: Install Aptly and dependencies
+        - name: Install Aptly and dependencies
       run: |
         set -euo pipefail
         sudo apt-get update
         sudo apt-get install -y aptly gnupg dirmngr
 
-    - name: Set up GPG key for signing
+        - name: Set up GPG key for signing
       run: |
         set -euo pipefail
         # Import GPG signing key
         echo "${{ secrets.APT_SIGNING_KEY }}" | gpg --import --batch --yes 2>&1 | grep -E "imported|key"
-        
+
         # Get the key ID from the imported key (format: "sec   rsa4096/KEYID")
         export KEYID=$(gpg --list-secret-keys --keyid-format SHORT 2>/dev/null | grep "^sec" | awk '{print $2}' | cut -d'/' -f2 | head -1)
         if [ -z "$KEYID" ]; then
@@ -253,7 +254,7 @@ jobs:
         fi
         echo "GPG_KEYID=$KEYID" >> $GITHUB_ENV
         echo "✅ Using GPG key ID: $KEYID"
-        
+
         # Configure GPG for batch/non-interactive mode
         mkdir -p ~/.gnupg
         chmod 700 ~/.gnupg
@@ -263,27 +264,27 @@ jobs:
         batch
         yes
         GPG_EOF
-        
+
         cat >> ~/.gnupg/gpg-agent.conf << 'AGENT_EOF'
         allow-loopback-pinentry
         AGENT_EOF
         chmod 600 ~/.gnupg/gpg.conf ~/.gnupg/gpg-agent.conf
-        
+
         # Restart GPG agent to load new config
         gpg-connect-agent reloadagent /bye || true
-        
+
         echo "✅ GPG configured for batch mode"
 
-    - name: Create APT Repository with Aptly (CLI)
-      env:
+        - name: Create APT Repository with Aptly (CLI)
+        env:
         GNUPGHOME: ~/.gnupg
       run: |
         set -euo pipefail
-        
+
         echo "=== Creating Aptly repositories ==="
         echo "GPG Key ID: $GPG_KEYID"
-        
-        # Initialize aptly config  
+
+        # Initialize aptly config
         mkdir -p ~/.aptly
         cat > ~/.aptly/aptly.conf << 'APTLY_EOF'
         {
@@ -307,66 +308,66 @@ jobs:
           "debug": false
         }
         APTLY_EOF
-        
+
         echo "✅ Aptly config initialised"
-        
+
         # Create repositories and add packages
         echo ""
         echo "--- Processing suites ---"
-        
+
         # Find all suites
         SUITES=$(find ./debs -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | grep -v '^nightly-' | sort | uniq)
-        
+
         for suite in $SUITES; do
           echo ""
           echo "Processing suite: $suite"
-          
+
           # Get architectures for this suite
           ARCHS=$(find "./debs/$suite" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort)
           ARCH_STR=$(echo $ARCHS | tr '\n' ' ' | sed 's/ $//')
           echo "  Architectures: $ARCH_STR"
-          
+
           # Create stable repository
           STABLE_REPO="${suite}-stable"
           echo "  Creating repository: $STABLE_REPO"
           aptly repo create -architectures="$ARCH_STR" -distribution="$suite" "$STABLE_REPO" 2>&1 || echo "  (Repository may already exist)"
-          
+
           # Add packages to stable
           echo "  Adding packages to stable repository..."
           find "./debs/$suite" -name "*.deb" -type f | while read deb; do
             aptly repo add "$STABLE_REPO" "$deb" 2>&1 | grep -v "Loading packages" || true
           done
-          
+
           # Create nightly repository
           NIGHTLY_SUITE="nightly-$suite"
           NIGHTLY_REPO="${NIGHTLY_SUITE}-nightly"
-          
+
           if [ -d "./debs/$NIGHTLY_SUITE" ]; then
             echo "  Creating repository: $NIGHTLY_REPO"
             aptly repo create -architectures="$ARCH_STR" -distribution="$NIGHTLY_SUITE" "$NIGHTLY_REPO" 2>&1 || echo "  (Repository may already exist)"
-            
+
             echo "  Adding packages to nightly repository..."
             find "./debs/$NIGHTLY_SUITE" -name "*.deb" -type f | while read deb; do
               aptly repo add "$NIGHTLY_REPO" "$deb" 2>&1 | grep -v "Loading packages" || true
             done
           fi
         done
-        
+
         echo ""
         echo "=== Listing all repositories ==="
         aptly repo list -raw
-        
+
         echo ""
         echo "=== Publishing repositories ==="
-        
+
         # Group repositories by distribution for publishing
         for suite in $SUITES; do
           STABLE_REPO="${suite}-stable"
           NIGHTLY_REPO="nightly-${suite}-nightly"
-          
+
           echo ""
           echo "Publishing for suite: $suite"
-          
+
           # Check if nightly directory exists
           if [ -d "./debs/nightly-$suite" ]; then
             # Publish both stable and nightly under the same distribution
@@ -382,11 +383,11 @@ jobs:
             aptly publish repo -skip-signing -distribution="$suite" -component="stable" "$STABLE_REPO" "debian/$suite" 2>&1 | head -10 || echo "  (publish failed, continuing...)"
           fi
         done
-        
+
         echo ""
         echo "=== Listing published repositories ==="
         aptly publish list -raw || echo "(No published repositories)"
-        
+
         echo ""
         echo "=== Signing Release files ==="
         # Find and sign all Release files in the aptly public directory
@@ -398,13 +399,13 @@ jobs:
           gpg --batch --yes --pinentry-mode loopback --armor --clearsign --output "$(dirname "$release_file")/InRelease" "$release_file" 2>&1 | head -5 || echo "    (clearsign failed)"
         done
         echo "✅ Release file signing complete"
-        
+
         echo ""
         echo "=== Exporting repository to debian/ directory ==="
-        
+
         # Copy aptly-generated files to debian/ directory for artifact upload
         mkdir -p debian
-        
+
         # Find and copy the public directory from aptly
         if [ -d ~/.aptly/public ]; then
           echo "  Copying aptly public directory..."
@@ -412,7 +413,7 @@ jobs:
         else
           echo "  ⚠️  ~/.aptly/public not found"
         fi
-        
+
         echo ""
         echo "=== Final debian/ directory contents ==="
         if [ -d debian ] && [ "$(find debian -type f | wc -l)" -gt 0 ]; then
@@ -422,7 +423,7 @@ jobs:
           echo "⚠️  Warning: debian/ directory is empty or missing"
         fi
 
-    - name: Upload APT Repository artifacts
+        - name: Upload APT Repository artifacts
       if: always()
       uses: actions/upload-artifact@v4
       with:
@@ -433,34 +434,34 @@ jobs:
     needs: create-apt-repo
     runs-on: ubuntu-latest
     if: always() && needs.create-apt-repo.result == 'success'
-    
+
     steps:
-    - name: Checkout packages repository
+        - name: Checkout packages repository
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         ref: main
 
-    - name: Download APT repository artifacts
+        - name: Download APT repository artifacts
       uses: actions/download-artifact@v5
       with:
         pattern: opencardev-apt-repo*
         path: ./apt-artifacts
         merge-multiple: true
 
-    - name: Deploy to packages repository
+        - name: Deploy to packages repository
       run: |
         set -euo pipefail
         echo "Current packages repo structure:"
         ls -la
-        
+
         echo ""
         echo "=== Available APT artifacts ==="
         find ./apt-artifacts -type f 2>/dev/null | sort || echo "No artifacts found"
-        
+
         echo ""
         echo "=== Extracting and deploying APT repository ==="
-        
+
         # Aptly action outputs directory tree under apt-artifacts/debian; move into repo root
         if [ -d "apt-artifacts/debian/dists" ]; then
           echo "Moving dists/ to repo root..."
@@ -473,7 +474,7 @@ jobs:
           rm -rf pool
           cp -a apt-artifacts/debian/pool ./
         fi
-        
+
         echo ""
         echo "=== Checking for dists/pool after extraction ==="
         if [ -d "dists" ]; then
@@ -482,19 +483,19 @@ jobs:
         else
           echo "❌ dists/ directory NOT found"
         fi
-        
+
         if [ -d "pool" ]; then
           echo "✅ pool/ directory found"
           (find pool -type f | head -10) 2>/dev/null || true
         else
           echo "❌ pool/ directory NOT found"
         fi
-        
+
         # Verify we have Release files
         if [ -z "$(find dists -name Release -o -name InRelease 2>/dev/null | head -1 2>/dev/null || true)" ]; then
           echo "⚠️  Warning: No Release or InRelease files found in dists/"
         fi
-        
+
         echo ""
         echo "=== Configuring git ==="
         # Ensure GPG public key is available in the repository
@@ -514,44 +515,44 @@ jobs:
         find . -maxdepth 2 -type d | grep -E 'dists|pool' || true
         echo ""
         find . -name "Release*" -type f 2>/dev/null | head -5 || echo "No Release files"
-        
+
         echo ""
         echo "=== Configuring git ==="
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
-        
+
         # Add changes
         git add .
-        
+
         if git diff --staged --quiet; then
           echo "No changes to commit"
         else
           SOURCE_REPO="${{ inputs.source_repo || github.event.client_payload.source_repo || 'opencardev/aasdk' }}"
           BUILD_RUN_ID="${{ inputs.build_run_id || github.event.client_payload.build_run_id }}"
           DISTRIBUTION="${{ inputs.distribution || github.event.client_payload.distribution || 'trixie' }}"
-          
+
           git commit -m "Update APT repository from $SOURCE_REPO build $BUILD_RUN_ID - Distribution: $DISTRIBUTION - Generated: $(date -u '+%Y-%m-%d %H:%M:%S UTC') - Automated update via jinnatar/actions-aptly-repo@v2"
-          
+
           echo "Pushing changes..."
           git push
-          
+
           echo "✅ APT repository successfully updated!"
         fi
 
-    - name: Trigger GitHub Pages deployment
+        - name: Trigger GitHub Pages deployment
       if: success()
       run: |
         echo "Triggering GitHub Pages deployment..."
-        
+
         # Wait a moment for git push to complete
         sleep 5
-        
+
         # Trigger Pages build using GitHub API
         curl -X POST \
           -H "Accept: application/vnd.github.v3+json" \
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           https://api.github.com/repos/${{ github.repository }}/pages/builds
-        
+
         echo "GitHub Pages deployment triggered!"
 
   deploy-pages:
@@ -561,20 +562,20 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    
+
     steps:
-    - name: Checkout latest main with APT files  
+        - name: Checkout latest main with APT files
       uses: actions/checkout@v4
       with:
         ref: main
         fetch-depth: 0
         token: ${{ secrets.GITHUB_TOKEN }}
-        
-    - name: Pull latest changes including APT files
+
+        - name: Pull latest changes including APT files
       run: |
         git pull origin main
-        
-    - name: Verify APT repository structure
+
+        - name: Verify APT repository structure
       run: |
         echo "=== Repository contents ==="
         ls -la
@@ -584,16 +585,16 @@ jobs:
         echo ""
         echo "=== Checking for Release files ==="
         find . -maxdepth 3 -name "Release*" 2>/dev/null | head -10 || echo "No Release files found"
-        
-    - name: Setup Pages
+
+        - name: Setup Pages
       uses: actions/configure-pages@v5
-      
-    - name: Upload to GitHub Pages
+
+        - name: Upload to GitHub Pages
       uses: actions/upload-pages-artifact@v3
       with:
         path: '.'
-        
-    - name: Deploy to GitHub Pages
+
+        - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4
 
@@ -601,14 +602,14 @@ jobs:
     needs: [create-apt-repo, deploy-apt-repo, deploy-pages]
     if: always()
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Summary
+        - name: Summary
       run: |
         SOURCE_REPO="${{ inputs.source_repo || github.event.client_payload.source_repo || 'opencardev/aasdk' }}"
         BUILD_RUN_ID="${{ inputs.build_run_id || github.event.client_payload.build_run_id }}"
         DISTRIBUTION="${{ inputs.distribution || github.event.client_payload.distribution || 'trixie' }}"
-        
+
         echo "## opencardev APT Repository Update Complete (Aptly)"
         echo "Source Repository: $SOURCE_REPO"
         echo "Build Run ID: $BUILD_RUN_ID"
@@ -627,7 +628,7 @@ jobs:
           echo "# Add GPG key"
           echo "curl -fsSL https://opencardev.github.io/packages/opencardev.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/opencardev-archive-keyring.gpg"
           echo ""
-          
+
           if [ "$DISTRIBUTION" = "trixie" ]; then
             echo "# Add Trixie repositories (stable + optional nightly)"
             echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages trixie stable" | sudo tee /etc/apt/sources.list.d/opencardev.list'
@@ -645,7 +646,7 @@ jobs:
             echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages bookworm stable" | sudo tee /etc/apt/sources.list.d/opencardev-bookworm.list'
             echo 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages bookworm nightly" | sudo tee -a /etc/apt/sources.list.d/opencardev-bookworm.list'
           fi
-          
+
           echo ""
           echo "# Update and install"
           echo "sudo apt update"

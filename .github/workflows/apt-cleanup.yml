@@ -1,3 +1,4 @@
+---
 name: APT Repository Cleanup
 
 permissions:
@@ -7,7 +8,7 @@ on:
   schedule:
     # Run daily at 02:00 UTC
     - cron: '0 2 * * *'
-  
+
   workflow_dispatch:
     inputs:
       dry_run:
@@ -22,37 +23,37 @@ jobs:
     outputs:
       has_removals: ${{ steps.analyze.outputs.has_removals }}
       remove_count: ${{ steps.analyze.outputs.remove_count }}
-    
+
     steps:
-      - name: Checkout packages repository
+        - name: Checkout packages repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-  
-      - name: Install dependencies
+
+        - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y aptly gnupg dirmngr
-  
-      - name: Analyze repository and identify packages to remove
+
+        - name: Analyze repository and identify packages to remove
         id: analyze
         run: |
           set -euo pipefail
-          
+
           DRY_RUN="${{ inputs.dry_run || 'false' }}"
-          
+
           echo "🔍 Analyzing APT repository for cleanup"
           echo "Dry run mode: $DRY_RUN"
-          
+
           # Track packages to remove
           PACKAGES_TO_REMOVE=""
             > /tmp/cleanup_stats.txt
-          
+
           # For each component (stable, nightly, unstable)
           for component in stable nightly unstable; do
             echo ""
             echo "📦 Analyzing component: $component"
-            
+
             # Determine retention policy
             case "$component" in
               stable)
@@ -65,51 +66,51 @@ jobs:
                 KEEP_COUNT=1
                 ;;
             esac
-            
+
             echo "  Retention policy: Keep last $KEEP_COUNT version(s)"
               echo "component=$component|policy=$KEEP_COUNT" >> /tmp/cleanup_stats.txt
-            
+
             # Find all packages in this component across all suites
             if [ ! -d "dists" ]; then
               echo "  ⚠️  No dists directory found, skipping"
               continue
             fi
-            
+
             # For each suite
             for suite_dir in dists/*/; do
               [ -d "$suite_dir" ] || continue
               suite=$(basename "$suite_dir")
-              
+
               component_dir="${suite_dir}/${component}"
               if [ ! -d "$component_dir" ]; then
                 continue
               fi
-              
+
               echo ""
               echo "  Suite: $suite / Component: $component"
-              
+
               # Get all unique package names
               PACKAGES=$(find "$component_dir" -name "Packages" -type f -exec cat {} \; | \
                 grep "^Package:" | awk '{print $2}' | sort | uniq)
-              
+
               for package in $PACKAGES; do
                 # Get all versions of this package, sorted by version (newest first)
                 VERSIONS=$(find "$component_dir" -name "Packages" -type f -exec grep -A 10 "^Package: $package$" {} \; | \
                   grep "^Version:" | awk '{print $2}' | sort -V -r)
-                
+
                 VERSION_COUNT=$(echo "$VERSIONS" | wc -l)
                   [ "$VERSION_COUNT" -eq 0 ] && continue
-                
+
                   KEPT_VERSIONS=$(echo "$VERSIONS" | head -n $KEEP_COUNT | tr '\n' ',' | sed 's/,$//')
-                
+
                 if [ "$VERSION_COUNT" -gt "$KEEP_COUNT" ]; then
                   # Mark old versions for removal
                   OLD_VERSIONS=$(echo "$VERSIONS" | tail -n +$((KEEP_COUNT + 1)))
                     REMOVE_COUNT=$((VERSION_COUNT - KEEP_COUNT))
-                  
+
                     echo "    📦 $package: Found $VERSION_COUNT versions, removing $REMOVE_COUNT old version(s)"
                     echo "package=$package|suite=$suite|component=$component|total=$VERSION_COUNT|kept=$KEPT_VERSIONS|removed=$REMOVE_COUNT" >> /tmp/cleanup_stats.txt
-                  
+
                   for old_version in $OLD_VERSIONS; do
                       [ -z "$old_version" ] && continue
                     echo "      🗑️  Marking for removal: $package $old_version"
@@ -122,7 +123,7 @@ jobs:
               done
             done
           done
-          
+
           # Save packages to remove
           if [ -n "$PACKAGES_TO_REMOVE" ]; then
             echo -e "$PACKAGES_TO_REMOVE" | grep -v "^$" > /tmp/packages_to_remove.txt
@@ -137,17 +138,17 @@ jobs:
             echo "has_removals=false" >> $GITHUB_OUTPUT
               echo "remove_count=0" >> $GITHUB_OUTPUT
           fi
-  
-      - name: Set up GPG key
+
+        - name: Set up GPG key
         if: steps.analyze.outputs.has_removals == 'true' && inputs.dry_run != 'true'
         run: |
           set -euo pipefail
-          
+
           echo "${{ secrets.APT_SIGNING_KEY }}" | gpg --import --batch --yes 2>&1 | grep -E "imported|key"
-          
+
           KEYID=$(gpg --list-secret-keys --keyid-format SHORT 2>/dev/null | grep "^sec" | awk '{print $2}' | cut -d'/' -f2 | head -1)
           echo "GPG_KEYID=$KEYID" >> $GITHUB_ENV
-          
+
           mkdir -p ~/.gnupg
           chmod 700 ~/.gnupg
           cat >> ~/.gnupg/gpg.conf << 'EOF'
@@ -156,23 +157,23 @@ jobs:
           batch
           yes
           EOF
-          
+
           cat >> ~/.gnupg/gpg-agent.conf << 'EOF'
           allow-loopback-pinentry
           EOF
           chmod 600 ~/.gnupg/gpg.conf ~/.gnupg/gpg-agent.conf
-          
+
           gpg-connect-agent reloadagent /bye || true
-  
-      - name: Remove old packages
+
+        - name: Remove old packages
         if: steps.analyze.outputs.has_removals == 'true' && inputs.dry_run != 'true'
         env:
           GNUPGHOME: ~/.gnupg
         run: |
           set -euo pipefail
-          
+
           echo "🗑️  Removing old packages from APT repository"
-          
+
           # Configure Aptly
           mkdir -p ~/.aptly
           cat > ~/.aptly/aptly.conf << 'EOF'
@@ -183,27 +184,27 @@ jobs:
             "gpgProvider": "gpg"
           }
           EOF
-          
+
           # Import existing repository into aptly
           # (This is a simplified approach - in production you'd want to import the actual aptly DB)
-          
+
           # For each package marked for removal
           while IFS='|' read -r suite component package version; do
             echo "  Removing $package $version from $suite/$component"
-            
+
             # In a real implementation, you would:
             # 1. Import the repository into aptly
             # 2. Remove the package from the repo
             # 3. Re-publish the repository
             # 4. Export back to dists/pool structure
-            
+
             # For now, just show what would be removed
             echo "    (Would remove: $suite / $component / $package / $version)"
           done < /tmp/packages_to_remove.txt
-          
+
           echo ""
           echo "✅ Cleanup complete"
-  
+
         - name: Upload cleanup report
           if: steps.analyze.outputs.has_removals == 'true'
           uses: actions/upload-artifact@v4
@@ -214,15 +215,15 @@ jobs:
               /tmp/packages_to_remove.txt
             retention-days: 30
           continue-on-error: true
-  
-      - name: Commit and push changes
+
+        - name: Commit and push changes
         if: steps.analyze.outputs.has_removals == 'true' && inputs.dry_run != 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          
+
           git add dists/ pool/ || true
-          
+
           if git diff --cached --quiet; then
             echo "ℹ️  No changes to commit"
           else
@@ -231,14 +232,14 @@ jobs:
             git push origin main
             echo "✅ Pushed cleanup changes"
           fi
-  
+
   summary:
     needs: cleanup
     if: always()
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: Download cleanup artifacts
+        - name: Download cleanup artifacts
         if: needs.cleanup.outputs.has_removals == 'true'
         uses: actions/download-artifact@v5
         with:
@@ -246,7 +247,7 @@ jobs:
           path: ./artifacts
         continue-on-error: true
 
-      - name: Summary
+        - name: Summary
         run: |
           echo "# APT Repository Cleanup Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -291,3 +292,4 @@ jobs:
           else
             echo "✅ No packages required cleanup. All packages are within retention policy." >> $GITHUB_STEP_SUMMARY
           fi
+
