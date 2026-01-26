@@ -281,7 +281,7 @@ jobs:
         echo ""
         echo "📢 Publishing repositories"
         
-        # Publish each suite with all components
+        # Publish each suite (only current channel to avoid multi-component parse issues)
         for suite_dir in ./staging/*/; do
           [ -d "$suite_dir" ] || continue
           suite=$(basename "$suite_dir")
@@ -290,23 +290,11 @@ jobs:
           echo ""
           echo "Publishing $suite (component: $CHANNEL)"
           
-          # Drop existing publication if present
+          # Drop existing publication for this distribution to refresh
           aptly publish drop "$suite" filesystem:repo: 2>/dev/null || true
           
-          # Collect all repos for this suite across all components
-          all_repos=""
-          for component in stable nightly unstable; do
-            test_repo="${suite}-${component}"
-            if aptly repo list -raw | grep -q "^${test_repo}$"; then
-              all_repos="$all_repos $test_repo"
-            fi
-          done
-          
-          if [ -n "$all_repos" ]; then
-            # Publish with all components
-            echo "  Publishing repos:$all_repos"
-            aptly publish repo -skip-signing -distribution="$suite" -component="stable,nightly,unstable" $all_repos filesystem:repo:
-          fi
+          # Publish only the current channel/component
+          aptly publish repo -skip-signing -distribution="$suite" -component="$CHANNEL" "$repo_name" filesystem:repo:
         done
         
         echo ""
