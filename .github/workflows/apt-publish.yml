@@ -78,14 +78,15 @@ jobs:
           artifact_list=$(gh run view "$BUILD_RUN_ID" \
             --repo "$SOURCE_REPO" \
             --json artifacts \
-            --jq '.artifacts[] | select(.name | contains("deb")) | .name')
+            --jq '.artifacts[] | select(.name | test("-deb$")) | .name')
 
           if [ -z "$artifact_list" ]; then
             echo "❌ No deb artifacts found for run $BUILD_RUN_ID in $SOURCE_REPO"
             exit 1
           fi
 
-          artifact_count=$(echo "$artifact_list" | wc -l)
+          # Count artifacts (filter empty lines)
+          artifact_count=$(echo "$artifact_list" | grep -c '^' || echo "0")
           echo "✅ Found $artifact_count deb artifacts"
 
           # Download each artifact using gh CLI
@@ -110,6 +111,12 @@ jobs:
           
           echo ""
           echo "Download summary: $download_success succeeded, $download_failed failed"
+          
+          # Fail if any downloads failed
+          if [ "$download_failed" -gt 0 ]; then
+            echo "❌ Some artifact downloads failed, cannot proceed"
+            exit 1
+          fi
 
           # Count packages
           DEB_COUNT=$(find ./downloaded-artifacts -name "*.deb" 2>/dev/null | wc -l)
