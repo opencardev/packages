@@ -67,8 +67,9 @@ jobs:
           echo "📦 Downloading artifacts from $SOURCE_REPO run $BUILD_RUN_ID"
           echo "📍 Publishing to channel: $CHANNEL"
 
-          # Download all artifacts from the build run
-          gh run download "$BUILD_RUN_ID" --repo "$SOURCE_REPO" --dir ./downloaded-artifacts
+          # Download all artifacts from the build run using API-based downloader
+          # (more robust than relying on the `gh` CLI presence/config)
+          python3 researcj/download_artifacts.py --repo "$SOURCE_REPO" --run-id "$BUILD_RUN_ID" --out ./downloaded-artifacts
 
           # Count packages
           DEB_COUNT=$(find ./downloaded-artifacts -name "*.deb" 2>/dev/null | wc -l)
@@ -83,7 +84,7 @@ jobs:
           echo "BUILD_RUN_ID=$BUILD_RUN_ID" >> $GITHUB_ENV
           echo "CHANNEL=$CHANNEL" >> $GITHUB_ENV
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Organize packages by distribution and architecture
         id: organize
