@@ -54,7 +54,7 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y aptly gnupg dirmngr jq unzip
+          sudo apt-get install -y aptly gnupg dirmngr jq
 
       - name: Download build artifacts
         run: |
@@ -67,42 +67,37 @@ jobs:
           echo "📦 Downloading artifacts from $SOURCE_REPO run $BUILD_RUN_ID"
           echo "📍 Publishing to channel: $CHANNEL"
 
-          # Parse owner/repo
-          OWNER=$(echo "$SOURCE_REPO" | cut -d'/' -f1)
-          REPO=$(echo "$SOURCE_REPO" | cut -d'/' -f2)
-
           # Ensure destination
           rm -rf ./downloaded-artifacts || true
           mkdir -p ./downloaded-artifacts
 
-          # Query GitHub Actions artifacts for the specified run
-          API_URL="https://api.github.com/repos/$OWNER/$REPO/actions/runs/$BUILD_RUN_ID/artifacts"
-          echo "Listing artifacts via: $API_URL"
+          # Use GitHub CLI to list artifacts for the run
+          echo "Listing artifacts from run $BUILD_RUN_ID in $SOURCE_REPO..."
+          
+          # Get list of artifacts (only .deb artifacts)
+          artifact_list=$(gh run view "$BUILD_RUN_ID" \
+            --repo "$SOURCE_REPO" \
+            --json artifacts \
+            --jq '.artifacts[] | select(.name | contains("deb")) | .name')
 
-          artifacts_json=$(curl -sSL -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "$API_URL")
-
-          total_count=$(echo "$artifacts_json" | jq -r '.total_count // 0')
-          if [ "$total_count" -eq 0 ]; then
-            echo "❌ No artifacts found for run $BUILD_RUN_ID in $SOURCE_REPO"
+          if [ -z "$artifact_list" ]; then
+            echo "❌ No deb artifacts found for run $BUILD_RUN_ID in $SOURCE_REPO"
             exit 1
           fi
-          echo "✅ Found $total_count artifacts"
 
-          # Download and extract each artifact
-          echo "$artifacts_json" | jq -c '.artifacts[]' | while read -r artifact; do
-            name=$(echo "$artifact" | jq -r '.name')
-            archive_url=$(echo "$artifact" | jq -r '.archive_download_url')
+          artifact_count=$(echo "$artifact_list" | wc -l)
+          echo "✅ Found $artifact_count deb artifacts"
 
-            echo "Downloading artifact: $name"
-            tmp_zip="/tmp/${name}.zip"
-            curl -sSL -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/octet-stream" "$archive_url" -o "$tmp_zip" || true
-
-            if [ -f "$tmp_zip" ]; then
-              echo "Extracting $tmp_zip into ./downloaded-artifacts"
-              unzip -o "$tmp_zip" -d ./downloaded-artifacts || true
-              rm -f "$tmp_zip"
-            else
-              echo "⚠️  Failed to download $name"
+          # Download each artifact using gh CLI
+          echo "$artifact_list" | while read -r artifact_name; do
+            if [ -n "$artifact_name" ]; then
+              echo "Downloading artifact: $artifact_name"
+              gh run download "$BUILD_RUN_ID" \
+                --repo "$SOURCE_REPO" \
+                --name "$artifact_name" \
+                --dir "./downloaded-artifacts" || {
+                  echo "⚠️  Failed to download $artifact_name"
+                }
             fi
           done
 
@@ -120,7 +115,7 @@ jobs:
           echo "BUILD_RUN_ID=$BUILD_RUN_ID" >> $GITHUB_ENV
           echo "CHANNEL=$CHANNEL" >> $GITHUB_ENV
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Organize packages by distribution and architecture
         id: organize
