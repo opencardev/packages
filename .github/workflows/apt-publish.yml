@@ -89,17 +89,27 @@ jobs:
           echo "✅ Found $artifact_count deb artifacts"
 
           # Download each artifact using gh CLI
-          echo "$artifact_list" | while read -r artifact_name; do
+          download_failed=0
+          download_success=0
+          
+          while IFS= read -r artifact_name || [ -n "$artifact_name" ]; do
             if [ -n "$artifact_name" ]; then
               echo "Downloading artifact: $artifact_name"
-              gh run download "$BUILD_RUN_ID" \
+              if gh run download "$BUILD_RUN_ID" \
                 --repo "$SOURCE_REPO" \
                 --name "$artifact_name" \
-                --dir "./downloaded-artifacts" || {
-                  echo "⚠️  Failed to download $artifact_name"
-                }
+                --dir "./downloaded-artifacts"; then
+                echo "  ✓ Successfully downloaded $artifact_name"
+                download_success=$((download_success + 1))
+              else
+                echo "  ⚠️  Failed to download $artifact_name"
+                download_failed=$((download_failed + 1))
+              fi
             fi
-          done
+          done <<< "$artifact_list"
+          
+          echo ""
+          echo "Download summary: $download_success succeeded, $download_failed failed"
 
           # Count packages
           DEB_COUNT=$(find ./downloaded-artifacts -name "*.deb" 2>/dev/null | wc -l)
