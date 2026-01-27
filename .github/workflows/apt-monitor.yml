@@ -36,7 +36,7 @@ jobs:
             dev_branch: develop
             build_workflow: "OpenAuto Build and Test"
           - owner: opencardev
-            name: crankshaft-core
+            name: crankshaft.core
             main_branch: main
             dev_branch: develop
             build_workflow: CI
