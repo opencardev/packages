@@ -152,9 +152,9 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Repository | Main Branch | Dev Branch |" >> $GITHUB_STEP_SUMMARY
           echo "|------------|-------------|------------|" >> $GITHUB_STEP_SUMMARY
-          echo "| opencardev/aasdk | development → stable | development → nightly |" >> $GITHUB_STEP_SUMMARY
+          echo "| opencardev/aasdk | main → stable | develop → nightly |" >> $GITHUB_STEP_SUMMARY
           echo "| opencardev/openauto | main → stable | develop → nightly |" >> $GITHUB_STEP_SUMMARY
-          echo "| opencardev/crankshaft-core | main → stable | development → nightly |" >> $GITHUB_STEP_SUMMARY
+          echo "| opencardev/crankshaft.core | main → stable | develop → nightly |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ "${{ needs.monitor.result }}" == "success" ]; then
