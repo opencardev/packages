@@ -97,11 +97,11 @@ jobs:
           # Use GitHub CLI to list artifacts for the run
           echo "Listing artifacts from run $BUILD_RUN_ID in $SOURCE_REPO..."
           
-          # Get list of artifacts (only .deb artifacts)
+          # Get list of artifacts (all artifact names — we'll unpack and locate .deb files inside)
           artifact_list=$(gh run view "$BUILD_RUN_ID" \
             --repo "$SOURCE_REPO" \
             --json artifacts \
-            --jq '.artifacts[] | select(.name | test("-deb$")) | .name')
+            --jq '.artifacts[] | .name')
 
           if [ -z "$artifact_list" ]; then
             echo "❌ No deb artifacts found for run $BUILD_RUN_ID in $SOURCE_REPO"
@@ -142,6 +142,20 @@ jobs:
           fi
 
           # Count packages
+          # If artifacts were archives, unpack them to find .deb files
+          for archive in ./downloaded-artifacts/*; do
+            if [ -f "$archive" ]; then
+              case "$archive" in
+                *.zip)
+                  unzip -o "$archive" -d ./downloaded-artifacts || true
+                  ;;
+                *.tar.gz|*.tgz)
+                  tar -xzf "$archive" -C ./downloaded-artifacts || true
+                  ;;
+              esac
+            fi
+          done
+
           DEB_COUNT=$(find ./downloaded-artifacts -name "*.deb" 2>/dev/null | wc -l)
           if [ "$DEB_COUNT" -eq 0 ]; then
             echo "❌ No .deb packages found in downloaded artifacts"
@@ -156,6 +170,7 @@ jobs:
           echo "CHANNEL=$CHANNEL" >> $GITHUB_ENV
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Organize packages by distribution and architecture
         id: organize
