@@ -54,7 +54,30 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y aptly gnupg dirmngr jq
+          sudo apt-get install -y gnupg dirmngr jq curl ca-certificates apt-transport-https software-properties-common
+
+          # Add Aptly repository and install Aptly (not available in default Ubuntu repos)
+          if ! command -v aptly >/dev/null 2>&1; then
+            echo "Adding aptly repository and key"
+            curl -sL https://repo.aptly.info/aptly.pub | sudo apt-key add -
+            echo "deb https://repo.aptly.info/ stable main" | sudo tee /etc/apt/sources.list.d/aptly.list
+            sudo apt-get update
+            sudo apt-get install -y aptly
+          else
+            echo "aptly already installed"
+          fi
+
+          # Ensure GitHub CLI is installed (used to download artifacts)
+          if ! command -v gh >/dev/null 2>&1; then
+            echo "Installing GitHub CLI"
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg >/dev/null 2>&1 || true
+            sudo chmod 644 /usr/share/keyrings/githubcli-archive-keyring.gpg || true
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
+            sudo apt-get update
+            sudo apt-get install -y gh
+          else
+            echo "gh already installed"
+          fi
 
       - name: Download build artifacts
         run: |
