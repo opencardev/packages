@@ -145,6 +145,7 @@ jobs:
           # If artifacts were archives, unpack them to find .deb files
           for archive in ./downloaded-artifacts/*; do
             if [ -f "$archive" ]; then
+              echo "Unpacking archive: $archive"
               case "$archive" in
                 *.zip)
                   unzip -o "$archive" -d ./downloaded-artifacts || true
@@ -152,9 +153,18 @@ jobs:
                 *.tar.gz|*.tgz)
                   tar -xzf "$archive" -C ./downloaded-artifacts || true
                   ;;
+                *.deb)
+                  # already a deb, nothing to unpack
+                  ;;
+                *)
+                  echo "  ⚪ Unknown file type, leaving as-is: $archive"
+                  ;;
               esac
             fi
           done
+
+          echo "\n📂 Contents of ./downloaded-artifacts (top 200 lines):"
+          ls -laR ./downloaded-artifacts | sed -n '1,200p' || true
 
           DEB_COUNT=$(find ./downloaded-artifacts -name "*.deb" 2>/dev/null | wc -l)
           if [ "$DEB_COUNT" -eq 0 ]; then
