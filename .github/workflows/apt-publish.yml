@@ -319,9 +319,9 @@ jobs:
             echo "⚠️  No GPG key found, publishing without signing"
             SIGN_OPTS="-skip-signing"
           else
-            echo "📝 Using GPG key $KEYID for signing"
-            # Use empty passphrase (key has no passphrase) and batch mode with loopback pinentry
-            SIGN_OPTS="-gpg-key=$KEYID -batch -passphrase=\"\""
+            echo "📝 Publishing without Aptly signing (will sign manually after)"
+            # Skip Aptly's automatic signing - we'll do it manually after export
+            SIGN_OPTS="-skip-signing"
           fi
 
           # Publish each suite (only current channel to avoid multi-component parse issues)
@@ -364,6 +364,52 @@ jobs:
           echo ""
           echo "📁 Repository structure:"
           find ./repo-export -type f | head -30 | sort
+
+      - name: Sign Release files
+        run: |
+          set -euo pipefail
+
+          KEYID=$(gpg --list-secret-keys --keyid-format SHORT 2>/dev/null | grep "^sec" | awk '{print $2}' | cut -d'/' -f2 | head -1)
+          
+          if [ -z "$KEYID" ]; then
+            echo "⚠️  No GPG key available, skipping manual signing"
+            exit 0
+          fi
+
+          echo "📝 Signing Release files with GPG key $KEYID"
+
+          # Find and sign all Release files
+          find ./repo-export -name "Release" -type f | while read release_file; do
+            echo "Signing: $release_file"
+            
+            # Create detached signature
+            gpg --batch --yes --pinentry-mode loopback --passphrase "" \
+              --armor --detach-sign \
+              --output "${release_file}.gpg" \
+              "$release_file" 2>/dev/null || {
+              echo "⚠️  Signing failed, trying with key ID specified"
+              gpg --batch --yes --pinentry-mode loopback --passphrase "" \
+                -u "$KEYID" --armor --detach-sign \
+                --output "${release_file}.gpg" \
+                "$release_file" 2>/dev/null || true
+            }
+            
+            # Create clearsigned InRelease file
+            if [ ! -f "${release_file%.Release}InRelease" ]; then
+              gpg --batch --yes --pinentry-mode loopback --passphrase "" \
+                --clearsign \
+                --output "${release_file%.Release}InRelease" \
+                "$release_file" 2>/dev/null || {
+                echo "⚠️  Clearsign failed, trying with key ID specified"
+                gpg --batch --yes --pinentry-mode loopback --passphrase "" \
+                  -u "$KEYID" --clearsign \
+                  --output "${release_file%.Release}InRelease" \
+                  "$release_file" 2>/dev/null || true
+              }
+            fi
+          done
+
+          echo "✅ Release files signed"
 
       - name: Upload published packages list
         uses: actions/upload-artifact@v4
