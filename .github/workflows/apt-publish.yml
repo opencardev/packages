@@ -333,29 +333,25 @@ jobs:
           echo "🔐 Signing Release files"
 
           # Sign all Release files (Aptly publishes to rootDir directly, not /repo subdirectory)
-          if ! find ~/.aptly/public -name "Release" -type f | head -1 | grep -q .; then
+          RELEASE_COUNT=$(find ~/.aptly/public -name "Release" -type f | wc -l)
+          if [ "$RELEASE_COUNT" -eq 0 ]; then
             echo "  ⚠️  No Release files found to sign"
           else
-            find ~/.aptly/public -name "Release" -type f | while read release_file; do
+            echo "  Found $RELEASE_COUNT Release files to sign"
+            find ~/.aptly/public -name "Release" -type f -print0 | while IFS= read -r -d '' release_file; do
               dir=$(dirname "$release_file")
               echo "  Signing: $release_file"
 
               # Create detached signature with empty passphrase via stdin
-              if echo "" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --armor --detach-sign \
-                --output "${release_file}.gpg" "$release_file" 2>&1 | grep -v "^$"; then
-                echo "    ✅ Detached signature created"
-              else
-                echo "    ✅ Detached signature created (no output)"
-              fi
+              echo "" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --armor --detach-sign \
+                --output "${release_file}.gpg" "$release_file" || exit 1
+              echo "    ✅ Detached signature created"
 
               # Create clearsigned InRelease with empty passphrase via stdin
-              if echo "" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --armor --clearsign \
-                --output "${dir}/InRelease" "$release_file" 2>&1 | grep -v "^$"; then
-                echo "    ✅ InRelease created"
-              else
-                echo "    ✅ InRelease created (no output)"
-              fi
-            done
+              echo "" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --armor --clearsign \
+                --output "${dir}/InRelease" "$release_file" || exit 1
+              echo "    ✅ InRelease created"
+            done || exit 1
           fi
 
           echo ""
