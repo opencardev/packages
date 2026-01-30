@@ -232,7 +232,7 @@ jobs:
 
           # Configure Aptly
           mkdir -p ~/.aptly
-          cat > ~/.aptly/aptly.conf << EOF
+          cat > ~/.aptly.conf << EOF
           {
             "rootDir": "$HOME/.aptly",
             "downloadConcurrency": 4,
