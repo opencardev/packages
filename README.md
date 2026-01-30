@@ -8,13 +8,13 @@ This repository hosts the official APT packages for OpenCarDev projects, includi
 
 ```bash
 # Add the GPG key
-curl -fsSL https://opencardev.github.io/packages/opencardev.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/opencardev-archive-keyring.gpg
+curl -fsSL https://apt.opencardev.org/opencardev.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/opencardev-archive-keyring.gpg
 
 # Add the repository (stable component)
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/opencardev.list
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://apt.opencardev.org $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/opencardev.list
 
 # Optional: enable nightly component alongside stable
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages $(lsb_release -cs) nightly" | sudo tee -a /etc/apt/sources.list.d/opencardev.list
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://apt.opencardev.org $(lsb_release -cs) nightly" | sudo tee -a /etc/apt/sources.list.d/opencardev.list
 
 # Update package lists
 sudo apt update
@@ -168,16 +168,16 @@ You can check the current status of the APT repository:
 
 ```bash
 # Check if repository is accessible
-curl -I https://opencardev.github.io/packages/
+curl -I https://apt.opencardev.org/
 
 # Verify GPG key is available
-curl -s https://opencardev.github.io/packages/opencardev.gpg.key | gpg --show-keys
+curl -s https://apt.opencardev.org/opencardev.gpg.key | gpg --show-keys
 
 # Test repository metadata (replace 'trixie' with your distribution)
-curl -s https://opencardev.github.io/packages/dists/trixie/Release
+curl -s https://apt.opencardev.org/dists/trixie/Release
 
 # Check available packages
-curl -s https://opencardev.github.io/packages/dists/trixie/main/binary-amd64/Packages
+curl -s https://apt.opencardev.org/dists/trixie/main/binary-amd64/Packages
 ```
 
 ### Workflow Status
@@ -197,7 +197,7 @@ If the quick setup doesn't work for your distribution, you can set up the reposi
 sudo mkdir -p /usr/share/keyrings
 
 # Download and install the GPG key
-wget -qO- https://opencardev.github.io/packages/opencardev.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/opencardev-archive-keyring.gpg
+wget -qO- https://apt.opencardev.org/opencardev.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/opencardev-archive-keyring.gpg
 
 # Verify the key was installed
 gpg --list-keys --keyring /usr/share/keyrings/opencardev-archive-keyring.gpg
@@ -211,10 +211,10 @@ DISTRO=$(lsb_release -cs)
 ARCH=$(dpkg --print-architecture)
 
 # Create the source list file
-echo "deb [arch=$ARCH signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages $DISTRO stable" | sudo tee /etc/apt/sources.list.d/opencardev.list
+echo "deb [arch=$ARCH signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://apt.opencardev.org $DISTRO stable" | sudo tee /etc/apt/sources.list.d/opencardev.list
 
 # Optional: nightly channel
-echo "deb [arch=$ARCH signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages $DISTRO nightly" | sudo tee -a /etc/apt/sources.list.d/opencardev.list
+echo "deb [arch=$ARCH signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://apt.opencardev.org $DISTRO nightly" | sudo tee -a /etc/apt/sources.list.d/opencardev.list
 
 # Update package cache
 sudo apt update
@@ -248,8 +248,8 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y curl gnupg lsb-release
 
 # Add OpenCarDev repository
-curl -fsSL https://opencardev.github.io/packages/opencardev.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/opencardev-archive-keyring.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/opencardev.list
+curl -fsSL https://apt.opencardev.org/opencardev.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/opencardev-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://apt.opencardev.org $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/opencardev.list
 
 # Update and install AASDK
 sudo apt update
@@ -309,7 +309,7 @@ If packages aren't available for your architecture:
 dpkg --print-architecture
 
 # Verify supported architectures
-curl -s https://opencardev.github.io/packages/dists/$(lsb_release -cs)/Release | grep Architecture
+curl -s https://apt.opencardev.org/dists/$(lsb_release -cs)/Release | grep Architecture
 ```
 
 #### Distribution Not Supported
@@ -318,7 +318,7 @@ If your distribution isn't supported, you can try using packages from a compatib
 
 ```bash
 # For newer Debian/Ubuntu, try using bookworm packages
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages bookworm main" | sudo tee /etc/apt/sources.list.d/opencardev.list
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://apt.opencardev.org bookworm main" | sudo tee /etc/apt/sources.list.d/opencardev.list
 ```
 
 ### Dependency Issues
@@ -428,7 +428,7 @@ To contribute packages or report issues:
 - **Key ID**: `DDD61787D9360C2F`
 - **Fingerprint**: `B4F9 E5D4 E41B 0CBE EADF  33CA DDD6 1787 D936 0C2F`
 - **Name**: OpenCarDev UK (Apt Signing)
-- **Download**: https://opencardev.github.io/packages/opencardev.gpg.key
+- **Download**: https://apt.opencardev.org/opencardev.gpg.key
 
 ### Package Signing
 
