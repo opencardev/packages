@@ -312,20 +312,19 @@ jobs:
 
           # Get the key ID for signing
           KEYID=$(gpg --list-secret-keys --keyid-format SHORT 2>/dev/null | grep "^sec" | awk '{print $2}' | cut -d'/' -f2 | head -1)
+          
+          # Extract passphrase if available - needed for Aptly GPG signing
+          GPG_PASSPHRASE="${{ secrets.APT_SIGNING_PASSPHRASE }}"
+          
           if [ -z "$KEYID" ]; then
             echo "⚠️  No GPG key found, publishing without signing"
             SIGN_OPTS="-skip-signing"
+          elif [ -n "$GPG_PASSPHRASE" ]; then
+            echo "📝 Using GPG key $KEYID for Aptly signing with passphrase"
+            SIGN_OPTS="-gpg-key=$KEYID -batch -passphrase=$GPG_PASSPHRASE"
           else
-            echo "📝 Using GPG key $KEYID for Aptly signing"
+            echo "📝 Using GPG key $KEYID for Aptly signing (no passphrase)"
             SIGN_OPTS="-gpg-key=$KEYID -batch"
-          fi
-
-          # Extract passphrase if available - needed for Aptly GPG signing
-          # The APT_SIGNING_KEY secret is an exported private key that may have a passphrase
-          GPG_PASSPHRASE="${{ secrets.APT_SIGNING_PASSPHRASE }}"
-          if [ -n "$GPG_PASSPHRASE" ]; then
-            export GPG_PASS="$GPG_PASSPHRASE"
-            echo "✅ GPG_PASS environment variable set for signing"
           fi
 
           # Publish each suite (only current channel to avoid multi-component parse issues)
