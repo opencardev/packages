@@ -291,7 +291,7 @@ jobs:
 
           # Configure Aptly
           mkdir -p ~/.aptly
-          cat > ~/.aptly/aptly.conf << 'EOF'
+          cat > ~/.aptly/aptly.conf << EOF
           {
             "rootDir": "$HOME/.aptly",
             "downloadConcurrency": 4,
@@ -308,27 +308,20 @@ jobs:
             "ppaDistributorID": "debian",
             "ppaCodename": "",
             "skipContentsPublishing": false,
-            "FileSystemPublishEndpoints": {},
+            "FileSystemPublishEndpoints": {
+              "repo": {
+                "rootDir": "$HOME/.aptly/public",
+                "linkMethod": "copy"
+              }
+            },
             "S3PublishEndpoints": {},
             "SwiftPublishEndpoints": {}
           }
           EOF
 
-          # Check if existing repo state exists
+          # Existing published repository import is skipped to avoid missing repo errors
           if [ -d "dists" ]; then
-            echo "📥 Importing existing APT repository"
-            # Import existing published repos into aptly
-            for suite_dir in dists/*/; do
-              suite=$(basename "$suite_dir")
-              if aptly publish list -raw | grep -q "^${suite} "; then
-                echo "  ✓ Repository $suite already imported"
-              else
-                # Try to import if Release file exists
-                if [ -f "dists/${suite}/Release" ]; then
-                  aptly publish repo -skip-signing -distribution="${suite}" dummy "filesystem:." || true
-                fi
-              fi
-            done
+            echo "📥 Existing APT repository detected; will rebuild publications"
           fi
 
           # Process each suite in staging
