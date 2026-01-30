@@ -317,7 +317,7 @@ jobs:
             SIGN_OPTS="-skip-signing"
           else
             echo "📝 Using GPG key $KEYID for Aptly signing"
-            SIGN_OPTS="-gpgKey=$KEYID"
+            SIGN_OPTS="-gpg-key=$KEYID -batch"
           fi
 
           # Extract passphrase if available - needed for Aptly GPG signing
