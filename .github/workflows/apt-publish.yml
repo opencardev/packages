@@ -96,9 +96,11 @@ jobs:
           echo "Listing artifacts from run $BUILD_RUN_ID in $SOURCE_REPO..."
           
           # Get list of artifacts (all artifact names — we'll unpack and locate .deb files inside)
-          artifact_list=$(gh run view "$BUILD_RUN_ID" \
-            --repo "$SOURCE_REPO" \
-            --json artifacts \
+          owner=$(echo "$SOURCE_REPO" | cut -d'/' -f1)
+          repo=$(echo "$SOURCE_REPO" | cut -d'/' -f2)
+          artifact_list=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${owner}/${repo}/actions/runs/${BUILD_RUN_ID}/artifacts" \
             --jq '.artifacts[] | .name')
 
           if [ -z "$artifact_list" ]; then
