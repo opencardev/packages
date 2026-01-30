@@ -41,7 +41,7 @@ on:
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout packages repository
@@ -56,12 +56,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gnupg dirmngr jq curl ca-certificates apt-transport-https software-properties-common
 
-          # Add Aptly repository and install Aptly (not available in default Ubuntu repos)
+          # Install Aptly from default Ubuntu repos (available in Ubuntu 24.04+)
+          # Note: This workflow requires ubuntu-24.04 runner
           if ! command -v aptly >/dev/null 2>&1; then
-            echo "Adding aptly repository and key"
-            curl -sL https://repo.aptly.info/aptly.pub | sudo apt-key add -
-            echo "deb https://repo.aptly.info/ stable main" | sudo tee /etc/apt/sources.list.d/aptly.list
-            sudo apt-get update
+            echo "Installing aptly from default repositories"
             sudo apt-get install -y aptly
           else
             echo "aptly already installed"
