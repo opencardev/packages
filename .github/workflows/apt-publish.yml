@@ -320,7 +320,7 @@ jobs:
             SKIP_SIGN="-skip-signing"
           else
             echo "📝 Using GPG key $KEYID for signing"
-            SKIP_SIGN="-gpgKey=$KEYID"
+            SKIP_SIGN="-gpg-key=$KEYID"
           fi
 
           # Publish each suite (only current channel to avoid multi-component parse issues)
