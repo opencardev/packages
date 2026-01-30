@@ -118,6 +118,18 @@ jobs:
             -f channel="stable"
           
           echo "✅ Triggered stable publish for build ${{ steps.check_builds.outputs.main_run }}"
+          echo "⏳ Waiting for the stable publish to complete before continuing"
+          publish_run_id=$(gh run list --repo opencardev/packages \
+            --workflow "apt-publish.yml" \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId')
+          if [ -n "$publish_run_id" ] && [ "$publish_run_id" != "null" ]; then
+            gh run watch "$publish_run_id" --repo opencardev/packages
+          else
+            echo "❌ Could not determine publish run id for stable channel"
+            exit 1
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -133,6 +145,18 @@ jobs:
             -f channel="nightly"
           
           echo "✅ Triggered nightly publish for build ${{ steps.check_builds.outputs.dev_run }}"
+          echo "⏳ Waiting for the nightly publish to complete before continuing"
+          publish_run_id=$(gh run list --repo opencardev/packages \
+            --workflow "apt-publish.yml" \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId')
+          if [ -n "$publish_run_id" ] && [ "$publish_run_id" != "null" ]; then
+            gh run watch "$publish_run_id" --repo opencardev/packages
+          else
+            echo "❌ Could not determine publish run id for nightly channel"
+            exit 1
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
