@@ -222,9 +222,6 @@ jobs:
           EOF
           chmod 600 ~/.gnupg/gpg.conf ~/.gnupg/gpg-agent.conf
 
-          # Set empty passphrase for signing (key likely has no passphrase)
-          echo "" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --armor --detach-sign --output /tmp/test.gpg /etc/hostname 2>&1 || true
-          
           # Reload agent
           gpg-connect-agent reloadagent /bye || true
 
