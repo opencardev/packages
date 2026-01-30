@@ -313,6 +313,16 @@ jobs:
           echo ""
           echo "📢 Publishing repositories"
 
+          # Get the key ID for signing
+          KEYID=$(gpg --list-secret-keys --keyid-format SHORT 2>/dev/null | grep "^sec" | awk '{print $2}' | cut -d'/' -f2 | head -1)
+          if [ -z "$KEYID" ]; then
+            echo "⚠️  No GPG key found, publishing without signing"
+            SKIP_SIGN="-skip-signing"
+          else
+            echo "📝 Using GPG key $KEYID for signing"
+            SKIP_SIGN="-gpgKey=$KEYID"
+          fi
+
           # Publish each suite (only current channel to avoid multi-component parse issues)
           for suite_dir in ./staging/*/; do
             [ -d "$suite_dir" ] || continue
@@ -320,39 +330,14 @@ jobs:
             repo_name="${suite}-${CHANNEL}"
 
             echo ""
-            echo "Publishing $suite (component: $CHANNEL)"
+            echo "Publishing $suite (component: $CHANNEL) with key $KEYID"
 
             # Drop existing publication for this distribution to refresh
             aptly publish drop "$suite" filesystem:repo: 2>/dev/null || true
 
-            # Publish only the current channel/component
-            aptly publish repo -skip-signing -distribution="$suite" -component="$CHANNEL" "$repo_name" filesystem:repo:
+            # Publish with GPG key for signing
+            eval "aptly publish repo $SKIP_SIGN -distribution=\"$suite\" -component=\"$CHANNEL\" \"$repo_name\" filesystem:repo:"
           done
-
-          echo ""
-          echo "🔐 Signing Release files"
-
-          # Sign all Release files (Aptly publishes to rootDir directly, not /repo subdirectory)
-          RELEASE_COUNT=$(find ~/.aptly/public -name "Release" -type f | wc -l)
-          if [ "$RELEASE_COUNT" -eq 0 ]; then
-            echo "  ⚠️  No Release files found to sign"
-          else
-            echo "  Found $RELEASE_COUNT Release files to sign"
-            find ~/.aptly/public -name "Release" -type f -print0 | while IFS= read -r -d '' release_file; do
-              dir=$(dirname "$release_file")
-              echo "  Signing: $release_file"
-
-              # Create detached signature with empty passphrase via stdin
-              echo "" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --armor --detach-sign \
-                --output "${release_file}.gpg" "$release_file" || exit 1
-              echo "    ✅ Detached signature created"
-
-              # Create clearsigned InRelease with empty passphrase via stdin
-              echo "" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --armor --clearsign \
-                --output "${dir}/InRelease" "$release_file" || exit 1
-              echo "    ✅ InRelease created"
-            done || exit 1
-          fi
 
           echo ""
           echo "✅ Repository update complete"
