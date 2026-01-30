@@ -1,7 +1,6 @@
-Origin: debian trixie
-Label: debian trixie
+Origin: . trixie
+Label: . trixie
 Archive: trixie
 Suite: trixie
-Codename: trixie
 Architecture: arm64
 Component: stable
