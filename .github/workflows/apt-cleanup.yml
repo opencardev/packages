@@ -19,7 +19,8 @@ on:
 
 jobs:
   cleanup:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
     outputs:
       has_removals: ${{ steps.analyze.outputs.has_removals }}
       remove_count: ${{ steps.analyze.outputs.remove_count }}
