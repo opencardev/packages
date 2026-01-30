@@ -317,10 +317,11 @@ jobs:
           KEYID=$(gpg --list-secret-keys --keyid-format SHORT 2>/dev/null | grep "^sec" | awk '{print $2}' | cut -d'/' -f2 | head -1)
           if [ -z "$KEYID" ]; then
             echo "⚠️  No GPG key found, publishing without signing"
-            SKIP_SIGN="-skip-signing"
+            SIGN_OPTS="-skip-signing"
           else
             echo "📝 Using GPG key $KEYID for signing"
-            SKIP_SIGN="-gpg-key=$KEYID"
+            # Use empty passphrase (key has no passphrase) and batch mode with loopback pinentry
+            SIGN_OPTS="-gpg-key=$KEYID -batch -passphrase=\"\""
           fi
 
           # Publish each suite (only current channel to avoid multi-component parse issues)
@@ -335,8 +336,8 @@ jobs:
             # Drop existing publication for this distribution to refresh
             aptly publish drop "$suite" filesystem:repo: 2>/dev/null || true
 
-            # Publish with GPG key for signing
-            eval "aptly publish repo $SKIP_SIGN -distribution=\"$suite\" -component=\"$CHANNEL\" \"$repo_name\" filesystem:repo:"
+            # Publish with GPG key for signing (eval to handle quotes in SIGN_OPTS)
+            eval "aptly publish repo $SIGN_OPTS -distribution=\"$suite\" -component=\"$CHANNEL\" \"$repo_name\" filesystem:repo:"
           done
 
           echo ""
