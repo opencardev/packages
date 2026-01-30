@@ -350,9 +350,9 @@ jobs:
           rm -rf ./repo-export
           mkdir -p ./repo-export
 
-          # Copy from aptly public directory
-          if [ -d ~/.aptly/public/repo ]; then
-            cp -a ~/.aptly/public/repo/* ./repo-export/
+          # Copy from aptly public directory (Aptly publishes to ~/.aptly/public directly)
+          if [ -d ~/.aptly/public ]; then
+            cp -a ~/.aptly/public/* ./repo-export/
             echo "✅ Exported repository structure"
           else
             echo "❌ No aptly public directory found"
