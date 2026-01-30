@@ -113,22 +113,37 @@ jobs:
           artifact_count=$(echo "$artifact_list" | grep -c '^' || echo "0")
           echo "✅ Found $artifact_count deb artifacts"
 
-          # Download each artifact using gh CLI
+          # Download each artifact using REST API (more reliable than gh run download)
           download_failed=0
           download_success=0
           
           while IFS= read -r artifact_name || [ -n "$artifact_name" ]; do
             if [ -n "$artifact_name" ]; then
               echo "Downloading artifact: $artifact_name"
-              if gh run download "$BUILD_RUN_ID" \
-                --repo "$SOURCE_REPO" \
-                --name "$artifact_name" \
-                --dir "./downloaded-artifacts"; then
-                echo "  ✓ Successfully downloaded $artifact_name"
-                download_success=$((download_success + 1))
-              else
-                echo "  ⚠️  Failed to download $artifact_name"
+              
+              # Use REST API to get artifact download URL
+              artifact_url=$(gh api \
+                -H "Accept: application/vnd.github+json" \
+                "/repos/${owner}/${repo}/actions/runs/${BUILD_RUN_ID}/artifacts" \
+                --jq ".artifacts[] | select(.name == \"$artifact_name\") | .archive_download_url" | head -1)
+              
+              if [ -z "$artifact_url" ] || [ "$artifact_url" = "null" ]; then
+                echo "  ⚠️  Could not get download URL for $artifact_name"
                 download_failed=$((download_failed + 1))
+              else
+                # Download using curl with authentication
+                artifact_file="./downloaded-artifacts/${artifact_name}.zip"
+                if curl -sSL \
+                  -H "Authorization: token $GH_TOKEN" \
+                  -H "Accept: application/vnd.github+json" \
+                  -o "$artifact_file" \
+                  "$artifact_url"; then
+                  echo "  ✓ Successfully downloaded $artifact_name"
+                  download_success=$((download_success + 1))
+                else
+                  echo "  ⚠️  Failed to download $artifact_name via REST API"
+                  download_failed=$((download_failed + 1))
+                fi
               fi
             fi
           done <<< "$artifact_list"
