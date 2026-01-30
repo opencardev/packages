@@ -326,8 +326,8 @@ jobs:
           echo ""
           echo "🔐 Signing Release files"
 
-          # Sign all Release files
-          find ~/.aptly/public/repo -name "Release" -type f | while read release_file; do
+          # Sign all Release files (Aptly publishes to rootDir directly, not /repo subdirectory)
+          find ~/.aptly/public -name "Release" -type f | while read release_file; do
             dir=$(dirname "$release_file")
             echo "  Signing: $release_file"
 
