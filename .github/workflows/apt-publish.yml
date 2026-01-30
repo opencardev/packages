@@ -319,9 +319,16 @@ jobs:
             echo "⚠️  No GPG key found, publishing without signing"
             SIGN_OPTS="-skip-signing"
           else
-            echo "📝 Publishing without Aptly signing (will sign manually after)"
-            # Skip Aptly's automatic signing - we'll do it manually after export
-            SIGN_OPTS="-skip-signing"
+            echo "📝 Using GPG key $KEYID for Aptly signing"
+            SIGN_OPTS="-gpgKey=$KEYID"
+          fi
+
+          # Extract passphrase if available - needed for Aptly GPG signing
+          # The APT_SIGNING_KEY secret is an exported private key that may have a passphrase
+          GPG_PASSPHRASE="${{ secrets.APT_SIGNING_PASSPHRASE }}"
+          if [ -n "$GPG_PASSPHRASE" ]; then
+            export GPG_PASS="$GPG_PASSPHRASE"
+            echo "✅ GPG_PASS environment variable set for signing"
           fi
 
           # Publish each suite (only current channel to avoid multi-component parse issues)
