@@ -66,126 +66,55 @@ jobs:
             echo "aptly already installed"
           fi
 
-          # Ensure GitHub CLI is installed (used to download artifacts)
-          if ! command -v gh >/dev/null 2>&1; then
-            echo "Installing GitHub CLI"
-            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg >/dev/null 2>&1 || true
-            sudo chmod 644 /usr/share/keyrings/githubcli-archive-keyring.gpg || true
-            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
-            sudo apt-get update
-            sudo apt-get install -y gh
-          else
-            echo "gh already installed"
-          fi
-
       - name: Download build artifacts
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          repo: ${{ inputs.source_repo }}
+          run_id: ${{ inputs.build_run_id }}
+          path: ./downloaded-artifacts
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Unpack and verify artifacts
         run: |
           set -euo pipefail
 
+          CHANNEL="${{ inputs.channel }}"
           SOURCE_REPO="${{ inputs.source_repo }}"
           BUILD_RUN_ID="${{ inputs.build_run_id }}"
-          CHANNEL="${{ inputs.channel }}"
 
-          echo "📦 Downloading artifacts from $SOURCE_REPO run $BUILD_RUN_ID"
+          echo "📦 Processing artifacts from $SOURCE_REPO run $BUILD_RUN_ID"
           echo "📍 Publishing to channel: $CHANNEL"
 
-          # Ensure destination
-          rm -rf ./downloaded-artifacts || true
-          mkdir -p ./downloaded-artifacts
-
-          # Use GitHub CLI to list artifacts for the run
-          echo "Listing artifacts from run $BUILD_RUN_ID in $SOURCE_REPO..."
-          
-          # Get list of artifacts (all artifact names — we'll unpack and locate .deb files inside)
-          owner=$(echo "$SOURCE_REPO" | cut -d'/' -f1)
-          repo=$(echo "$SOURCE_REPO" | cut -d'/' -f2)
-          artifact_list=$(gh api \
-            -H "Accept: application/vnd.github+json" \
-            "/repos/${owner}/${repo}/actions/runs/${BUILD_RUN_ID}/artifacts" \
-            --jq '.artifacts[] | .name')
-
-          if [ -z "$artifact_list" ]; then
-            echo "❌ No deb artifacts found for run $BUILD_RUN_ID in $SOURCE_REPO"
-            exit 1
-          fi
-
-          # Count artifacts (filter empty lines)
-          artifact_count=$(echo "$artifact_list" | grep -c '^' || echo "0")
-          echo "✅ Found $artifact_count deb artifacts"
-
-          # Download each artifact using REST API (more reliable than gh run download)
-          download_failed=0
-          download_success=0
-          
-          while IFS= read -r artifact_name || [ -n "$artifact_name" ]; do
-            if [ -n "$artifact_name" ]; then
-              echo "Downloading artifact: $artifact_name"
-              
-              # Use REST API to get artifact download URL
-              artifact_url=$(gh api \
-                -H "Accept: application/vnd.github+json" \
-                "/repos/${owner}/${repo}/actions/runs/${BUILD_RUN_ID}/artifacts" \
-                --jq ".artifacts[] | select(.name == \"$artifact_name\") | .archive_download_url" | head -1)
-              
-              if [ -z "$artifact_url" ] || [ "$artifact_url" = "null" ]; then
-                echo "  ⚠️  Could not get download URL for $artifact_name"
-                download_failed=$((download_failed + 1))
-              else
-                # Download using curl with authentication
-                artifact_file="./downloaded-artifacts/${artifact_name}.zip"
-                if curl -sSL \
-                  -H "Authorization: token $GH_TOKEN" \
-                  -H "Accept: application/vnd.github+json" \
-                  -o "$artifact_file" \
-                  "$artifact_url"; then
-                  echo "  ✓ Successfully downloaded $artifact_name"
-                  download_success=$((download_success + 1))
-                else
-                  echo "  ⚠️  Failed to download $artifact_name via REST API"
-                  download_failed=$((download_failed + 1))
-                fi
-              fi
-            fi
-          done <<< "$artifact_list"
-          
+          # The dawidd6/action-download-artifact downloads each artifact into a folder named after the artifact
+          # We need to flatten them and find .deb files
           echo ""
-          echo "Download summary: $download_success succeeded, $download_failed failed"
+          echo "📂 Contents of downloaded-artifacts before unpacking:"
+          find ./downloaded-artifacts -type f | head -20
           
-          # Fail if any downloads failed
-          if [ "$download_failed" -gt 0 ]; then
-            echo "❌ Some artifact downloads failed, cannot proceed"
-            exit 1
-          fi
-
-          # Count packages
-          # If artifacts were archives, unpack them to find .deb files
-          for archive in ./downloaded-artifacts/*; do
-            if [ -f "$archive" ]; then
-              echo "Unpacking archive: $archive"
-              case "$archive" in
+          # Unzip artifact containers (dawidd6 action sometimes zips them)
+          for archive_file in ./downloaded-artifacts/*/*; do
+            if [ -f "$archive_file" ]; then
+              case "$archive_file" in
                 *.zip)
-                  unzip -o "$archive" -d ./downloaded-artifacts || true
+                  echo "Unpacking: $archive_file"
+                  unzip -o "$archive_file" -d "$(dirname "$archive_file")" || true
                   ;;
                 *.tar.gz|*.tgz)
-                  tar -xzf "$archive" -C ./downloaded-artifacts || true
-                  ;;
-                *.deb)
-                  # already a deb, nothing to unpack
-                  ;;
-                *)
-                  echo "  ⚪ Unknown file type, leaving as-is: $archive"
+                  echo "Extracting: $archive_file"
+                  tar -xzf "$archive_file" -C "$(dirname "$archive_file")" || true
                   ;;
               esac
             fi
           done
 
-          echo "\n📂 Contents of ./downloaded-artifacts (top 200 lines):"
-          ls -laR ./downloaded-artifacts | sed -n '1,200p' || true
+          echo ""
+          echo "📂 Contents after unpacking (showing .deb files):"
+          find ./downloaded-artifacts -name "*.deb" -type f | head -20
 
-          DEB_COUNT=$(find ./downloaded-artifacts -name "*.deb" 2>/dev/null | wc -l)
+          DEB_COUNT=$(find ./downloaded-artifacts -name "*.deb" -type f | wc -l)
           if [ "$DEB_COUNT" -eq 0 ]; then
             echo "❌ No .deb packages found in downloaded artifacts"
-            ls -la ./downloaded-artifacts || true
+            find ./downloaded-artifacts -type f | head -30
             exit 1
           fi
           echo "✅ Found $DEB_COUNT .deb packages"
@@ -194,9 +123,6 @@ jobs:
           echo "SOURCE_REPO=$SOURCE_REPO" >> $GITHUB_ENV
           echo "BUILD_RUN_ID=$BUILD_RUN_ID" >> $GITHUB_ENV
           echo "CHANNEL=$CHANNEL" >> $GITHUB_ENV
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Organize packages by distribution and architecture
         id: organize
