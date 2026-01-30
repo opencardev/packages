@@ -24,6 +24,7 @@ jobs:
     timeout-minutes: 90
 
     strategy:
+      max-parallel: 1
       matrix:
         repo:
           - owner: opencardev
