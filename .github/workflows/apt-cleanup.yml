@@ -36,108 +36,148 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y aptly gnupg dirmngr
           
-      - name: Analyze repository and identify packages to remove
+      - name: Configure Aptly
+        run: |
+          set -euo pipefail
+          
+          echo "🔧 Configuring Aptly for cleanup"
+          
+          mkdir -p ~/.aptly
+          cat > ~/.aptly.conf << 'EOF'
+          {
+            "rootDir": "$HOME/.aptly",
+            "downloadConcurrency": 4,
+            "downloadSpeedLimit": 0,
+            "architectures": ["amd64", "arm64", "armhf"],
+            "dependencyFollowSuggests": false,
+            "dependencyFollowRecommends": false,
+            "dependencyFollowAllVariants": false,
+            "dependencyFollowSource": false,
+            "gpgDisableSign": false,
+            "gpgDisableVerify": false,
+            "gpgProvider": "gpg",
+            "downloadSourcePackages": false,
+            "ppaDistributorID": "debian",
+            "ppaCodename": "",
+            "skipContentsPublishing": false,
+            "FileSystemPublishEndpoints": {
+              "repo": {
+                "rootDir": "$HOME/.aptly/public",
+                "linkMethod": "hardlink"
+              }
+            },
+            "S3PublishEndpoints": {},
+            "SwiftPublishEndpoints": {}
+          }
+          EOF
+          
+      - name: Import existing repository into Aptly
+        run: |
+          set -euo pipefail
+          
+          echo "📥 Importing existing APT repository structure into Aptly"
+          
+          # Check if repository exists
+          if [ ! -d "dists" ] || [ ! -d "pool" ]; then
+            echo "⚠️  No existing repository found (dists/ or pool/ missing)"
+            echo "Nothing to cleanup"
+            exit 0
+          fi
+          
+          # Copy existing published repository to Aptly's public directory
+          mkdir -p ~/.aptly/public
+          cp -a dists pool ~/.aptly/public/ 2>/dev/null || true
+          
+          echo "✅ Repository structure imported"
+          
+      - name: Analyze snapshots and identify old versions
         id: analyze
         run: |
           set -euo pipefail
           
           DRY_RUN="${{ inputs.dry_run || 'false' }}"
           
-          echo "🔍 Analyzing APT repository for cleanup"
+          echo "🔍 Analyzing Aptly snapshots for cleanup"
           echo "Dry run mode: $DRY_RUN"
           
-          # Track packages to remove
-          PACKAGES_TO_REMOVE=""
-            > /tmp/cleanup_stats.txt
+          > /tmp/cleanup_stats.txt
+          > /tmp/snapshots_to_remove.txt
           
-          # For each component (stable, nightly, unstable)
-          for component in stable nightly unstable; do
+          # Determine retention policy by channel
+          declare -A RETENTION_POLICY
+          RETENTION_POLICY[stable]=7
+          RETENTION_POLICY[nightly]=3
+          RETENTION_POLICY[unstable]=2
+          
+          echo "## Snapshot Retention Policy" >> /tmp/cleanup_stats.txt
+          for channel in stable nightly unstable; do
+            echo "channel=$channel|keep=${RETENTION_POLICY[$channel]}" >> /tmp/cleanup_stats.txt
+            echo "  $channel: Keep last ${RETENTION_POLICY[$channel]} snapshots"
+          done
+          
+          # List all snapshots
+          if ! aptly snapshot list -raw 2>/dev/null | grep -q .; then
+            echo "⚠️  No snapshots found in Aptly database"
+            echo "This is expected if using file-based repository (not Aptly-managed)"
+            echo "has_removals=false" >> $GITHUB_OUTPUT
+            echo "remove_count=0" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          echo ""
+          echo "📸 Analyzing snapshots by channel..."
+          
+          TOTAL_REMOVALS=0
+          
+          # For each channel
+          for channel in stable nightly unstable; do
+            KEEP_COUNT=${RETENTION_POLICY[$channel]}
+            
             echo ""
-            echo "📦 Analyzing component: $component"
-          
-            # Determine retention policy
-            case "$component" in
-              stable)
-                KEEP_COUNT=2
-                ;;
-              nightly)
-                KEEP_COUNT=1
-                ;;
-              unstable)
-                KEEP_COUNT=1
-                ;;
-            esac
-          
-            echo "  Retention policy: Keep last $KEEP_COUNT version(s)"
-              echo "component=$component|policy=$KEEP_COUNT" >> /tmp/cleanup_stats.txt
-          
-            # Find all packages in this component across all suites
-            if [ ! -d "dists" ]; then
-              echo "  ⚠️  No dists directory found, skipping"
+            echo "📦 Channel: $channel (keep last $KEEP_COUNT)"
+            
+            # Get all snapshots for this channel, sorted by timestamp (newest first)
+            # Snapshots are named: CHANNEL-TIMESTAMP (e.g., stable-2026-01-31-143022)
+            SNAPSHOTS=$(aptly snapshot list -raw | grep "^${channel}-" | sort -r || echo "")
+            
+            if [ -z "$SNAPSHOTS" ]; then
+              echo "  No snapshots found for $channel"
               continue
             fi
-          
-            # For each suite
-            for suite_dir in dists/*/; do
-              [ -d "$suite_dir" ] || continue
-              suite=$(basename "$suite_dir")
-          
-              component_dir="${suite_dir}/${component}"
-              if [ ! -d "$component_dir" ]; then
-                continue
-              fi
-          
-              echo ""
-              echo "  Suite: $suite / Component: $component"
-          
-              # Get all unique package names
-              PACKAGES=$(find "$component_dir" -name "Packages" -type f -exec cat {} \; | \
-                grep "^Package:" | awk '{print $2}' | sort | uniq)
-          
-              for package in $PACKAGES; do
-                # Get all versions of this package, sorted by version (newest first)
-                VERSIONS=$(find "$component_dir" -name "Packages" -type f -exec grep -A 10 "^Package: $package$" {} \; | \
-                  grep "^Version:" | awk '{print $2}' | sort -V -r)
-          
-                VERSION_COUNT=$(echo "$VERSIONS" | wc -l)
-                  [ "$VERSION_COUNT" -eq 0 ] && continue
-          
-                  KEPT_VERSIONS=$(echo "$VERSIONS" | head -n $KEEP_COUNT | tr '\n' ',' | sed 's/,$//')
-          
-                if [ "$VERSION_COUNT" -gt "$KEEP_COUNT" ]; then
-                  # Mark old versions for removal
-                  OLD_VERSIONS=$(echo "$VERSIONS" | tail -n +$((KEEP_COUNT + 1)))
-                    REMOVE_COUNT=$((VERSION_COUNT - KEEP_COUNT))
-          
-                    echo "    📦 $package: Found $VERSION_COUNT versions, removing $REMOVE_COUNT old version(s)"
-                    echo "package=$package|suite=$suite|component=$component|total=$VERSION_COUNT|kept=$KEPT_VERSIONS|removed=$REMOVE_COUNT" >> /tmp/cleanup_stats.txt
-          
-                  for old_version in $OLD_VERSIONS; do
-                      [ -z "$old_version" ] && continue
-                    echo "      🗑️  Marking for removal: $package $old_version"
-                    PACKAGES_TO_REMOVE="$PACKAGES_TO_REMOVE\n${suite}|${component}|${package}|${old_version}"
-                  done
-                else
-                  echo "    ✅ $package: $VERSION_COUNT version(s) (within retention policy)"
-                    echo "package=$package|suite=$suite|component=$component|total=$VERSION_COUNT|kept=$KEPT_VERSIONS|removed=0" >> /tmp/cleanup_stats.txt
-                fi
-              done
+            
+            SNAPSHOT_COUNT=$(echo "$SNAPSHOTS" | wc -l)
+            echo "  Found $SNAPSHOT_COUNT snapshot(s)"
+            
+            if [ "$SNAPSHOT_COUNT" -le "$KEEP_COUNT" ]; then
+              echo "  ✅ All snapshots within retention policy"
+              continue
+            fi
+            
+            # Mark old snapshots for removal
+            OLD_SNAPSHOTS=$(echo "$SNAPSHOTS" | tail -n +$((KEEP_COUNT + 1)))
+            REMOVE_COUNT=$((SNAPSHOT_COUNT - KEEP_COUNT))
+            
+            echo "  🗑️  Marking $REMOVE_COUNT old snapshot(s) for removal:"
+            
+            for snapshot in $OLD_SNAPSHOTS; do
+              echo "    - $snapshot"
+              echo "$snapshot" >> /tmp/snapshots_to_remove.txt
+              TOTAL_REMOVALS=$((TOTAL_REMOVALS + 1))
+              echo "snapshot=$snapshot|channel=$channel|action=remove" >> /tmp/cleanup_stats.txt
             done
           done
           
-          # Save packages to remove
-          if [ -n "$PACKAGES_TO_REMOVE" ]; then
-            echo -e "$PACKAGES_TO_REMOVE" | grep -v "^$" > /tmp/packages_to_remove.txt
-            REMOVE_COUNT=$(wc -l < /tmp/packages_to_remove.txt)
+          # Save results
+          if [ "$TOTAL_REMOVALS" -gt 0 ]; then
             echo ""
-            echo "📋 Total packages marked for removal: $REMOVE_COUNT"
+            echo "📋 Total snapshots marked for removal: $TOTAL_REMOVALS"
             echo "has_removals=true" >> $GITHUB_OUTPUT
-              echo "remove_count=$REMOVE_COUNT" >> $GITHUB_OUTPUT
+            echo "remove_count=$TOTAL_REMOVALS" >> $GITHUB_OUTPUT
           else
             echo ""
-            echo "✅ No packages need to be removed"
+            echo "✅ No snapshots need to be removed"
             echo "has_removals=false" >> $GITHUB_OUTPUT
-              echo "remove_count=0" >> $GITHUB_OUTPUT
+            echo "remove_count=0" >> $GITHUB_OUTPUT
           fi
           
       - name: Set up GPG key
@@ -166,45 +206,76 @@ jobs:
           
           gpg-connect-agent reloadagent /bye || true
           
-      - name: Remove old packages
+      - name: Remove old snapshots from Aptly
         if: steps.analyze.outputs.has_removals == 'true' && inputs.dry_run != 'true'
         env:
           GNUPGHOME: ~/.gnupg
         run: |
           set -euo pipefail
           
-          echo "🗑️  Removing old packages from APT repository"
+          echo "🗑️  Removing old snapshots from Aptly"
           
-          # Configure Aptly
-          mkdir -p ~/.aptly
-          cat > ~/.aptly/aptly.conf << 'EOF'
-          {
-            "rootDir": "$HOME/.aptly",
-            "architectures": ["amd64", "arm64", "armhf"],
-            "gpgDisableSign": false,
-            "gpgProvider": "gpg"
-          }
-          EOF
+          # Drop publications for snapshots being removed
+          # (Aptly won't allow snapshot deletion if still published)
+          echo ""
+          echo "🔍 Checking for publications to drop..."
           
-          # Import existing repository into aptly
-          # (This is a simplified approach - in production you'd want to import the actual aptly DB)
-          
-          # For each package marked for removal
-          while IFS='|' read -r suite component package version; do
-            echo "  Removing $package $version from $suite/$component"
-          
-            # In a real implementation, you would:
-            # 1. Import the repository into aptly
-            # 2. Remove the package from the repo
-            # 3. Re-publish the repository
-            # 4. Export back to dists/pool structure
-          
-            # For now, just show what would be removed
-            echo "    (Would remove: $suite / $component / $package / $version)"
-          done < /tmp/packages_to_remove.txt
+          while read snapshot; do
+            echo "  Checking publications for snapshot: $snapshot"
+            
+            # Check if this snapshot is published
+            PUBLISHED_TO=$(aptly publish list -raw 2>/dev/null | grep "$snapshot" || echo "")
+            
+            if [ -n "$PUBLISHED_TO" ]; then
+              echo "    ⚠️  Snapshot is published, cannot remove yet"
+              echo "    Published to: $PUBLISHED_TO"
+              echo "    Skipping $snapshot (still in use)"
+              continue
+            fi
+            
+            # Drop the snapshot
+            echo "    Dropping snapshot: $snapshot"
+            aptly snapshot drop "$snapshot" || {
+              echo "    ⚠️  Failed to drop $snapshot (may still be referenced)"
+            }
+          done < /tmp/snapshots_to_remove.txt
           
           echo ""
-          echo "✅ Cleanup complete"
+          echo "✅ Snapshot cleanup complete"
+          
+      - name: Clean up unreferenced packages from pool
+        if: steps.analyze.outputs.has_removals == 'true' && inputs.dry_run != 'true'
+        run: |
+          set -euo pipefail
+          
+          echo "🧹 Cleaning up unreferenced packages from pool"
+          
+          # Run Aptly database cleanup to remove unreferenced packages
+          # This removes packages from the pool that are no longer referenced by any snapshot
+          ap/tmp/cleanup_stats.txt
+            /tmp/snapshotbase cleanup encountered issues (may be normal if no orphans found)"
+          }
+          
+          echo "✅ Pool cleanup complete"
+          
+      - name: Export cleaned repository
+        if: steps.analyze.outputs.has_removals == 'true' && inputs.dry_run != 'true'
+        run: |
+          set -euo pipefail
+          
+          echo "📤 Exporting cleaned repository structure"
+          
+          # Remove old repository files
+          rm -rf ./dists ./pool (no orphaned packages in pool)"
+          else
+            REMOVE_COUNT="${{ steps.analyze.outputs.remove_count }}"
+            git commit -m "chore: Clean up $REMOVE_COUNT old snapshot(s) and orphaned packages
+            cp -a ~/.aptly/public/dists ./
+            cp -a ~/.aptly/public/pool ./
+            echo "✅ Exported cleaned repository"
+          else
+            echo "⚠️  No Aptly public directory found, nothing to export"
+          fi
           
       - name: Upload cleanup report
         if: steps.analyze.outputs.has_removals == 'true'
@@ -223,44 +294,40 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          git add dists/ pool/ || true
-          
-          if git diff --cached --quiet; then
-            echo "ℹ️  No changes to commit"
-          else
-            REMOVE_COUNT=$(wc -l < /tmp/packages_to_remove.txt)
-            git commit -m "chore: Clean up $REMOVE_COUNT old package version(s)"
-            git push origin main
-            echo "✅ Pushed cleanup changes"
-          fi
-          
-  summary:
-    needs: cleanup
-    if: always()
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Download cleanup artifacts
-        if: needs.cleanup.outputs.has_removals == 'true'
-        uses: actions/download-artifact@v5
-        with:
-          name: cleanup-report-${{ github.run_id }}
-          path: ./artifacts
-        continue-on-error: true
-
-      - name: Summary
-        run: |
-          echo "# APT Repository Cleanup Summary" >> $GITHUB_STEP_SUMMARY
+          git add Snapshots Removed**: ${{ needs.cleanup.outputs.remove_count || '0' }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Status**: ${{ needs.cleanup.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Dry Run**: ${{ inputs.dry_run || 'false' }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Packages Removed**: ${{ needs.cleanup.outputs.remove_count || '0' }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Retention Policy" >> $GITHUB_STEP_SUMMARY
+          echo "## 📸 Snapshot Retention Policy" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Channel | Retention |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|-----------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Stable | Keep last 2 versions |" >> $GITHUB_STEP_SUMMARY
+          echo "| Stable | Keep last 7 snapshots |" >> $GITHUB_STEP_SUMMARY
+          echo "| Nightly | Keep last 3 snapshots |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unstable | Keep last 2 snapshots |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Show cleanup details if available
+          if [ -f ./artifacts/cleanup_stats.txt ]; then
+            echo "## 🗑️ Cleanup Details" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          
+            # Show removed snapshots
+            if [ -f ./artifacts/snapshots_to_remove.txt ]; then
+              echo "### Removed Snapshots" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              
+              while read snapshot; do
+                echo "- \`$snapshot\`" >> $GITHUB_STEP_SUMMARY
+              done < ./artifacts/snapshots_to_remove.txt
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+          elif [ "${{ needs.cleanup.outputs.remove_count || '0' }}" != "0" ]; then
+            echo "## Snapshots Removed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "${{ needs.cleanup.outputs.remove_count }} old snapshot(s) were removed." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Orphaned packages in the pool were also cleaned up via \`aptly db cleanup\`." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No snapshots required cleanup. All snapshot_STEP_SUMMARY
           echo "| Nightly | Keep last 1 version |" >> $GITHUB_STEP_SUMMARY
           echo "| Unstable | Keep last 1 version |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
