@@ -1,0 +1,72 @@
+Package: libaasdk
+Priority: optional
+Section: libs
+Installed-Size: 667032
+Maintainer: AASDK <opencardevuk@gmail.com>
+Architecture: amd64
+Version: 2026.01.29-1+deb13u1
+Depends: libc6 (>= 2.38), libgcc-s1 (>= 3.4), libssl3t64 (>= 3.0.0), libstdc++6 (>= 14), libusb-1.0-0 (>= 2:1.0.16)
+Filename: pool/stable/liba/libaasdk/libaasdk_2026.01.29_deb13u1_amd64.deb
+Size: 88896294
+MD5sum: 9ebb79f3e4e90026e53fa84a1171e5f0
+SHA1: c44467593ef14f4faaccedc6f0f1794f213306ee
+SHA256: 245e87d567fb68ceb8e6a5e67ae61c92f8db75032c27516bddcbf2aa8754bf89
+SHA512: 78aad2b1b5cf2cc81d652a5983401e234aeaff3cdc544cbb271c6c10b35cba315bd5d010c21b4512d3f8ed7f8bf806cdc6007332c1e5dbcc65379da8d8f44ab3
+Description: Android Auto SDK Library
+ Runtime libraries for Android Auto SDK on amd64 architecture
+Homepage: https://github.com/opencardev/aasdk
+
+Package: libaasdk
+Priority: optional
+Section: libs
+Installed-Size: 662722
+Maintainer: AASDK <opencardevuk@gmail.com>
+Architecture: amd64
+Version: 2026.01.29-1+deb12u1
+Depends: libc6 (>= 2.34), libgcc-s1 (>= 3.4), libssl3 (>= 3.0.0), libstdc++6 (>= 12), libusb-1.0-0 (>= 2:1.0.16)
+Filename: pool/stable/liba/libaasdk/libaasdk_2026.01.29_deb12u1_amd64.deb
+Size: 89802042
+MD5sum: b7453d839a6dde2d96be702925785994
+SHA1: 726e332fb347d6b00611193a8b047e5702708f5f
+SHA256: 1a96d6bab267919cc8af2a3b3d83b448e8ff9a39cf26a22618eb9cfcb2b00087
+SHA512: 1c5b7040b0288e35c0f8802828eac1138ea41d1adb931acef65229cf5c85fa594e871dba18e37f516143090a78bcde2fd9d47947e12f93e86fabe67c4221b54a
+Description: Android Auto SDK Library
+ Runtime libraries for Android Auto SDK on amd64 architecture
+Homepage: https://github.com/opencardev/aasdk
+
+Package: libaasdk-dev
+Priority: optional
+Section: libdevel
+Installed-Size: 4752
+Maintainer: AASDK <opencardevuk@gmail.com>
+Architecture: amd64
+Version: 2026.01.29-1+deb13u1
+Depends: libaasdk (= 2026.01.29-1+deb13u1)
+Filename: pool/stable/liba/libaasdk-dev/libaasdk-dev_2026.01.29_deb13u1_amd64.deb
+Size: 352356
+MD5sum: 9ae287843ae2e0c06ad2e3c069c18210
+SHA1: a0b075be6e7bfd03449ab36a184f1aa33c939c70
+SHA256: a7972319c4db656cdb5b3906dde45b2893335e6f77fe3c8bf4ee583c388a2329
+SHA512: 47898e13bfc47bc08cfdad4d8b51ec27f42346ba62b61bc5075bfc30d91f7004441d470ad2260d054b8080bb288866672b8b79df397ac0681a50616e4786a9aa
+Description: Android Auto SDK Library
+ Development headers and CMake files for Android Auto SDK on amd64 architecture
+Homepage: https://github.com/opencardev/aasdk
+
+Package: libaasdk-dev
+Priority: optional
+Section: libdevel
+Installed-Size: 4751
+Maintainer: AASDK <opencardevuk@gmail.com>
+Architecture: amd64
+Version: 2026.01.29-1+deb12u1
+Depends: libaasdk (= 2026.01.29-1+deb12u1)
+Filename: pool/stable/liba/libaasdk-dev/libaasdk-dev_2026.01.29_deb12u1_amd64.deb
+Size: 352374
+MD5sum: a4455166d9e1c03dd9e175335da17dcb
+SHA1: 81bf9d2e34bb031d112184042f9fa8709c05a477
+SHA256: 94924301d712b8bfcc1532595c4ddcba70a60c81a168db77c38d2640a6faacdd
+SHA512: fe33af069a4335de951aed064c2621fd8f395f04a9221b930c5f21d36db15cfe3d2e35ce5d3510830361e137003415baabaea5c4561474609c2088aedc5bc34b
+Description: Android Auto SDK Library
+ Development headers and CMake files for Android Auto SDK on amd64 architecture
+Homepage: https://github.com/opencardev/aasdk
+

@@ -1,0 +1,16 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Origin: . trixie
+Label: . trixie
+Archive: trixie
+Suite: trixie
+Architecture: arm64
+Component: stable
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYKAB0WIQS0+eXU5BsMvurfM8rd1heH2TYMLwUCaX1URAAKCRDd1heH2TYM
+L/sBAQCq4oBsekSggueo9+fcFVgf251kmDkpFFRR9kn5cV9SbQD9GepKb7lnEe8w
+JddwEUi9gAPX5d2lj4p74EPxKDrIGwQ=
+=dU7f
+-----END PGP SIGNATURE-----
