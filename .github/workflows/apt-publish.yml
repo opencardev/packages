@@ -485,10 +485,13 @@ jobs:
           echo "✅ Pushed changes to repository"
           fi
 
-      - name: Trigger GitHub Pages deployment
+      - name: Verify repository structure
         if: success()
         run: |
-          echo "🌐 GitHub Pages will be automatically deployed"
+          echo "🌐 GitHub Pages deployment will be triggered automatically by pages-deploy.yml"
+          echo ""
+          echo "Repository structure:"
+          ls -lh dists/ pool/ opencardev.gpg.key 2>/dev/null | head -20
 
   summary:
     needs: publish
