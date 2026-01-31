@@ -1,6 +1,0 @@
-Origin: debian/bookworm bookworm
-Label: debian/bookworm bookworm
-Archive: bookworm
-Suite: bookworm
-Architecture: armhf
-Component: nightly
