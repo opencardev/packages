@@ -363,12 +363,66 @@ jobs:
             exit 1
           fi
 
+          # Reorganize pool by distribution to prevent cross-distribution package conflicts
+          # Move pool/suite/channel/arch/*.deb to pool/channel/suite/arch/*.deb
+          if [ -d ./repo-export/pool ]; then
+            echo ""
+            echo "🔄 Reorganizing pool structure to isolate distributions..."
+            
+            # Find all .deb files in pool
+            find ./repo-export/pool -name "*.deb" -type f | while read deb_file; do
+              # Extract: pool/suite/channel/arch/file.deb → pool/channel/suite/arch/file.deb
+              rel_path="${deb_file#./repo-export/pool/}"
+              # rel_path is now: suite/channel/arch/file.deb
+              
+              suite=$(echo "$rel_path" | cut -d'/' -f1)
+              channel=$(echo "$rel_path" | cut -d'/' -f2)
+              arch=$(echo "$rel_path" | cut -d'/' -f3)
+              filename=$(basename "$deb_file")
+              
+              # Create new pool structure: pool/channel/suite/arch
+              new_dir="./repo-export/pool/${channel}/${suite}/${arch}"
+              mkdir -p "$new_dir"
+              
+              # Move if not already in new location
+              if [ "$rel_path" != "${channel}/${suite}/${arch}/${filename}" ]; then
+                mv "$deb_file" "$new_dir/$filename"
+                echo "  Reorganized: $rel_path → ${channel}/${suite}/${arch}/${filename}"
+              fi
+            done
+            
+            # Clean up empty directories
+            find ./repo-export/pool -type d -empty -delete
+            
+            echo "✅ Pool reorganized to isolate distributions"
+          fi
+
           # Show structure
           echo ""
           echo "📁 Repository structure:"
           find ./repo-export -type f | head -30 | sort
 
-      - name: Sign Release files
+      - name: Update Packages metadata for new pool structure
+        run: |
+          set -euo pipefail
+
+          echo "🔄 Updating Packages files to reflect reorganized pool structure..."
+
+          # Update all Packages files to reflect the new pool paths
+          find ./repo-export/dists -name "Packages" -type f | while read packages_file; do
+            echo "Processing: $packages_file"
+
+            # Extract suite and channel from path: dists/SUITE/CHANNEL/binary-ARCH/Packages
+            path_parts="${packages_file#./repo-export/dists/}"
+            suite=$(echo "$path_parts" | cut -d'/' -f1)
+            channel=$(echo "$path_parts" | cut -d'/' -f2)
+
+            # Replace pool paths: pool/suite/channel/arch/ → pool/channel/suite/arch/
+            sed -i "s|pool/${suite}/${channel}/|pool/${channel}/${suite}/|g" "$packages_file"
+            echo "  ✓ Updated paths in $packages_file"
+          done
+
+          echo "✅ Packages files updated"
         run: |
           set -euo pipefail
 
