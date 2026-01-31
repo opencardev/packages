@@ -423,6 +423,7 @@ jobs:
           done
 
           echo "✅ Packages files updated"
+      - name: Sign Release files with GPG
         run: |
           set -euo pipefail
 
