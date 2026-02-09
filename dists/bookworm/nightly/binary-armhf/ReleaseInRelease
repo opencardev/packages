@@ -1,0 +1,16 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Origin: . bookworm
+Label: . bookworm
+Archive: bookworm
+Suite: bookworm
+Architecture: armhf
+Component: nightly
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYKAB0WIQS0+eXU5BsMvurfM8rd1heH2TYMLwUCaYk9wAAKCRDd1heH2TYM
+L1n4AP99YRu7fCGFrCAUynWbWO7XBsJdzJ7QbYzGQu4Yo8EOwwEA/egVPm1Sg6g1
+RH3Gadn6PIoaODvE+gXJAPNtTYeVTgg=
+=zZeP
+-----END PGP SIGNATURE-----
