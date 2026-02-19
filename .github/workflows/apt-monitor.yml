@@ -130,6 +130,11 @@ jobs:
             echo "❌ Could not determine publish run id for stable channel"
             exit 1
           fi
+
+          # Trigger pages deployment
+          echo "🚀 Triggering pages deployment after stable publish"
+          gh workflow run pages-deploy.yml --repo opencardev/packages
+          echo "✅ Triggered pages deployment for stable channel"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -157,6 +162,11 @@ jobs:
             echo "❌ Could not determine publish run id for nightly channel"
             exit 1
           fi
+
+          # Trigger pages deployment
+          echo "🚀 Triggering pages deployment after nightly publish"
+          gh workflow run pages-deploy.yml --repo opencardev/packages
+          echo "✅ Triggered pages deployment for nightly channel"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
