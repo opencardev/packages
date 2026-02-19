@@ -24,6 +24,9 @@ on:
         type: string
         default: 'unstable'
 
+  repository_dispatch:
+    types: [publish-apt-packages]
+
   workflow_call:
     inputs:
       source_repo:
@@ -45,6 +48,20 @@ jobs:
     timeout-minutes: 90
 
     steps:
+      - name: Normalize inputs
+        id: inputs
+        run: |
+          # Handle different trigger types
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            echo "source_repo=${{ github.event.client_payload.source_repo }}" >> $GITHUB_OUTPUT
+            echo "build_run_id=${{ github.event.client_payload.build_run_id }}" >> $GITHUB_OUTPUT
+            # Default channel for repository_dispatch
+            echo "channel=stable" >> $GITHUB_OUTPUT
+          else
+            echo "source_repo=${{ inputs.source_repo }}" >> $GITHUB_OUTPUT
+            echo "build_run_id=${{ inputs.build_run_id }}" >> $GITHUB_OUTPUT
+            echo "channel=${{ inputs.channel }}" >> $GITHUB_OUTPUT
+          fi
       - name: Checkout packages repository
         uses: actions/checkout@v4
         with:
@@ -69,8 +86,8 @@ jobs:
       - name: Download build artifacts
         uses: dawidd6/action-download-artifact@v3
         with:
-          repo: ${{ inputs.source_repo }}
-          run_id: ${{ inputs.build_run_id }}
+          repo: ${{ steps.inputs.outputs.source_repo }}
+          run_id: ${{ steps.inputs.outputs.build_run_id }}
           path: ./downloaded-artifacts
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -78,9 +95,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          CHANNEL="${{ inputs.channel }}"
-          SOURCE_REPO="${{ inputs.source_repo }}"
-          BUILD_RUN_ID="${{ inputs.build_run_id }}"
+          CHANNEL="${{ steps.inputs.outputs.channel }}"
+          SOURCE_REPO="${{ steps.inputs.outputs.source_repo }}"
+          BUILD_RUN_ID="${{ steps.inputs.outputs.build_run_id }}"
 
           echo "📦 Processing artifacts from $SOURCE_REPO run $BUILD_RUN_ID"
           echo "📍 Publishing to channel: $CHANNEL"
@@ -511,9 +528,9 @@ jobs:
         run: |
           echo "# APT Repository Publish Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Source Repository**: ${{ inputs.source_repo }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Build Run**: #${{ inputs.build_run_id }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Channel**: \`${{ inputs.channel }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Source Repository**: ${{ steps.inputs.outputs.source_repo }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Build Run**: #${{ steps.inputs.outputs.build_run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Channel**: \`${{ steps.inputs.outputs.channel }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Status**: ${{ needs.publish.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
@@ -559,7 +576,7 @@ jobs:
             echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
             echo "# Add repository (Debian Trixie example)" >> $GITHUB_STEP_SUMMARY
             echo "curl -fsSL https://apt.opencardev.org/opencardev.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/opencardev-archive-keyring.gpg" >> $GITHUB_STEP_SUMMARY
-            echo "echo \\\"deb [arch=\\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://apt.opencardev.org trixie ${{ inputs.channel }}\\\" | sudo tee /etc/apt/sources.list.d/opencardev.list" >> $GITHUB_STEP_SUMMARY
+            echo "echo \\\"deb [arch=\\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://apt.opencardev.org trixie ${{ steps.inputs.outputs.channel }}\\\" | sudo tee /etc/apt/sources.list.d/opencardev.list" >> $GITHUB_STEP_SUMMARY
             echo "sudo apt update" >> $GITHUB_STEP_SUMMARY
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           else
