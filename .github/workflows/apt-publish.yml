@@ -362,10 +362,12 @@ jobs:
             echo ""
             echo "Publishing to distribution: $suite (component: $CHANNEL)"
 
-            # Drop existing publication for this distribution
-            aptly publish drop "$suite" filesystem:repo: 2>/dev/null || {
-              echo "  (No existing publication to drop)"
-            }
+            # Check if publication already exists
+            if aptly publish list -raw | grep -q "^${suite}$"; then
+              echo "  (Publication $suite already exists, adding component $CHANNEL)"
+            else
+              echo "  (Creating new publication for $suite)"
+            fi
 
             # Publish the snapshot to this distribution
             # The -component flag sets the component name (stable/nightly/unstable)
