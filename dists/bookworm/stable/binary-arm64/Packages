@@ -1,3 +1,51 @@
+Package: crankshaft-core
+Priority: optional
+Section: devel
+Installed-Size: 1536
+Maintainer: OpenCarDev Team <opencardevuk@gmail.com>
+Architecture: arm64
+Version: 0.1.0-deb13
+Depends: libaasdk0 (>= 0.1.0), libqt6core6t64, libqt6network6, libqt6websockets6, libqt6dbus6, libqt6bluetooth6, libqt6multimedia6, libgstreamer1.0-0, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, gstreamer1.0-libav, libdbus-1-3, libusb-1.0-0, gstreamer1.0-tools
+Filename: pool/stable/c/crankshaft-core/crankshaft-core_0.1.0-deb13_arm64.deb
+Size: 358900
+MD5sum: 25add13a998d2991cfea392c9e57e6ec
+SHA1: 0a810c744525b9cf40537d6e5c28eed0f69b8b0f
+SHA256: bbdd84cde944a83b6694452b01af607adf1e0f9883a4c24387355846587129af
+SHA512: ea7575d2f9bf9cc3244a2cb477710ee09a433ed71b96783c0264cce0daee6f96daeea0ae8531ea3ac6e06dbfe634a21aea56f40189185239cf5c2e220da52a4c
+Description: Crankshaft core service with WebSocket server and event bus
+
+Package: crankshaft-slim-ui
+Priority: optional
+Section: devel
+Installed-Size: 1223
+Maintainer: OpenCarDev Team <opencardevuk@gmail.com>
+Architecture: arm64
+Version: 0.1.0-deb13
+Depends: libaasdk0 (>= 0.1.0), crankshaft-core (>= 0.1.0), libqt6core6t64, libqt6gui6, libqt6qml6, libqt6quick6, libqt6websockets6, libqt6multimedia6, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-window, qml6-module-qtmultimedia, qt6-qpa-plugins, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-libav
+Filename: pool/stable/c/crankshaft-slim-ui/crankshaft-slim-ui_0.1.0-deb13_arm64.deb
+Size: 295248
+MD5sum: 6cbe5b735598ee7bb27b241b97c930b3
+SHA1: 14f153282373dc95cb4a8bbb126401d7e4c4e165
+SHA256: 42ed43b156d4dc79a11906772547db5a45654914b59d058615c3884cac764b4c
+SHA512: 242aad3b5ca365867ec838fa4e487afc6fe298c75ec9ef3ce6c3981aaf364e550ae7d07d72cadabc6aa3969f1e610fbb59457b55c8356b88b4c42b6b7064ee97
+Description: Crankshaft slim QML-based user interface with integrated AndroidAuto
+
+Package: crankshaft-ui
+Priority: optional
+Section: devel
+Installed-Size: 4216
+Maintainer: OpenCarDev Team <opencardevuk@gmail.com>
+Architecture: arm64
+Version: 0.1.0-deb13
+Depends: crankshaft-core (>= 0.1.0), libqt6core6t64, libqt6gui6, libqt6qml6, libqt6quick6, libqt6websockets6, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-window, qt6-qpa-plugins
+Filename: pool/stable/c/crankshaft-ui/crankshaft-ui_0.1.0-deb13_arm64.deb
+Size: 758458
+MD5sum: 1c51d3f73021be2e969842a805aabbbc
+SHA1: bc8c584e942aa5ba0363f59c1a0e3a296219e2cc
+SHA256: 416a5e89b3752045edcc4aa4503532eca23b5444ee21ac945a3c7e414ec1f43c
+SHA512: 5f70f5fde5abba8dcd255e18d4d33d5cb884f2fac72310070c28d10d34d2ed5a5242a7282abffaf320d33e6c0d92dbb78fe1e83e283170e4c75e4c9b0868fcba
+Description: Crankshaft QML-based user interface
+
 Package: libaasdk
 Priority: optional
 Section: libs
@@ -69,6 +117,38 @@ SHA512: a5309189429f5fab10146e454a7c739921b1b73aa849798b3e4c9350d19ddeaa99ff8acf
 Description: Android Auto SDK Library
  Development headers and CMake files for Android Auto SDK on arm64 architecture
 Homepage: https://github.com/opencardev/aasdk
+
+Package: libaasdk-dev
+Priority: optional
+Section: libdevel
+Installed-Size: 4
+Maintainer: OpenCarDev Team <opencardevuk@gmail.com>
+Architecture: arm64
+Version: 0.1.0-deb13
+Depends: libaasdk0 (>= 0.1.0), libssl-dev, libprotobuf-dev, libusb-1.0-0-dev
+Filename: pool/stable/liba/libaasdk-dev/libaasdk-dev_0.1.0-deb13_arm64.deb
+Size: 668
+MD5sum: c172430f85bb2ab9fd4022fba593c6c3
+SHA1: 477658a488e8a1f1c5fb96115483673e21ffcbdb
+SHA256: 78d17bf25bca3615c0d3381cde0eefda693a0b3e431beae235ef3c42cda57092
+SHA512: 938e502e8645b0ca6856c2162fb9db4deb9c3531a431d4cec2eb06294e7ef1973f57e4969c7fb4990b2a5922bce81d6208c5b0b69089e1231402d80aac8bf8ad
+Description: Android Auto SDK headers and development files
+
+Package: libaasdk0
+Priority: optional
+Section: libs
+Installed-Size: 4
+Maintainer: OpenCarDev Team <opencardevuk@gmail.com>
+Architecture: arm64
+Version: 0.1.0-deb13
+Depends: libssl3t64, libusb-1.0-0
+Filename: pool/stable/liba/libaasdk0/libaasdk0_0.1.0-deb13_arm64.deb
+Size: 650
+MD5sum: 9efbcb8d1344ddb330b0baa6a701d602
+SHA1: b3bc62d5377a7a283ba5cdac8ecd04db88468c26
+SHA256: da1f8d5cc6454820a1558de343af6bd86fc8730b2d1932bb741e632be131838b
+SHA512: 8042dbe3935038e1cbbd97db3049710dbbcd3805b0e0ec3b8c90e0c0536f511c1e521f16ba473e279e429a5a9aa0e7f4ed7dc93677b4d77508224cac1a75438f
+Description: Android Auto SDK runtime libraries and SSL certificates
 
 Package: openauto
 Priority: optional
