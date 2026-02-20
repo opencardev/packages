@@ -46,6 +46,10 @@ jobs:
   publish:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
+    outputs:
+      source_repo: ${{ steps.inputs.outputs.source_repo }}
+      build_run_id: ${{ steps.inputs.outputs.build_run_id }}
+      channel: ${{ steps.inputs.outputs.channel }}
 
     steps:
       - name: Normalize inputs
@@ -206,6 +210,58 @@ jobs:
           echo "suites=$SUITES" >> $GITHUB_OUTPUT
           echo "architectures=$ARCHS" >> $GITHUB_OUTPUT
 
+      - name: Hydrate staging with existing repository components
+        run: |
+          set -euo pipefail
+
+          echo "🔁 Hydrating staging from existing repository state"
+
+          # Ensure staging exists even if no new artifacts were downloaded
+          mkdir -p ./staging
+
+          # Load existing packages for stable and nightly components so each publish
+          # includes all components and does not overwrite Release component metadata.
+          for suite_path in ./dists/*; do
+            [ -d "$suite_path" ] || continue
+            suite=$(basename "$suite_path")
+
+            for component in stable nightly; do
+              for packages_file in "$suite_path/$component"/binary-*/Packages; do
+                [ -f "$packages_file" ] || continue
+
+                echo "Hydrating $suite/$component from $(basename "$(dirname "$packages_file")")"
+
+                awk '/^Filename: / {print $2}' "$packages_file" | while read -r rel_path; do
+                  [ -n "$rel_path" ] || continue
+                  src_file="./$rel_path"
+
+                  if [ ! -f "$src_file" ]; then
+                    echo "⚠️  Referenced package missing in pool: $rel_path"
+                    continue
+                  fi
+
+                  if echo "$src_file" | grep -q "_amd64\.deb$"; then
+                    arch="amd64"
+                  elif echo "$src_file" | grep -q "_arm64\.deb$"; then
+                    arch="arm64"
+                  elif echo "$src_file" | grep -q "_armhf\.deb$"; then
+                    arch="armhf"
+                  else
+                    echo "⚠️  Could not determine architecture for: $src_file"
+                    continue
+                  fi
+
+                  mkdir -p "./staging/$suite/$component/$arch"
+                  cp -n "$src_file" "./staging/$suite/$component/$arch/" || true
+                done
+              done
+            done
+          done
+
+          echo ""
+          echo "📁 Staging after hydration (first 50 packages):"
+          find ./staging -name "*.deb" -type f | head -50 | sort
+
       - name: Set up GPG key
         run: |
           set -euo pipefail
@@ -242,13 +298,13 @@ jobs:
           # Reload agent
           gpg-connect-agent reloadagent /bye || true
 
-      - name: Update APT repository with Aptly (Option A - Shared Repo with Snapshots)
+      - name: Update APT repository with Aptly (multi-component publish)
         env:
           GNUPGHOME: ~/.gnupg
         run: |
           set -euo pipefail
 
-          echo "🔧 Initializing Aptly (Option A: Shared Repository + Distribution Snapshots)"
+          echo "🔧 Initializing Aptly (multi-component snapshots)"
 
           # Configure Aptly
           mkdir -p ~/.aptly
@@ -290,44 +346,56 @@ jobs:
           fi
           echo "📐 Architectures detected: $ALL_ARCHS"
 
-          # Create ONE shared repository for all packages
-          REPO_NAME="${CHANNEL}-packages"
-          
-          if aptly repo list -raw | grep -q "^${REPO_NAME}$"; then
-            echo "✓ Shared repository $REPO_NAME exists, will update"
-          else
-            echo "📦 Creating shared repository: $REPO_NAME"
-            aptly repo create -component="$CHANNEL" -architectures="$ALL_ARCHS" "$REPO_NAME"
-          fi
-
-          # Add ALL packages from ALL suites to the ONE repository
-          echo ""
-          echo "📥 Adding packages from all distributions to shared repository..."
-          PKG_COUNT=0
-          for suite_dir in ./staging/*/; do
-            [ -d "$suite_dir" ] || continue
-            suite=$(basename "$suite_dir")
-            
-            echo "  Processing $suite packages..."
-            while read deb_file; do
-              pkg_name=$(dpkg-deb -f "$deb_file" Package 2>/dev/null || echo "unknown")
-              pkg_version=$(dpkg-deb -f "$deb_file" Version 2>/dev/null || echo "unknown")
-              
-              aptly repo add "$REPO_NAME" "$deb_file" 2>&1 | grep -E "\[\+\]|added|already" | head -1 || true
-              PKG_COUNT=$((PKG_COUNT + 1))
-            done < <(find "$suite_dir/$CHANNEL" -name "*.deb" -type f)
-          done
-          
-          echo "✅ Added $PKG_COUNT packages to shared repository"
+          # Components that we support in the published repository
+          SUPPORTED_COMPONENTS="stable nightly"
 
           # Create timestamp for snapshot names
           SNAPSHOT_DATE=$(date +%Y-%m-%d-%H%M%S)
 
-          # Create a snapshot of the shared repository
-          SNAPSHOT_NAME="${CHANNEL}-${SNAPSHOT_DATE}"
+          # Build component repositories and snapshots from staged packages
+          COMPONENT_NAMES=()
+          COMPONENT_SNAPSHOTS=()
+
+          for component in $SUPPORTED_COMPONENTS; do
+            component_count=$(find ./staging -path "*/$component/*/*.deb" -type f | wc -l)
+            if [ "$component_count" -eq 0 ]; then
+              echo "ℹ️  No staged packages found for component: $component (skipping)"
+              continue
+            fi
+
+            repo_name="${component}-packages"
+            snapshot_name="${component}-${SNAPSHOT_DATE}"
+
+            echo ""
+            echo "📦 Preparing repository for component: $component ($component_count packages)"
+
+            if aptly repo list -raw | grep -q "^${repo_name}$"; then
+              echo "✓ Repository $repo_name exists"
+            else
+              aptly repo create -component="$component" -architectures="$ALL_ARCHS" "$repo_name"
+            fi
+
+            while read -r deb_file; do
+              [ -f "$deb_file" ] || continue
+              aptly repo add "$repo_name" "$deb_file" 2>&1 | grep -E "\[\+\]|added|already" | head -1 || true
+            done < <(find ./staging -path "*/$component/*/*.deb" -type f)
+
+            echo "📸 Creating snapshot: $snapshot_name"
+            aptly snapshot create "$snapshot_name" from repo "$repo_name"
+
+            COMPONENT_NAMES+=("$component")
+            COMPONENT_SNAPSHOTS+=("$snapshot_name")
+          done
+
+          if [ "${#COMPONENT_NAMES[@]}" -eq 0 ]; then
+            echo "❌ No component snapshots created"
+            exit 1
+          fi
+
+          COMPONENT_CSV=$(IFS=,; echo "${COMPONENT_NAMES[*]}")
+
           echo ""
-          echo "📸 Creating snapshot: $SNAPSHOT_NAME"
-          aptly snapshot create "$SNAPSHOT_NAME" from repo "$REPO_NAME"
+          echo "✅ Components to publish together: $COMPONENT_CSV"
 
           echo ""
           echo "📋 Current snapshots:"
@@ -350,29 +418,28 @@ jobs:
             SIGN_OPTS="-gpg-key=$KEYID -batch"
           fi
 
-          # Publish the SAME snapshot to EACH distribution
-          # This creates separate dists/SUITE/ directories all pointing to the shared pool
+          # Publish ALL component snapshots to EACH distribution together.
+          # This guarantees Release metadata keeps stable/nightly side-by-side.
           echo ""
-          echo "📢 Publishing snapshot to multiple distributions..."
-          
+          echo "📢 Publishing multi-component snapshots to distributions..."
+
           for suite_dir in ./staging/*/; do
             [ -d "$suite_dir" ] || continue
             suite=$(basename "$suite_dir")
 
             echo ""
-            echo "Publishing to distribution: $suite (component: $CHANNEL)"
+            echo "Publishing to distribution: $suite (components: $COMPONENT_CSV)"
 
-            # Check if publication already exists
-            if aptly publish list -raw | grep -q "^${suite}$"; then
-              echo "  (Publication $suite already exists, adding component $CHANNEL)"
-            else
-              echo "  (Creating new publication for $suite)"
-            fi
+            # Drop existing publication to republish all components atomically.
+            aptly publish drop "$suite" filesystem:repo: 2>/dev/null || true
 
-            # Publish the snapshot to this distribution
-            # The -component flag sets the component name (stable/nightly/unstable)
-            # The -distribution flag sets the suite name (bookworm/trixie)
-            eval "aptly publish snapshot $SIGN_OPTS -distribution=\"$suite\" -component=\"$CHANNEL\" \"$SNAPSHOT_NAME\" filesystem:repo:" || {
+            # Build quoted snapshot args for eval
+            SNAPSHOT_ARGS=""
+            for snap in "${COMPONENT_SNAPSHOTS[@]}"; do
+              SNAPSHOT_ARGS="$SNAPSHOT_ARGS \"$snap\""
+            done
+
+            eval "aptly publish snapshot $SIGN_OPTS -distribution=\"$suite\" -component=\"$COMPONENT_CSV\" $SNAPSHOT_ARGS filesystem:repo:" || {
               echo "❌ Failed to publish to $suite"
               exit 1
             }
@@ -530,9 +597,9 @@ jobs:
         run: |
           echo "# APT Repository Publish Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Source Repository**: ${{ steps.inputs.outputs.source_repo }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Build Run**: #${{ steps.inputs.outputs.build_run_id }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Channel**: \`${{ steps.inputs.outputs.channel }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Source Repository**: ${{ needs.publish.outputs.source_repo }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Build Run**: #${{ needs.publish.outputs.build_run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Channel**: \`${{ needs.publish.outputs.channel }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Status**: ${{ needs.publish.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
@@ -578,7 +645,7 @@ jobs:
             echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
             echo "# Add repository (Debian Trixie example)" >> $GITHUB_STEP_SUMMARY
             echo "curl -fsSL https://apt.opencardev.org/opencardev.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/opencardev-archive-keyring.gpg" >> $GITHUB_STEP_SUMMARY
-            echo "echo \\\"deb [arch=\\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://apt.opencardev.org trixie ${{ steps.inputs.outputs.channel }}\\\" | sudo tee /etc/apt/sources.list.d/opencardev.list" >> $GITHUB_STEP_SUMMARY
+            echo "echo \\\"deb [arch=\\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://apt.opencardev.org trixie ${{ needs.publish.outputs.channel }}\\\" | sudo tee /etc/apt/sources.list.d/opencardev.list" >> $GITHUB_STEP_SUMMARY
             echo "sudo apt update" >> $GITHUB_STEP_SUMMARY
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           else
