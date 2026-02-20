@@ -346,8 +346,25 @@ jobs:
           fi
           echo "📐 Architectures detected: $ALL_ARCHS"
 
-          # Components that we support in the published repository
-          SUPPORTED_COMPONENTS="stable nightly"
+          # Explicitly list all supported release channels
+          # (prevents accidental overwrites and supports multi-channel publishing)
+          SUPPORTED_COMPONENTS="stable nightly unstable"
+          
+          # Filter to only components that have staged packages
+          ACTIVE_COMPONENTS=""
+          for component in $SUPPORTED_COMPONENTS; do
+            component_count=$(find ./staging -path "*/$component/*/*.deb" -type f 2>/dev/null | wc -l)
+            if [ "$component_count" -gt 0 ]; then
+              ACTIVE_COMPONENTS="$ACTIVE_COMPONENTS $component"
+            fi
+          done
+          ACTIVE_COMPONENTS=$(echo "$ACTIVE_COMPONENTS" | xargs)
+          
+          if [ -z "$ACTIVE_COMPONENTS" ]; then
+            echo "❌ No staged packages found in any supported component (stable|nightly|unstable)"
+            exit 1
+          fi
+          echo "📦 Active components with staged packages: $ACTIVE_COMPONENTS"
 
           # Create timestamp for snapshot names
           SNAPSHOT_DATE=$(date +%Y-%m-%d-%H%M%S)
@@ -356,7 +373,7 @@ jobs:
           COMPONENT_NAMES=()
           COMPONENT_SNAPSHOTS=()
 
-          for component in $SUPPORTED_COMPONENTS; do
+          for component in $ACTIVE_COMPONENTS; do
             component_count=$(find ./staging -path "*/$component/*/*.deb" -type f | wc -l)
             if [ "$component_count" -eq 0 ]; then
               echo "ℹ️  No staged packages found for component: $component (skipping)"
