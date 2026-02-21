@@ -110,7 +110,7 @@ jobs:
           # We need to flatten them and find .deb files
           echo ""
           echo "📂 Contents of downloaded-artifacts before unpacking:"
-          find ./downloaded-artifacts -type f | head -20
+          find ./downloaded-artifacts -type f | sed -n '1,20p'
           
           # Unzip artifact containers (dawidd6 action sometimes zips them)
           for archive_file in ./downloaded-artifacts/*/*; do
@@ -130,12 +130,12 @@ jobs:
 
           echo ""
           echo "📂 Contents after unpacking (showing .deb files):"
-          find ./downloaded-artifacts -name "*.deb" -type f | head -20
+          find ./downloaded-artifacts -name "*.deb" -type f | sed -n '1,20p'
 
           DEB_COUNT=$(find ./downloaded-artifacts -name "*.deb" -type f | wc -l)
           if [ "$DEB_COUNT" -eq 0 ]; then
             echo "❌ No .deb packages found in downloaded artifacts"
-            find ./downloaded-artifacts -type f | head -30
+            find ./downloaded-artifacts -type f | sed -n '1,30p'
             exit 1
           fi
           echo "✅ Found $DEB_COUNT .deb packages"
@@ -260,7 +260,7 @@ jobs:
 
           echo ""
           echo "📁 Staging after hydration (first 50 packages):"
-          find ./staging -name "*.deb" -type f | head -50 | sort
+          find ./staging -name "*.deb" -type f | sort | sed -n '1,50p'
 
       - name: Set up GPG key
         run: |
@@ -270,7 +270,7 @@ jobs:
           echo "${{ secrets.APT_SIGNING_KEY }}" | gpg --import --batch --yes 2>&1 | grep -E "imported|key"
 
           # Get key ID
-          KEYID=$(gpg --list-secret-keys --keyid-format SHORT 2>/dev/null | grep "^sec" | awk '{print $2}' | cut -d'/' -f2 | head -1)
+          KEYID=$(gpg --list-secret-keys --keyid-format SHORT 2>/dev/null | grep "^sec" | awk '{print $2}' | cut -d'/' -f2 | sed -n '1p')
           if [ -z "$KEYID" ]; then
             echo "❌ Failed to extract GPG key ID"
             exit 1
@@ -419,7 +419,7 @@ jobs:
           aptly snapshot list
 
           # Get the key ID for signing
-          KEYID=$(gpg --list-secret-keys --keyid-format SHORT 2>/dev/null | grep "^sec" | awk '{print $2}' | cut -d'/' -f2 | head -1)
+          KEYID=$(gpg --list-secret-keys --keyid-format SHORT 2>/dev/null | grep "^sec" | awk '{print $2}' | cut -d'/' -f2 | sed -n '1p')
           
           # Extract passphrase if available
           GPG_PASSPHRASE="${{ secrets.APT_SIGNING_PASSPHRASE }}"
@@ -494,7 +494,7 @@ jobs:
           # Verify pool structure
           echo ""
           echo "📁 Pool structure (Aptly shared pool - first 20 packages):"
-          find ./repo-export/pool -name "*.deb" -type f | head -20 | sort
+          find ./repo-export/pool -name "*.deb" -type f | sort | sed -n '1,20p'
 
           echo ""
           echo "📁 Distribution metadata:"
@@ -503,7 +503,7 @@ jobs:
           # Show sample Packages file entry to verify paths
           echo ""
           echo "📄 Sample Packages metadata (first entry from first distribution):"
-          FIRST_PACKAGES=$(find ./repo-export/dists -name "Packages" -type f | head -1)
+          FIRST_PACKAGES=$(find ./repo-export/dists -name "Packages" -type f | sed -n '1p')
           if [ -n "$FIRST_PACKAGES" ]; then
             head -20 "$FIRST_PACKAGES"
           fi
@@ -514,7 +514,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          KEYID=$(gpg --list-secret-keys --keyid-format SHORT 2>/dev/null | grep "^sec" | awk '{print $2}' | cut -d'/' -f2 | head -1)
+          KEYID=$(gpg --list-secret-keys --keyid-format SHORT 2>/dev/null | grep "^sec" | awk '{print $2}' | cut -d'/' -f2 | sed -n '1p')
           
           if [ -z "$KEYID" ]; then
             echo "⚠️  No GPG key available, skipping manual signing"
