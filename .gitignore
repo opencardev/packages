@@ -1,0 +1,30 @@
+# Temporary and log files
+*.log
+run_log*.txt
+*.tmp
+*.swp
+*~
+
+# Backup files
+*.backup
+*.bak
+*.orig
+
+# Build artifacts (temporary)
+downloaded-artifacts/
+staging/
+repo-export/
+repo-build/
+
+# Aptly working directories (local only, not committed)
+.aptly/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-*
+.DS_Store
+Thumbs.db
+
+# Documentation working files (keep final docs)
+*.draft.md

@@ -1,0 +1,212 @@
+---
+name: Deploy APT Repository to GitHub Pages
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["main"]
+    paths:
+      - 'dists/**'
+      - 'pool/**'
+      - 'opencardev.gpg.key'
+
+  # Allows manual trigger from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Create .nojekyll file
+        run: |
+          # Prevent GitHub Pages from processing files with Jekyll
+          touch .nojekyll
+          echo "✓ Created .nojekyll to disable Jekyll processing"
+
+      - name: Create index page
+        run: |
+          cat > index.html <<'HTMLEOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>OpenCarDev APT Repository</title>
+              <style>
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                      max-width: 900px;
+                      margin: 50px auto;
+                      padding: 20px;
+                      line-height: 1.6;
+                      background: #f5f5f5;
+                  }
+                  .container {
+                      background: white;
+                      padding: 30px;
+                      border-radius: 8px;
+                      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                  }
+                  h1 {
+                      color: #2c3e50;
+                      border-bottom: 3px solid #3498db;
+                      padding-bottom: 10px;
+                  }
+                  h2 {
+                      color: #34495e;
+                      margin-top: 30px;
+                  }
+                  code {
+                      background: #f8f9fa;
+                      padding: 2px 6px;
+                      border-radius: 3px;
+                      font-family: "Courier New", monospace;
+                      font-size: 0.9em;
+                  }
+                  pre {
+                      background: #2c3e50;
+                      color: #ecf0f1;
+                      padding: 15px;
+                      border-radius: 5px;
+                      overflow-x: auto;
+                  }
+                  pre code {
+                      background: transparent;
+                      color: inherit;
+                      padding: 0;
+                  }
+                  .note {
+                      background: #e8f4f8;
+                      border-left: 4px solid #3498db;
+                      padding: 15px;
+                      margin: 20px 0;
+                  }
+                  a {
+                      color: #3498db;
+                      text-decoration: none;
+                  }
+                  a:hover {
+                      text-decoration: underline;
+                  }
+                  ul {
+                      margin: 10px 0;
+                  }
+                  li {
+                      margin: 5px 0;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <h1>🚗 OpenCarDev APT Repository</h1>
+                  
+                  <p>Official Debian package repository for OpenCarDev projects including</p>
+                  <ul>
+                      <li><strong>AASDK</strong> - Android Auto SDK library</li>
+                      <li><strong>Crankshaft</strong> - Automotive infotainment system</li>
+                      <li>Additional automotive software packages</li>
+                  </ul>
+
+                  <h2>📥 Installation</h2>
+                  
+                  <h3>Ubuntu 24.04 (Noble) - Stable Channel</h3>
+                  <pre><code># Add GPG key
+          curl -fsSL https://apt.opencardev.org/opencardev.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/opencardev-archive-keyring.gpg
+
+          # Add repository
+          echo "deb [signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://apt.opencardev.org noble stable" | sudo tee /etc/apt/sources.list.d/opencardev.list
+
+          # Update package list
+          sudo apt update</code></pre>
+
+                  <h3>Debian 13 (Trixie) - Stable Channel</h3>
+                  <pre><code># Add GPG key
+          curl -fsSL https://apt.opencardev.org/opencardev.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/opencardev-archive-keyring.gpg
+
+          # Add repository
+          echo "deb [signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://apt.opencardev.org trixie stable" | sudo tee /etc/apt/sources.list.d/opencardev.list
+
+          # Update package list
+          sudo apt update</code></pre>
+
+                  <h3>Debian 12 (Bookworm) - Stable Channel</h3>
+                  <pre><code># Add GPG key
+          curl -fsSL https://apt.opencardev.org/opencardev.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/opencardev-archive-keyring.gpg
+
+          # Add repository
+          echo "deb [signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://apt.opencardev.org bookworm stable" | sudo tee /etc/apt/sources.list.d/opencardev.list
+
+          # Update package list
+          sudo apt update</code></pre>
+
+                  <div class="note">
+                      <strong>💡 Note:</strong> Replace <code>stable</code> with <code>nightly</code> or <code>unstable</code> for development versions.
+                  </div>
+
+                  <h2>📦 Available Distributions</h2>
+                  <ul>
+                      <li><strong>noble</strong> - Ubuntu 24.04 LTS</li>
+                      <li><strong>trixie</strong> - Debian 13</li>
+                      <li><strong>bookworm</strong> - Debian 12</li>
+                  </ul>
+
+                  <h2>🔄 Available Channels</h2>
+                  <ul>
+                      <li><strong>stable</strong> - Production-ready releases</li>
+                      <li><strong>nightly</strong> - Automated nightly builds</li>
+                      <li><strong>unstable</strong> - Development builds</li>
+                  </ul>
+
+                  <h2>📋 Repository Structure</h2>
+                  <ul>
+                      <li><a href="dists/">dists/</a> - Distribution metadata</li>
+                      <li><a href="pool/">pool/</a> - Package files</li>
+                      <li><a href="opencardev.gpg.key">opencardev.gpg.key</a> - Repository signing key</li>
+                  </ul>
+
+                  <h2>🔗 Links</h2>
+                  <ul>
+                      <li><a href="https://github.com/opencardev">GitHub Organization</a></li>
+                      <li><a href="https://github.com/opencardev/crankshaft.core">Crankshaft Project</a></li>
+                      <li><a href="https://github.com/opencardev/packages">Repository Source</a></li>
+                  </ul>
+
+                  <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ecf0f1; color: #7f8c8d; font-size: 0.9em;">
+                      <p>Maintained by the OpenCarDev Team | Updated automatically via GitHub Actions</p>
+                  </footer>
+              </div>
+          </body>
+          </html>
+          HTMLEOF
+          echo "✓ Created index.html"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload entire repository
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

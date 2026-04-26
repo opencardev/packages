@@ -1,0 +1,805 @@
+---
+name: APT Repository Publish
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_repo:
+        description: 'Source repository (owner/repo)'
+        required: true
+        type: string
+        default: 'opencardev/aasdk'
+      build_run_id:
+        description: 'Build run ID'
+        required: true
+        type: string
+      channel:
+        description: 'Release channel (stable/nightly/unstable)'
+        required: true
+        type: string
+        default: 'unstable'
+
+  repository_dispatch:
+    types: [publish-apt-packages]
+
+  workflow_call:
+    inputs:
+      source_repo:
+        description: 'Source repository (owner/repo)'
+        required: true
+        type: string
+      build_run_id:
+        description: 'Build run ID'
+        required: true
+        type: string
+      channel:
+        description: 'Release channel (stable/nightly/unstable)'
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    outputs:
+      source_repo: ${{ steps.inputs.outputs.source_repo }}
+      build_run_id: ${{ steps.inputs.outputs.build_run_id }}
+      channel: ${{ steps.inputs.outputs.channel }}
+      has_changes: ${{ steps.package_changes.outputs.has_changes }}
+      changed_count: ${{ steps.package_changes.outputs.changed_count }}
+      unchanged_count: ${{ steps.package_changes.outputs.unchanged_count }}
+
+    steps:
+      - name: Normalize inputs
+        id: inputs
+        run: |
+          # Handle different trigger types
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            echo "source_repo=${{ github.event.client_payload.source_repo }}" >> $GITHUB_OUTPUT
+            echo "build_run_id=${{ github.event.client_payload.build_run_id }}" >> $GITHUB_OUTPUT
+            # Default channel for repository_dispatch
+            echo "channel=stable" >> $GITHUB_OUTPUT
+          else
+            echo "source_repo=${{ inputs.source_repo }}" >> $GITHUB_OUTPUT
+            echo "build_run_id=${{ inputs.build_run_id }}" >> $GITHUB_OUTPUT
+            echo "channel=${{ inputs.channel }}" >> $GITHUB_OUTPUT
+          fi
+      - name: Checkout packages repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y gnupg dirmngr jq curl ca-certificates apt-transport-https software-properties-common
+
+          # Install Aptly from default Ubuntu repos (available in Ubuntu 24.04+)
+          # Note: This workflow requires ubuntu-24.04 runner
+          if ! command -v aptly >/dev/null 2>&1; then
+            echo "Installing aptly from default repositories"
+            sudo apt-get install -y aptly
+          else
+            echo "aptly already installed"
+          fi
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v8
+        with:
+          repository: ${{ steps.inputs.outputs.source_repo }}
+          run-id: ${{ steps.inputs.outputs.build_run_id }}
+          path: ./downloaded-artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Unpack and verify artifacts
+        run: |
+          set -euo pipefail
+
+          CHANNEL="${{ steps.inputs.outputs.channel }}"
+          SOURCE_REPO="${{ steps.inputs.outputs.source_repo }}"
+          BUILD_RUN_ID="${{ steps.inputs.outputs.build_run_id }}"
+
+          echo "📦 Processing artifacts from $SOURCE_REPO run $BUILD_RUN_ID"
+          echo "📍 Publishing to channel: $CHANNEL"
+
+          # The dawidd6/action-download-artifact downloads each artifact into a folder named after the artifact
+          # We need to flatten them and find .deb files
+          echo ""
+          echo "📂 Contents of downloaded-artifacts before unpacking:"
+          find ./downloaded-artifacts -type f | sed -n '1,20p'
+          
+          # Unzip artifact containers (dawidd6 action sometimes zips them)
+          for archive_file in ./downloaded-artifacts/*/*; do
+            if [ -f "$archive_file" ]; then
+              case "$archive_file" in
+                *.zip)
+                  echo "Unpacking: $archive_file"
+                  unzip -o "$archive_file" -d "$(dirname "$archive_file")" || true
+                  ;;
+                *.tar.gz|*.tgz)
+                  echo "Extracting: $archive_file"
+                  tar -xzf "$archive_file" -C "$(dirname "$archive_file")" || true
+                  ;;
+              esac
+            fi
+          done
+
+          echo ""
+          echo "📂 Contents after unpacking (showing .deb files):"
+          find ./downloaded-artifacts -name "*.deb" -type f | sed -n '1,20p'
+
+          DEB_COUNT=$(find ./downloaded-artifacts -name "*.deb" -type f | wc -l)
+          if [ "$DEB_COUNT" -eq 0 ]; then
+            echo "❌ No .deb packages found in downloaded artifacts"
+            find ./downloaded-artifacts -type f | sed -n '1,30p'
+            exit 1
+          fi
+          echo "✅ Found $DEB_COUNT .deb packages"
+
+          # Store for next steps
+          echo "SOURCE_REPO=$SOURCE_REPO" >> $GITHUB_ENV
+          echo "BUILD_RUN_ID=$BUILD_RUN_ID" >> $GITHUB_ENV
+          echo "CHANNEL=$CHANNEL" >> $GITHUB_ENV
+
+      - name: Detect incoming package content changes
+        id: package_changes
+        run: |
+          set -euo pipefail
+
+          has_changes=false
+          changed_count=0
+          unchanged_count=0
+          > /tmp/published_packages.txt
+          > /tmp/unchanged_packages.txt
+
+          while IFS= read -r deb_file; do
+            [ -f "$deb_file" ] || continue
+
+            filename=$(basename "$deb_file")
+            incoming_sha=$(sha256sum "$deb_file" | awk '{print $1}')
+            existing_file=$(find ./pool -type f -name "$filename" -print -quit 2>/dev/null || true)
+
+            if [ -z "$existing_file" ]; then
+              echo "NEW: $filename"
+              has_changes=true
+              changed_count=$((changed_count + 1))
+              continue
+            fi
+
+            existing_sha=$(sha256sum "$existing_file" | awk '{print $1}')
+            if [ "$incoming_sha" != "$existing_sha" ]; then
+              echo "UPDATED: $filename"
+              has_changes=true
+              changed_count=$((changed_count + 1))
+            else
+              echo "UNCHANGED: $filename"
+              unchanged_count=$((unchanged_count + 1))
+              # Save metadata for summary
+              unch_pkg=$(dpkg-deb -f "$deb_file" Package 2>/dev/null || echo "unknown")
+              unch_ver=$(dpkg-deb -f "$deb_file" Version 2>/dev/null || echo "unknown")
+              if echo "$filename" | grep -q "deb12"; then unch_suite="bookworm"
+              elif echo "$filename" | grep -q "deb13"; then unch_suite="trixie"
+              elif echo "$filename" | grep -Eq "ubuntu24(\.04)?|noble"; then unch_suite="noble"
+              else unch_suite="unknown"; fi
+              if echo "$filename" | grep -q "_amd64\.deb"; then unch_arch="amd64"
+              elif echo "$filename" | grep -q "_arm64\.deb"; then unch_arch="arm64"
+              elif echo "$filename" | grep -q "_armhf\.deb"; then unch_arch="armhf"
+              else unch_arch="unknown"; fi
+              echo "${unch_suite}|${CHANNEL}|${unch_pkg}|${unch_ver}|${unch_arch}" >> /tmp/unchanged_packages.txt
+            fi
+          done < <(find ./downloaded-artifacts -name "*.deb" -type f | sort)
+
+          echo "has_changes=$has_changes" >> "$GITHUB_OUTPUT"
+          echo "changed_count=$changed_count" >> "$GITHUB_OUTPUT"
+          echo "unchanged_count=$unchanged_count" >> "$GITHUB_OUTPUT"
+
+          if [ "$has_changes" = true ]; then
+            echo "✅ Detected $changed_count new or updated package files"
+          else
+            echo "ℹ️  All incoming package files already exist with identical content"
+          fi
+
+      - name: Organize packages by distribution and architecture
+        id: organize
+        if: steps.package_changes.outputs.has_changes == 'true'
+        run: |
+          set -euo pipefail
+
+          mkdir -p ./staging
+
+          # Track published packages for summary
+          > /tmp/published_packages.txt
+
+          # Process each .deb file
+          while IFS= read -r deb_file; do
+            filename=$(basename "$deb_file")
+
+            # Extract package name and version using dpkg
+            pkg_name=$(dpkg-deb -f "$deb_file" Package 2>/dev/null || echo "unknown")
+            pkg_version=$(dpkg-deb -f "$deb_file" Version 2>/dev/null || echo "unknown")
+
+            # Extract suite from package name / release token.
+            if echo "$filename" | grep -q "deb12"; then
+              suite="bookworm"
+            elif echo "$filename" | grep -q "deb13"; then
+              suite="trixie"
+            elif echo "$filename" | grep -Eq "ubuntu24(\\.04)?|noble"; then
+              suite="noble"
+            else
+              echo "⚠️  Cannot determine suite for: $filename (skipping)"
+              continue
+            fi
+
+            # Extract architecture (amd64, arm64, armhf)
+            if echo "$filename" | grep -q "_amd64\.deb"; then
+              arch="amd64"
+            elif echo "$filename" | grep -q "_arm64\.deb"; then
+              arch="arm64"
+            elif echo "$filename" | grep -q "_armhf\.deb"; then
+              arch="armhf"
+            else
+              echo "⚠️  Cannot determine architecture for: $filename (skipping)"
+              continue
+            fi
+
+            # Organize by suite/channel/arch
+            dest_dir="./staging/${suite}/${CHANNEL}/${arch}"
+            mkdir -p "$dest_dir"
+            cp "$deb_file" "$dest_dir/"
+            echo "  ✓ $filename → $suite/$CHANNEL/$arch"
+
+            # Track for summary: suite|channel|package|version|arch
+            echo "${suite}|${CHANNEL}|${pkg_name}|${pkg_version}|${arch}" >> /tmp/published_packages.txt
+          done < <(find ./downloaded-artifacts -name "*.deb" -type f)
+
+          echo ""
+          echo "📁 Staging structure:"
+          find ./staging -name "*.deb" | sort
+
+          # Generate summary stats
+          TOTAL_PACKAGES=$(wc -l < /tmp/published_packages.txt)
+          SUITES=$(cut -d'|' -f1 /tmp/published_packages.txt | sort -u | tr '\n' ' ')
+          ARCHS=$(cut -d'|' -f5 /tmp/published_packages.txt | sort -u | tr '\n' ' ')
+
+          echo ""
+          echo "📊 Summary: $TOTAL_PACKAGES packages across suites [$SUITES] and architectures [$ARCHS]"
+          echo "total_packages=$TOTAL_PACKAGES" >> $GITHUB_OUTPUT
+          echo "suites=$SUITES" >> $GITHUB_OUTPUT
+          echo "architectures=$ARCHS" >> $GITHUB_OUTPUT
+
+      - name: Hydrate staging with existing repository components
+        if: steps.package_changes.outputs.has_changes == 'true'
+        run: |
+          set -euo pipefail
+
+          echo "🔁 Hydrating staging from existing repository state"
+
+          # Ensure staging exists even if no new artifacts were downloaded
+          mkdir -p ./staging
+
+          # Load existing packages for all supported components so each publish
+          # includes all components and does not overwrite Release component metadata.
+          for suite_path in ./dists/*; do
+            [ -d "$suite_path" ] || continue
+            suite=$(basename "$suite_path")
+
+            for component in stable nightly unstable; do
+              for packages_file in "$suite_path/$component"/binary-*/Packages; do
+                [ -f "$packages_file" ] || continue
+
+                echo "Hydrating $suite/$component from $(basename "$(dirname "$packages_file")")"
+
+                awk '/^Filename: / {print $2}' "$packages_file" | while read -r rel_path; do
+                  [ -n "$rel_path" ] || continue
+                  src_file="./$rel_path"
+
+                  if [ ! -f "$src_file" ]; then
+                    echo "⚠️  Referenced package missing in pool: $rel_path"
+                    continue
+                  fi
+
+                  if echo "$src_file" | grep -q "_amd64\.deb$"; then
+                    arch="amd64"
+                  elif echo "$src_file" | grep -q "_arm64\.deb$"; then
+                    arch="arm64"
+                  elif echo "$src_file" | grep -q "_armhf\.deb$"; then
+                    arch="armhf"
+                  else
+                    echo "⚠️  Could not determine architecture for: $src_file"
+                    continue
+                  fi
+
+                  mkdir -p "./staging/$suite/$component/$arch"
+                  cp -n "$src_file" "./staging/$suite/$component/$arch/" || true
+                done
+              done
+            done
+          done
+
+          echo ""
+          echo "📁 Staging after hydration (first 50 packages):"
+          find ./staging -name "*.deb" -type f | sort | sed -n '1,50p'
+
+      - name: Set up GPG key
+        if: steps.package_changes.outputs.has_changes == 'true'
+        run: |
+          set -euo pipefail
+
+          # Import GPG key
+          echo "${{ secrets.APT_SIGNING_KEY }}" | gpg --import --batch --yes 2>&1 | grep -E "imported|key"
+
+          # Get key ID
+          KEYID=$(gpg --list-secret-keys --keyid-format SHORT 2>/dev/null | grep "^sec" | awk '{print $2}' | cut -d'/' -f2 | sed -n '1p')
+          if [ -z "$KEYID" ]; then
+            echo "❌ Failed to extract GPG key ID"
+            exit 1
+          fi
+          echo "GPG_KEYID=$KEYID" >> $GITHUB_ENV
+          echo "✅ GPG Key ID: $KEYID"
+
+          # Configure GPG for batch mode
+          mkdir -p ~/.gnupg
+          chmod 700 ~/.gnupg
+          cat > ~/.gnupg/gpg.conf << 'EOF'
+          use-agent
+          pinentry-mode loopback
+          batch
+          yes
+          EOF
+
+          cat > ~/.gnupg/gpg-agent.conf << 'EOF'
+          allow-loopback-pinentry
+          max-cache-ttl 86400
+          default-cache-ttl 86400
+          EOF
+          chmod 600 ~/.gnupg/gpg.conf ~/.gnupg/gpg-agent.conf
+
+          # Reload agent
+          gpg-connect-agent reloadagent /bye || true
+
+      - name: Update APT repository with Aptly (multi-component publish)
+        if: steps.package_changes.outputs.has_changes == 'true'
+        env:
+          GNUPGHOME: ~/.gnupg
+        run: |
+          set -euo pipefail
+
+          echo "🔧 Initializing Aptly (multi-component snapshots)"
+
+          # Configure Aptly
+          mkdir -p ~/.aptly
+          cat > ~/.aptly.conf << EOF
+          {
+            "rootDir": "$HOME/.aptly",
+            "downloadConcurrency": 4,
+            "downloadSpeedLimit": 0,
+            "architectures": ["amd64", "arm64", "armhf"],
+            "dependencyFollowSuggests": false,
+            "dependencyFollowRecommends": false,
+            "dependencyFollowAllVariants": false,
+            "dependencyFollowSource": false,
+            "gpgDisableSign": false,
+            "gpgDisableVerify": false,
+            "gpgProvider": "gpg",
+            "downloadSourcePackages": false,
+            "ppaDistributorID": "debian",
+            "ppaCodename": "",
+            "skipContentsPublishing": false,
+            "FileSystemPublishEndpoints": {
+              "repo": {
+                "rootDir": "$HOME/.aptly/public",
+                "linkMethod": "hardlink"
+              }
+            },
+            "S3PublishEndpoints": {},
+            "SwiftPublishEndpoints": {}
+          }
+          EOF
+
+          # Get all unique architectures across all suites
+          ALL_ARCHS=$(find ./staging -name "*.deb" -type f | while read deb; do
+            dpkg-deb -f "$deb" Architecture 2>/dev/null || echo ""
+          done | sort -u | tr '\n' ',' | sed 's/,$//')
+          
+          if [ -z "$ALL_ARCHS" ]; then
+            ALL_ARCHS="amd64,arm64,armhf"
+          fi
+          echo "📐 Architectures detected: $ALL_ARCHS"
+
+          # Explicitly list all supported release channels
+          # (prevents accidental overwrites and supports multi-channel publishing)
+          SUPPORTED_COMPONENTS="stable nightly unstable"
+          
+          # Filter to only components that have staged packages
+          ACTIVE_COMPONENTS=""
+          for component in $SUPPORTED_COMPONENTS; do
+            component_count=$(find ./staging -path "*/$component/*/*.deb" -type f 2>/dev/null | wc -l)
+            if [ "$component_count" -gt 0 ]; then
+              ACTIVE_COMPONENTS="$ACTIVE_COMPONENTS $component"
+            fi
+          done
+          ACTIVE_COMPONENTS=$(echo "$ACTIVE_COMPONENTS" | xargs)
+          
+          if [ -z "$ACTIVE_COMPONENTS" ]; then
+            echo "❌ No staged packages found in any supported component (stable|nightly|unstable)"
+            exit 1
+          fi
+          echo "📦 Active components with staged packages: $ACTIVE_COMPONENTS"
+
+          # Create timestamp for snapshot names
+          SNAPSHOT_DATE=$(date +%Y-%m-%d-%H%M%S)
+
+          # Build component repositories and snapshots from staged packages
+          COMPONENT_NAMES=()
+          COMPONENT_SNAPSHOTS=()
+
+          for component in $ACTIVE_COMPONENTS; do
+            component_count=$(find ./staging -path "*/$component/*/*.deb" -type f | wc -l)
+            if [ "$component_count" -eq 0 ]; then
+              echo "ℹ️  No staged packages found for component: $component (skipping)"
+              continue
+            fi
+
+            repo_name="${component}-packages"
+            snapshot_name="${component}-${SNAPSHOT_DATE}"
+
+            echo ""
+            echo "📦 Preparing repository for component: $component ($component_count packages)"
+
+            if aptly repo list -raw | grep -q "^${repo_name}$"; then
+              echo "✓ Repository $repo_name exists"
+            else
+              aptly repo create -component="$component" -architectures="$ALL_ARCHS" "$repo_name"
+            fi
+
+            while read -r deb_file; do
+              [ -f "$deb_file" ] || continue
+              aptly repo add "$repo_name" "$deb_file" 2>&1 | grep -E "\[\+\]|added|already" | head -1 || true
+            done < <(find ./staging -path "*/$component/*/*.deb" -type f)
+
+            echo "📸 Creating snapshot: $snapshot_name"
+            aptly snapshot create "$snapshot_name" from repo "$repo_name"
+
+            COMPONENT_NAMES+=("$component")
+            COMPONENT_SNAPSHOTS+=("$snapshot_name")
+          done
+
+          if [ "${#COMPONENT_NAMES[@]}" -eq 0 ]; then
+            echo "❌ No component snapshots created"
+            exit 1
+          fi
+
+          COMPONENT_CSV=$(IFS=,; echo "${COMPONENT_NAMES[*]}")
+
+          echo ""
+          echo "✅ Components to publish together: $COMPONENT_CSV"
+
+          echo ""
+          echo "📋 Current snapshots:"
+          aptly snapshot list
+
+          # Get the key ID for signing
+          KEYID=$(gpg --list-secret-keys --keyid-format SHORT 2>/dev/null | grep "^sec" | awk '{print $2}' | cut -d'/' -f2 | sed -n '1p')
+          
+          # Extract passphrase if available
+          GPG_PASSPHRASE="${{ secrets.APT_SIGNING_PASSPHRASE }}"
+          
+          if [ -z "$KEYID" ]; then
+            echo "⚠️  No GPG key found, publishing without signing"
+            SIGN_OPTS="-skip-signing"
+          elif [ -n "$GPG_PASSPHRASE" ]; then
+            echo "📝 Using GPG key $KEYID with passphrase"
+            SIGN_OPTS="-gpg-key=$KEYID -batch -passphrase=$GPG_PASSPHRASE"
+          else
+            echo "📝 Using GPG key $KEYID (no passphrase)"
+            SIGN_OPTS="-gpg-key=$KEYID -batch"
+          fi
+
+          # Publish ALL component snapshots to EACH distribution together.
+          # This guarantees Release metadata keeps stable/nightly side-by-side.
+          echo ""
+          echo "📢 Publishing multi-component snapshots to distributions..."
+
+          for suite_dir in ./staging/*/; do
+            [ -d "$suite_dir" ] || continue
+            suite=$(basename "$suite_dir")
+
+            echo ""
+            echo "Publishing to distribution: $suite (components: $COMPONENT_CSV)"
+
+            # Drop existing publication to republish all components atomically.
+            aptly publish drop "$suite" filesystem:repo: 2>/dev/null || true
+
+            # Build quoted snapshot args for eval
+            SNAPSHOT_ARGS=""
+            for snap in "${COMPONENT_SNAPSHOTS[@]}"; do
+              SNAPSHOT_ARGS="$SNAPSHOT_ARGS \"$snap\""
+            done
+
+            eval "aptly publish snapshot $SIGN_OPTS -distribution=\"$suite\" -component=\"$COMPONENT_CSV\" $SNAPSHOT_ARGS filesystem:repo:" || {
+              echo "❌ Failed to publish to $suite"
+              exit 1
+            }
+            
+            echo "✅ Published to $suite"
+          done
+
+          echo ""
+          echo "📋 Published repositories:"
+          aptly publish list -raw
+
+          echo ""
+          echo "✅ Aptly repository update complete (shared pool with per-distribution metadata)"
+
+      - name: Export repository
+        if: steps.package_changes.outputs.has_changes == 'true'
+        run: |
+          set -euo pipefail
+
+          # Create clean export directory
+          rm -rf ./repo-export
+          mkdir -p ./repo-export
+
+          # Copy from aptly public directory
+          # Aptly creates proper shared pool structure automatically:
+          # - pool/COMPONENT/LETTER/PACKAGE/ (shared across all distributions)
+          # - dists/DISTRIBUTION/COMPONENT/ (per-distribution metadata)
+          if [ -d ~/.aptly/public ]; then
+            cp -a ~/.aptly/public/* ./repo-export/
+            echo "✅ Exported repository structure from Aptly"
+          else
+            echo "❌ No aptly public directory found"
+            exit 1
+          fi
+
+          # Verify pool structure
+          echo ""
+          echo "📁 Pool structure (Aptly shared pool - first 20 packages):"
+          find ./repo-export/pool -name "*.deb" -type f | sort | sed -n '1,20p'
+
+          echo ""
+          echo "📁 Distribution metadata:"
+          find ./repo-export/dists -type d -maxdepth 2 | sort
+
+          # Show sample Packages file entry to verify paths
+          echo ""
+          echo "📄 Sample Packages metadata (first entry from first distribution):"
+          FIRST_PACKAGES=$(find ./repo-export/dists -name "Packages" -type f | sed -n '1p')
+          if [ -n "$FIRST_PACKAGES" ]; then
+            head -20 "$FIRST_PACKAGES"
+          fi
+
+          echo ""
+          echo "✅ Repository structure validated (shared pool with per-distribution metadata)"
+      - name: Sign Release files with GPG
+        if: steps.package_changes.outputs.has_changes == 'true'
+        run: |
+          set -euo pipefail
+
+          KEYID=$(gpg --list-secret-keys --keyid-format SHORT 2>/dev/null | grep "^sec" | awk '{print $2}' | cut -d'/' -f2 | sed -n '1p')
+          
+          if [ -z "$KEYID" ]; then
+            echo "⚠️  No GPG key available, skipping manual signing"
+            exit 0
+          fi
+
+          echo "📝 Signing Release files with GPG key $KEYID"
+
+          # Find and sign all Release files
+          find ./repo-export -name "Release" -type f | while read release_file; do
+            echo "Signing: $release_file"
+            
+            # Create detached signature
+            gpg --batch --yes --pinentry-mode loopback --passphrase "" \
+              --armor --detach-sign \
+              --output "${release_file}.gpg" \
+              "$release_file" 2>/dev/null || {
+              echo "⚠️  Signing failed, trying with key ID specified"
+              gpg --batch --yes --pinentry-mode loopback --passphrase "" \
+                -u "$KEYID" --armor --detach-sign \
+                --output "${release_file}.gpg" \
+                "$release_file" 2>/dev/null || true
+            }
+            
+            # Create clearsigned InRelease file
+            if [ ! -f "${release_file%.Release}InRelease" ]; then
+              gpg --batch --yes --pinentry-mode loopback --passphrase "" \
+                --clearsign \
+                --output "${release_file%.Release}InRelease" \
+                "$release_file" 2>/dev/null || {
+                echo "⚠️  Clearsign failed, trying with key ID specified"
+                gpg --batch --yes --pinentry-mode loopback --passphrase "" \
+                  -u "$KEYID" --clearsign \
+                  --output "${release_file%.Release}InRelease" \
+                  "$release_file" 2>/dev/null || true
+              }
+            fi
+          done
+
+          echo "✅ Release files signed"
+
+      - name: Upload published packages list
+        uses: actions/upload-artifact@v7
+        with:
+          name: published-packages-${{ github.run_id }}
+          path: |
+            /tmp/published_packages.txt
+            /tmp/unchanged_packages.txt
+          retention-days: 7
+        continue-on-error: true
+
+      - name: Detect exported repository changes
+        if: steps.package_changes.outputs.has_changes == 'true'
+        id: repo_changes
+        run: |
+          set -euo pipefail
+
+          rm -rf ./repo-compare
+          mkdir -p ./repo-compare/current ./repo-compare/exported
+
+          if [ -d ./dists ]; then
+            cp -a ./dists ./repo-compare/current/
+          fi
+          if [ -d ./pool ]; then
+            cp -a ./pool ./repo-compare/current/
+          fi
+          if [ -d ./repo-export/dists ]; then
+            cp -a ./repo-export/dists ./repo-compare/exported/
+          fi
+          if [ -d ./repo-export/pool ]; then
+            cp -a ./repo-export/pool ./repo-compare/exported/
+          fi
+
+          current_digest=$(find ./repo-compare/current -type f -print0 | sort -z | xargs -0 sha256sum 2>/dev/null | sha256sum | awk '{print $1}')
+          exported_digest=$(find ./repo-compare/exported -type f -print0 | sort -z | xargs -0 sha256sum 2>/dev/null | sha256sum | awk '{print $1}')
+
+          if [ "$current_digest" = "$exported_digest" ]; then
+            echo "has_repo_changes=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️  Exported repository content matches committed repository content"
+          else
+            echo "has_repo_changes=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Exported repository content differs from committed repository content"
+          fi
+
+      - name: Commit and push to repository
+        if: steps.package_changes.outputs.has_changes == 'true' && steps.repo_changes.outputs.has_repo_changes == 'true'
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Copy exported files to repository root
+          cp -a ./repo-export/* ./
+
+          # Stage all changes
+          git add dists/ pool/ || true
+
+          # Check if there are changes
+          if git diff --cached --quiet; then
+          echo "ℹ️  No changes to commit"
+          else
+          # Create commit message
+          PROJECT_NAME=$(echo "$SOURCE_REPO" | cut -d'/' -f2)
+          git commit -m "chore: Update $CHANNEL packages from $PROJECT_NAME build $BUILD_RUN_ID"
+          git push origin main
+          echo "✅ Pushed changes to repository"
+          fi
+
+      - name: Verify repository structure
+        if: success() && steps.package_changes.outputs.has_changes == 'true'
+        run: |
+          echo "🌐 GitHub Pages deployment will be triggered automatically by pages-deploy.yml"
+          echo ""
+          echo "Repository structure:"
+          ls -lh dists/ pool/ opencardev.gpg.key 2>/dev/null | head -20
+
+  summary:
+    needs: publish
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download published packages list
+        if: needs.publish.result == 'success'
+        uses: actions/download-artifact@v8
+        with:
+          pattern: published-packages-*
+          path: ./artifacts
+        continue-on-error: true
+
+      - name: Job Summary
+        run: |
+          echo "# APT Repository Publish Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Source Repository**: ${{ needs.publish.outputs.source_repo }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Build Run**: #${{ needs.publish.outputs.build_run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Channel**: \`${{ needs.publish.outputs.channel }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Status**: ${{ needs.publish.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.publish.result }}" == "success" ]; then
+            HAS_CHANGES="${{ needs.publish.outputs.has_changes }}"
+            CHANGED="${{ needs.publish.outputs.changed_count }}"
+            UNCHANGED="${{ needs.publish.outputs.unchanged_count }}"
+
+            if [ "$HAS_CHANGES" = "true" ]; then
+              echo "✅ **Repository updated**: $CHANGED new/updated package file(s), $UNCHANGED unchanged" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "ℹ️ **No changes**: All $UNCHANGED incoming package file(s) are already up to date" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            PKG_FILE=$(find ./artifacts -name "published_packages.txt" 2>/dev/null | head -1)
+            UNCH_FILE=$(find ./artifacts -name "unchanged_packages.txt" 2>/dev/null | head -1)
+
+            # Show updated / new packages
+            if [ -n "$PKG_FILE" ] && [ -s "$PKG_FILE" ]; then
+              echo "## ✅ Updated / New Packages" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              for suite in $(cut -d'|' -f1 "$PKG_FILE" | sort -u); do
+                echo "### $suite" >> $GITHUB_STEP_SUMMARY
+                echo "" >> $GITHUB_STEP_SUMMARY
+                echo "| Package | Version | Architectures |" >> $GITHUB_STEP_SUMMARY
+                echo "|---------|---------|---------------|" >> $GITHUB_STEP_SUMMARY
+                for pkg in $(grep "^${suite}|" "$PKG_FILE" | cut -d'|' -f3 | sort -u); do
+                  version=$(grep "^${suite}|.*|${pkg}|" "$PKG_FILE" | cut -d'|' -f4 | head -1)
+                  archs=$(grep "^${suite}|.*|${pkg}|" "$PKG_FILE" | cut -d'|' -f5 | sort | tr '\n' ' ' | sed 's/ $//')
+                  echo "| \`$pkg\` | $version | $archs |" >> $GITHUB_STEP_SUMMARY
+                done
+                echo "" >> $GITHUB_STEP_SUMMARY
+              done
+            fi
+
+            # Show unchanged packages
+            if [ -n "$UNCH_FILE" ] && [ -s "$UNCH_FILE" ]; then
+              echo "## ℹ️ Unchanged Packages (already up to date)" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              for suite in $(cut -d'|' -f1 "$UNCH_FILE" | sort -u); do
+                echo "### $suite" >> $GITHUB_STEP_SUMMARY
+                echo "" >> $GITHUB_STEP_SUMMARY
+                echo "| Package | Version | Architectures |" >> $GITHUB_STEP_SUMMARY
+                echo "|---------|---------|---------------|" >> $GITHUB_STEP_SUMMARY
+                for pkg in $(grep "^${suite}|" "$UNCH_FILE" | cut -d'|' -f3 | sort -u); do
+                  version=$(grep "^${suite}|.*|${pkg}|" "$UNCH_FILE" | cut -d'|' -f4 | head -1)
+                  archs=$(grep "^${suite}|.*|${pkg}|" "$UNCH_FILE" | cut -d'|' -f5 | sort | tr '\n' ' ' | sed 's/ $//')
+                  echo "| \`$pkg\` | $version | $archs |" >> $GITHUB_STEP_SUMMARY
+                done
+                echo "" >> $GITHUB_STEP_SUMMARY
+              done
+            fi
+
+            # Overall stats
+            TOTAL_CHANGED=$([ -n "$PKG_FILE" ] && [ -s "$PKG_FILE" ] && wc -l < "$PKG_FILE" || echo 0)
+            TOTAL_UNCHANGED=$([ -n "$UNCH_FILE" ] && [ -s "$UNCH_FILE" ] && wc -l < "$UNCH_FILE" || echo 0)
+            UNIQUE_PKGS=$(cat "${PKG_FILE:-/dev/null}" "${UNCH_FILE:-/dev/null}" 2>/dev/null | cut -d'|' -f3 | sort -u | wc -l)
+            echo "---" >> $GITHUB_STEP_SUMMARY
+            echo "**Updated files**: $TOTAL_CHANGED | **Unchanged files**: $TOTAL_UNCHANGED | **Unique packages**: $UNIQUE_PKGS" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Repository URL**: https://apt.opencardev.org" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📥 Installation" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+            echo "# Add GPG key (run once)" >> $GITHUB_STEP_SUMMARY
+            echo "curl -fsSL https://apt.opencardev.org/opencardev.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/opencardev-archive-keyring.gpg" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "# Debian Trixie" >> $GITHUB_STEP_SUMMARY
+            echo "echo \\\"deb [arch=\\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://apt.opencardev.org trixie ${{ needs.publish.outputs.channel }}\\\" | sudo tee /etc/apt/sources.list.d/opencardev.list" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "# Ubuntu 24.04 (Noble)" >> $GITHUB_STEP_SUMMARY
+            echo "echo \\\"deb [arch=\\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://apt.opencardev.org noble ${{ needs.publish.outputs.channel }}\\\" | sudo tee /etc/apt/sources.list.d/opencardev.list" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "sudo apt update" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Repository update failed**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Check the job logs above for details." >> $GITHUB_STEP_SUMMARY
+          fi
