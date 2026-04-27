@@ -1,0 +1,16 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Origin: . noble
+Label: . noble
+Archive: noble
+Suite: noble
+Architecture: amd64
+Component: stable
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYKAB0WIQS0+eXU5BsMvurfM8rd1heH2TYMLwUCae7FtgAKCRDd1heH2TYM
+Ly1jAQCqk/pVDDvkL2oVtxsGG9y/AsoqIw7Nx8T502NziiXZKwD7BZ8x8G2njsdP
+VOF9Mx//l8Kjbbla5X5QBrzKNCjNxQY=
+=hb4p
+-----END PGP SIGNATURE-----
