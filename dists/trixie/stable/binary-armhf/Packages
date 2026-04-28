@@ -24,12 +24,12 @@ Maintainer: AASDK <opencardevuk@gmail.com>
 Architecture: armhf
 Version: 4.1.20260427
 Depends: libaasdk (= 4.1.20260427)
-Filename: pool/stable/liba/libaasdk-dev/libaasdk-dev_4.1.20260427-2_ubuntu24.04_armhf.deb
-Size: 305844
-MD5sum: fa987dcb59b9a64cc8c5bc37506097f2
-SHA1: cd33290e2bfc1e829eb16af60028fadd53a01197
-SHA256: e4c5660884aaead2552042cfec630793f2dabaacf076dff853bf92f08e8a379a
-SHA512: b33a5d1e3880989b8434e765eede131a8bfacadfd21fa9854ff48e55b56f439cb3321d3a77c2c544085ccc9c79cbe9e08f723a4a977cbfc564beed6bf28b281b
+Filename: pool/stable/liba/libaasdk-dev/libaasdk-dev_4.1.20260427-2_deb13_armhf.deb
+Size: 305742
+MD5sum: eb044774dc060b68242c387ba29cc3ce
+SHA1: c37e1e0d8e0712c3e94a190888af783f87e8f6c8
+SHA256: 12c49c0ee079a0795ba9b4455063891f5eb8374f6a8e9db72f7883e016a6ce67
+SHA512: 5f45d821ecbc1c97c3d77c555ae02a1e9916655b1b3dc8f668fc5e70167d185b41e2f82cdf44c13b819823b63e0d1739fec5911a9b7aa87398a9ac22538717ba
 Description: Android Auto SDK Library
  Development headers and CMake files for Android Auto SDK on armhf architecture
 Homepage: https://github.com/opencardev/aasdk
