@@ -186,7 +186,7 @@ jobs:
               unch_ver=$(dpkg-deb -f "$deb_file" Version 2>/dev/null || echo "unknown")
               if echo "$filename" | grep -q "deb12"; then unch_suite="bookworm"
               elif echo "$filename" | grep -q "deb13"; then unch_suite="trixie"
-              elif echo "$filename" | grep -Eq "ubuntu24(\.04)?|noble"; then unch_suite="noble"
+              elif echo "$filename" | grep -Eq "(0ubuntu1~)?24(\.04)?|ubuntu24(\.04)?|noble"; then unch_suite="noble"
               else unch_suite="unknown"; fi
               if echo "$filename" | grep -q "_amd64\.deb"; then unch_arch="amd64"
               elif echo "$filename" | grep -q "_arm64\.deb"; then unch_arch="arm64"
@@ -230,7 +230,7 @@ jobs:
               suite="bookworm"
             elif echo "$filename" | grep -q "deb13"; then
               suite="trixie"
-            elif echo "$filename" | grep -Eq "ubuntu24(\\.04)?|noble"; then
+            elif echo "$filename" | grep -Eq "(0ubuntu1~)?24(\\.04)?|ubuntu24(\\.04)?|noble"; then
               suite="noble"
             else
               echo "⚠️  Cannot determine suite for: $filename (skipping)"
@@ -313,6 +313,18 @@ jobs:
                     arch="armhf"
                   else
                     echo "⚠️  Could not determine architecture for: $src_file"
+                    continue
+                  fi
+
+                  # Guard against stale cross-suite metadata pointing to a mismatched distro package.
+                  src_name=$(basename "$src_file")
+                  if echo "$src_name" | grep -q "deb12"; then src_suite="bookworm"
+                  elif echo "$src_name" | grep -q "deb13"; then src_suite="trixie"
+                  elif echo "$src_name" | grep -Eq "(0ubuntu1~)?24(\\.04)?|ubuntu24(\\.04)?|noble"; then src_suite="noble"
+                  else src_suite="unknown"; fi
+
+                  if [ "$src_suite" != "$suite" ]; then
+                    echo "⚠️  Skipping mismatched package for $suite: $src_name (detected $src_suite)"
                     continue
                   fi
 
@@ -436,55 +448,6 @@ jobs:
           # Create timestamp for snapshot names
           SNAPSHOT_DATE=$(date +%Y-%m-%d-%H%M%S)
 
-          # Build component repositories and snapshots from staged packages
-          COMPONENT_NAMES=()
-          COMPONENT_SNAPSHOTS=()
-
-          for component in $ACTIVE_COMPONENTS; do
-            component_count=$(find ./staging -path "*/$component/*/*.deb" -type f | wc -l)
-            if [ "$component_count" -eq 0 ]; then
-              echo "ℹ️  No staged packages found for component: $component (skipping)"
-              continue
-            fi
-
-            repo_name="${component}-packages"
-            snapshot_name="${component}-${SNAPSHOT_DATE}"
-
-            echo ""
-            echo "📦 Preparing repository for component: $component ($component_count packages)"
-
-            if aptly repo list -raw | grep -q "^${repo_name}$"; then
-              echo "✓ Repository $repo_name exists"
-            else
-              aptly repo create -component="$component" -architectures="$ALL_ARCHS" "$repo_name"
-            fi
-
-            while read -r deb_file; do
-              [ -f "$deb_file" ] || continue
-              aptly repo add "$repo_name" "$deb_file" 2>&1 | grep -E "\[\+\]|added|already" | head -1 || true
-            done < <(find ./staging -path "*/$component/*/*.deb" -type f)
-
-            echo "📸 Creating snapshot: $snapshot_name"
-            aptly snapshot create "$snapshot_name" from repo "$repo_name"
-
-            COMPONENT_NAMES+=("$component")
-            COMPONENT_SNAPSHOTS+=("$snapshot_name")
-          done
-
-          if [ "${#COMPONENT_NAMES[@]}" -eq 0 ]; then
-            echo "❌ No component snapshots created"
-            exit 1
-          fi
-
-          COMPONENT_CSV=$(IFS=,; echo "${COMPONENT_NAMES[*]}")
-
-          echo ""
-          echo "✅ Components to publish together: $COMPONENT_CSV"
-
-          echo ""
-          echo "📋 Current snapshots:"
-          aptly snapshot list
-
           # Get the key ID for signing
           KEYID=$(gpg --list-secret-keys --keyid-format SHORT 2>/dev/null | grep "^sec" | awk '{print $2}' | cut -d'/' -f2 | sed -n '1p')
           
@@ -502,14 +465,54 @@ jobs:
             SIGN_OPTS="-gpg-key=$KEYID -batch"
           fi
 
-          # Publish ALL component snapshots to EACH distribution together.
-          # This guarantees Release metadata keeps stable/nightly side-by-side.
+          # Publish per-suite snapshots so distributions cannot clash on
+          # package identity (name/version/arch) inside a shared local repo.
           echo ""
-          echo "📢 Publishing multi-component snapshots to distributions..."
+          echo "📢 Publishing per-suite component snapshots to distributions..."
 
           for suite_dir in ./staging/*/; do
             [ -d "$suite_dir" ] || continue
             suite=$(basename "$suite_dir")
+
+            SUITE_COMPONENTS=()
+            SUITE_SNAPSHOTS=()
+
+            for component in $ACTIVE_COMPONENTS; do
+              component_count=$(find "./staging/$suite" -path "*/$component/*/*.deb" -type f 2>/dev/null | wc -l)
+              if [ "$component_count" -eq 0 ]; then
+                continue
+              fi
+
+              repo_name="${suite}-${component}-packages"
+              snapshot_name="${suite}-${component}-${SNAPSHOT_DATE}"
+
+              echo ""
+              echo "📦 Preparing repository for $suite/$component ($component_count packages)"
+
+              if aptly repo list -raw | grep -q "^${repo_name}$"; then
+                echo "✓ Repository $repo_name exists"
+              else
+                aptly repo create -component="$component" -architectures="$ALL_ARCHS" "$repo_name"
+              fi
+
+              while read -r deb_file; do
+                [ -f "$deb_file" ] || continue
+                aptly repo add "$repo_name" "$deb_file" 2>&1 | grep -E "\[\+\]|added|already" | head -1 || true
+              done < <(find "./staging/$suite" -path "*/$component/*/*.deb" -type f)
+
+              echo "📸 Creating snapshot: $snapshot_name"
+              aptly snapshot create "$snapshot_name" from repo "$repo_name"
+
+              SUITE_COMPONENTS+=("$component")
+              SUITE_SNAPSHOTS+=("$snapshot_name")
+            done
+
+            if [ "${#SUITE_COMPONENTS[@]}" -eq 0 ]; then
+              echo "ℹ️  No snapshots created for suite: $suite (skipping publish)"
+              continue
+            fi
+
+            COMPONENT_CSV=$(IFS=,; echo "${SUITE_COMPONENTS[*]}")
 
             echo ""
             echo "Publishing to distribution: $suite (components: $COMPONENT_CSV)"
@@ -519,7 +522,7 @@ jobs:
 
             # Build quoted snapshot args for eval
             SNAPSHOT_ARGS=""
-            for snap in "${COMPONENT_SNAPSHOTS[@]}"; do
+            for snap in "${SUITE_SNAPSHOTS[@]}"; do
               SNAPSHOT_ARGS="$SNAPSHOT_ARGS \"$snap\""
             done
 
