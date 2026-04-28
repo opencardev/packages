@@ -24,12 +24,12 @@ Maintainer: AASDK <opencardevuk@gmail.com>
 Architecture: amd64
 Version: 4.1.20260427
 Depends: libaasdk (= 4.1.20260427)
-Filename: pool/stable/liba/libaasdk-dev/libaasdk-dev_4.1.20260427-2_deb13_amd64.deb
-Size: 305640
-MD5sum: d5bea297fffee78455bd4b65b0e9d6d2
-SHA1: aa8842b1636b0a5093529f1bcf6306d7c85bc6d6
-SHA256: 9ec2fdff92b8f97865d542d87bcd4ccfb54ff63dad6a0624243d3f3235976499
-SHA512: eaa82aa52206496ab5f63d94bbfa53a1ebc2c9a4e8c9113c19ef8c55a38371fdc437da91ed278260b4c41572de86610bdbd298362d13646147c425578391d780
+Filename: pool/stable/liba/libaasdk-dev/libaasdk-dev_4.1.20260427-2_ubuntu24.04_amd64.deb
+Size: 305644
+MD5sum: 8713d24d45b2251cd342408729d9d583
+SHA1: 464957dfdc3f8b97d2d12bb027491b7b009d6d19
+SHA256: 975bf108a6b55275cd6d705aff5e43d90914e578f80e52a047f83a12f19c63be
+SHA512: 4e42d3a2ae9b805cef967bcd40cf0e9eadababfe57a2fc41ef682fa865c558663ce68b79a57742b46eb358884d97f4c8f4983f02ff1f2537b86b889d12eb6bf9
 Description: Android Auto SDK Library
  Development headers and CMake files for Android Auto SDK on amd64 architecture
 Homepage: https://github.com/opencardev/aasdk
