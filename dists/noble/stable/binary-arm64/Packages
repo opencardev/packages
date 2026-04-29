@@ -1,3 +1,18 @@
+Package: crankshaft-core
+Priority: optional
+Section: devel
+Installed-Size: 4608
+Maintainer: OpenCarDev Team
+Architecture: arm64
+Version: 0.1.0
+Filename: pool/stable/c/crankshaft-core/crankshaft-core_0.1.0_ubuntu24.04_arm64.deb
+Size: 1280016
+MD5sum: 94fdd2f12d80dda4e31efeb1bc38f3c0
+SHA1: ebcf64cf8cf3222188fbaf7a0d2ec2c58d565057
+SHA256: 052b50d93f408dc190102a242251fd2ef8cd7a7d6029291605138d58184fd610
+SHA512: abdba631616b34c6a4b26ff39167ecaea48f1c8b00268dd4d7cd349ee1368e908ef576ff7a25934ea60c82a64049c926db29d4698c26514217b9422c7407a4dd
+Description: crankshaft-core built using CMake
+
 Package: libaasdk
 Priority: optional
 Section: libs

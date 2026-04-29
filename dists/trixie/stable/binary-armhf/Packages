@@ -1,3 +1,18 @@
+Package: crankshaft-core
+Priority: optional
+Section: devel
+Installed-Size: 3496
+Maintainer: OpenCarDev Team
+Architecture: armhf
+Version: 0.1.0
+Filename: pool/stable/c/crankshaft-core/crankshaft-core_0.1.0_deb13_armhf.deb
+Size: 1127972
+MD5sum: cc1ae512b8651a398ae60fd76ec0bc71
+SHA1: 6a15426e100e1d518a587600412540f712407953
+SHA256: 42da7129d0e569f2723415a8eeba393afb85875a8bef2f1faf5e9ca297054d65
+SHA512: de64025e5be0b9c0939a8383c499f60ca7200e470c8c94c331c6bfc853bcf70207a49947b2411bc5924324f92f7416c91d18bcb5a489682d34402b88d9c4c1f9
+Description: crankshaft-core built using CMake
+
 Package: libaasdk
 Priority: optional
 Section: libs
