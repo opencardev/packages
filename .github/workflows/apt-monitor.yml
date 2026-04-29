@@ -37,11 +37,16 @@ jobs:
 #            main_branch: main
 #            dev_branch: develop
 #            build_workflow: "OpenAuto Build and Test"
-#          - owner: opencardev
-#            name: crankshaft.core
-#            main_branch: main
-#            dev_branch: develop
-#            build_workflow: CI
+          - owner: opencardev
+            name: crankshaft-core
+            main_branch: main
+            dev_branch: develop
+            build_workflow: CI
+          - owner: opencardev
+            name: crankshaft-ui-slim
+            main_branch: main
+            dev_branch: develop
+            build_workflow: CI
 
     steps:
       - name: Check for new successful builds
