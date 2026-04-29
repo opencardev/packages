@@ -13,6 +13,21 @@ SHA256: 052b50d93f408dc190102a242251fd2ef8cd7a7d6029291605138d58184fd610
 SHA512: abdba631616b34c6a4b26ff39167ecaea48f1c8b00268dd4d7cd349ee1368e908ef576ff7a25934ea60c82a64049c926db29d4698c26514217b9422c7407a4dd
 Description: crankshaft-core built using CMake
 
+Package: crankshaft-ui-slim
+Priority: optional
+Section: devel
+Installed-Size: 633
+Maintainer: OpenCarDev Team
+Architecture: arm64
+Version: 0.0.1-1
+Filename: pool/stable/c/crankshaft-ui-slim/crankshaft-ui-slim_0.0.1-1_ubuntu24.04_arm64.deb
+Size: 214840
+MD5sum: 7c2c3d998cbb836a06dc779d4f6b6f02
+SHA1: 963a2613449027596fccf7a00ee7d0cd6de65752
+SHA256: cb83b9af8bc4d6ee506bbe4393d322ad7a654fc568a12e1ed863eee03b2feebd
+SHA512: 1909c4a526fbf45772e84c3d85984aa5032651011bb7dfe30a96399ff63127342453b3ec0c4e3747880501fa975896966169dc9e0ba951e4acc9cd7b24f17214
+Description: crankshaft-slim-ui built using CMake
+
 Package: libaasdk
 Priority: optional
 Section: libs
