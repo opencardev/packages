@@ -1,16 +1,17 @@
 Package: crankshaft-core
 Priority: optional
 Section: devel
-Installed-Size: 3496
+Installed-Size: 1695
 Maintainer: OpenCarDev Team
 Architecture: armhf
 Version: 0.1.0
+Depends: libaasdk | libaasdk-amd64, libc6 (>= 2.34), libgcc-s1 (>= 3.5), libglib2.0-0t64 (>= 2.12.0), libgstreamer-plugins-base1.0-0 (>= 1.0.0), libgstreamer1.0-0 (>= 1.4.0), libprotobuf32t64 (>= 3.21.12), libqt6core6t64 (>= 6.8.2), libqt6dbus6 (>= 6.8.2), libqt6gui6 (>= 6.1.2), libqt6multimedia6 (>= 6.6.1), libqt6network6 (>= 6.1.2), libqt6sql6 (>= 6.1.2), libqt6websockets6 (>= 6.6.0), libstdc++6 (>= 14), libusb-1.0-0 (>= 2:1.0.9)
 Filename: pool/stable/c/crankshaft-core/crankshaft-core_0.1.0_deb13_armhf.deb
-Size: 1127972
-MD5sum: cc1ae512b8651a398ae60fd76ec0bc71
-SHA1: 6a15426e100e1d518a587600412540f712407953
-SHA256: 42da7129d0e569f2723415a8eeba393afb85875a8bef2f1faf5e9ca297054d65
-SHA512: de64025e5be0b9c0939a8383c499f60ca7200e470c8c94c331c6bfc853bcf70207a49947b2411bc5924324f92f7416c91d18bcb5a489682d34402b88d9c4c1f9
+Size: 645368
+MD5sum: e1f28b3b8b7dd4f9a293b159bb0d2e42
+SHA1: 67089680f1bad9618e3d046f619a8db59da649a0
+SHA256: 65a9a269f1843f1b6fa9ac1f19849a6b475390bed99e0cb02d4910e80cdabb9c
+SHA512: 0f653db2dc9d094561ba1be64bb1574b96dbc0df646aaff257f4b9de72178b7d191c6fbbebe14e94038bc940ca60e4eb76bbd180cbadfe06c4e662a4f2e892dc
 Description: crankshaft-core built using CMake
 
 Package: crankshaft-ui-slim
