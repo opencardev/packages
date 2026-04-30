@@ -17,6 +17,22 @@ Description: crankshaft-core built using CMake
 Package: crankshaft-ui-slim
 Priority: optional
 Section: devel
+Installed-Size: 629
+Maintainer: OpenCarDev Team
+Architecture: arm64
+Version: 1.0.0
+Depends: crankshaft-core, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libqt6core6t64 (>= 6.4.0), libqt6gui6t64 (>= 6.1.2), libqt6network6t64 (>= 6.4.0), libqt6qml6 (>= 6.2.0), libqt6quickcontrols2-6 (>= 6.2.0), libqt6websockets6 (>= 6.2.1), libstdc++6 (>= 5), qt6-websockets-abi (= 6.4.2)
+Filename: pool/stable/c/crankshaft-ui-slim/crankshaft-ui-slim_1.0.0_ubuntu24.04_arm64.deb
+Size: 216606
+MD5sum: 8585ef7e6e57fad68f43d9b423c0ded4
+SHA1: b3efa50678776277eb4897f3090e96e563773c47
+SHA256: 109423883700df866a546cdaf267d43008abc56c4ece41a51b939534ae9def66
+SHA512: aa28b97cea714b2d769571346ef79a7acb3100aefa37c807f2457bda14e5c309cabb809cb23031235c7336fa0289900a53fe56c695ac49e3286300950bd2619c
+Description: crankshaft-ui-slim built using CMake
+
+Package: crankshaft-ui-slim
+Priority: optional
+Section: devel
 Installed-Size: 633
 Maintainer: OpenCarDev Team
 Architecture: arm64

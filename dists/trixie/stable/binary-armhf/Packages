@@ -17,6 +17,22 @@ Description: crankshaft-core built using CMake
 Package: crankshaft-ui-slim
 Priority: optional
 Section: devel
+Installed-Size: 510
+Maintainer: OpenCarDev Team
+Architecture: armhf
+Version: 1.0.0
+Depends: crankshaft-core, libc6 (>= 2.34), libgcc-s1 (>= 3.5), libqt6core6t64 (>= 6.8.2), libqt6gui6 (>= 6.1.2), libqt6network6 (>= 6.4.0), libqt6qml6 (>= 6.6.0), libqt6quickcontrols2-6 (>= 6.6.0), libqt6websockets6 (>= 6.6.0), libstdc++6 (>= 5)
+Filename: pool/stable/c/crankshaft-ui-slim/crankshaft-ui-slim_1.0.0_deb13_armhf.deb
+Size: 197126
+MD5sum: 4848cea237512f40183db245635b2ed4
+SHA1: a69808ce04adf7062bdc5fd0028437a19d05779d
+SHA256: 3faaf31fe9b018b4e5f3a3db733e84983f99465c56bd6b067815816002cdbb83
+SHA512: df1300a3cf393cf608499a6b2f979a5d6a9bc110f25ddc13a78f813c2a50490343e2e06fac61e53ed24a6a5a31e02630bcfa8f77b16b0577857738e6d2d7100f
+Description: crankshaft-ui-slim built using CMake
+
+Package: crankshaft-ui-slim
+Priority: optional
+Section: devel
 Installed-Size: 514
 Maintainer: OpenCarDev Team
 Architecture: armhf
