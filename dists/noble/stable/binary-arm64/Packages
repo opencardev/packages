@@ -4,6 +4,22 @@ Section: devel
 Installed-Size: 2338
 Maintainer: OpenCarDev Team
 Architecture: arm64
+Version: 1.0.1-3
+Depends: libaasdk | libaasdk-amd64, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libglib2.0-0t64 (>= 2.12.0), libgstreamer-plugins-base1.0-0 (>= 1.0.0), libgstreamer1.0-0 (>= 1.4.0), libprotobuf32t64 (>= 3.21.12), libqt6core6t64 (>= 6.4.0), libqt6dbus6t64 (>= 6.4.0), libqt6gui6t64 (>= 6.1.2), libqt6multimedia6 (>= 6.2.1), libqt6network6t64 (>= 6.1.2), libqt6sql6t64 (>= 6.1.2), libqt6websockets6 (>= 6.2.1), libstdc++6 (>= 13.1), libusb-1.0-0 (>= 2:1.0.9), qt6-websockets-abi (= 6.4.2)
+Filename: pool/stable/c/crankshaft-core/crankshaft-core_1.0.1-3_ubuntu24.04_arm64.deb
+Size: 748352
+MD5sum: 94e57bffba5c7a08dce7348272249e83
+SHA1: 04102515eec907679e3616fb98f762f2848afbf2
+SHA256: 8d54d0d32b0267a18606419608299f8f1abebb68e509e296b11f8fa404fb5c19
+SHA512: 10ea98b48dee14b6c04c587432564391723a5447e26f790dab8147dd8aabd9bff15cafdd797b4ca3f82bf3b674ff47b503f2cd22a5a03a6e07bb8edb0f85424b
+Description: crankshaft-core built using CMake
+
+Package: crankshaft-core
+Priority: optional
+Section: devel
+Installed-Size: 2338
+Maintainer: OpenCarDev Team
+Architecture: arm64
 Version: 0.1.0
 Depends: libaasdk | libaasdk-amd64, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libglib2.0-0t64 (>= 2.12.0), libgstreamer-plugins-base1.0-0 (>= 1.0.0), libgstreamer1.0-0 (>= 1.4.0), libprotobuf32t64 (>= 3.21.12), libqt6core6t64 (>= 6.4.0), libqt6dbus6t64 (>= 6.4.0), libqt6gui6t64 (>= 6.1.2), libqt6multimedia6 (>= 6.2.1), libqt6network6t64 (>= 6.1.2), libqt6sql6t64 (>= 6.1.2), libqt6websockets6 (>= 6.2.1), libstdc++6 (>= 13.1), libusb-1.0-0 (>= 2:1.0.9), qt6-websockets-abi (= 6.4.2)
 Filename: pool/stable/c/crankshaft-core/crankshaft-core_0.1.0_ubuntu24.04_arm64.deb

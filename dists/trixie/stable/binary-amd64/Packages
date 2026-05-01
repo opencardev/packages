@@ -4,6 +4,22 @@ Section: devel
 Installed-Size: 2273
 Maintainer: OpenCarDev Team
 Architecture: amd64
+Version: 1.0.1-3
+Depends: libaasdk | libaasdk-amd64, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libglib2.0-0t64 (>= 2.12.0), libgstreamer-plugins-base1.0-0 (>= 1.0.0), libgstreamer1.0-0 (>= 1.4.0), libprotobuf32t64 (>= 3.21.12), libqt6core6t64 (>= 6.8.2), libqt6dbus6 (>= 6.8.2), libqt6gui6 (>= 6.1.2), libqt6multimedia6 (>= 6.6.1), libqt6network6 (>= 6.1.2), libqt6sql6 (>= 6.1.2), libqt6websockets6 (>= 6.6.0), libstdc++6 (>= 14), libusb-1.0-0 (>= 2:1.0.9)
+Filename: pool/stable/c/crankshaft-core/crankshaft-core_1.0.1-3_deb13_amd64.deb
+Size: 759698
+MD5sum: 9c3c40ae22c4d829329a64fa8786ae3c
+SHA1: 372ce11158ad462503c9be4327b3c90c33b05b10
+SHA256: 8bf235be8a10cd26fd8a83baa060a7406ef191a7838eae91bda4c62219603913
+SHA512: 05e450da582217eeef75fa28c131c99656c6698e2be1ec7b85b4baacce450bcea4346fba94fd577b42fe1a5fb787f881472586ff86dba666455f3941bce028a0
+Description: crankshaft-core built using CMake
+
+Package: crankshaft-core
+Priority: optional
+Section: devel
+Installed-Size: 2273
+Maintainer: OpenCarDev Team
+Architecture: amd64
 Version: 0.1.0
 Depends: libaasdk | libaasdk-amd64, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libglib2.0-0t64 (>= 2.12.0), libgstreamer-plugins-base1.0-0 (>= 1.0.0), libgstreamer1.0-0 (>= 1.4.0), libprotobuf32t64 (>= 3.21.12), libqt6core6t64 (>= 6.8.2), libqt6dbus6 (>= 6.8.2), libqt6gui6 (>= 6.1.2), libqt6multimedia6 (>= 6.6.1), libqt6network6 (>= 6.1.2), libqt6sql6 (>= 6.1.2), libqt6websockets6 (>= 6.6.0), libstdc++6 (>= 14), libusb-1.0-0 (>= 2:1.0.9)
 Filename: pool/stable/c/crankshaft-core/crankshaft-core_0.1.0_deb13_amd64.deb
