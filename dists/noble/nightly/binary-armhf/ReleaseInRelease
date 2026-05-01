@@ -1,0 +1,16 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Origin: . noble
+Label: . noble
+Archive: noble
+Suite: noble
+Architecture: armhf
+Component: nightly
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYKAB0WIQS0+eXU5BsMvurfM8rd1heH2TYMLwUCafQReQAKCRDd1heH2TYM
+L8WvAQC+ZN76uOcLB6p33Ilnc82EZ97NIpibVVMPsmf+O1rYbAEA3VtD1kPHgfut
+gyJDp/IvAahEfOSPzWt4100aiLoVsQU=
+=ZZ5j
+-----END PGP SIGNATURE-----
