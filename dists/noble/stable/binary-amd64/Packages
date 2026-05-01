@@ -17,17 +17,33 @@ Description: crankshaft-core built using CMake
 Package: crankshaft-core
 Priority: optional
 Section: devel
+Installed-Size: 5162
+Maintainer: OpenCarDev Team
+Architecture: amd64
+Version: 1.0.0+git.1dc99fd0
+Depends: libaasdk | libaasdk-amd64, libc6 (>= 2.38), libgcc-s1 (>= 3.0), libglib2.0-0t64 (>= 2.12.0), libgstreamer-plugins-base1.0-0 (>= 1.0.0), libgstreamer1.0-0 (>= 1.4.0), libprotobuf32t64 (>= 3.21.12), libqt6core6t64 (>= 6.4.0), libqt6dbus6t64 (>= 6.4.0), libqt6gui6t64 (>= 6.1.2), libqt6multimedia6 (>= 6.2.1), libqt6network6t64 (>= 6.1.2), libqt6sql6t64 (>= 6.1.2), libqt6websockets6 (>= 6.2.1), libstdc++6 (>= 13.1), libusb-1.0-0 (>= 2:1.0.9), qt6-websockets-abi (= 6.4.2)
+Filename: pool/stable/c/crankshaft-core/crankshaft-core_1.0.0+git.1dc99fd0_0ubuntu1~24.04_amd64.deb
+Size: 1445794
+MD5sum: 3c225e75c7d5824afb5993c600269639
+SHA1: 0a2f51f444a30db55b3911aaef4ab7362306a4b2
+SHA256: f8aab9ba75ce9cb16bdc95b6984b3af73b08ea8e058d194c2b8b8a105c2baad1
+SHA512: a8d08ca3d3a1055413d04b3d9be0d043e47c29fa053ed3a8b156e85bbe6930dd857317d56594c53be3fa6ef8ea78067527711f90a6b7822922e7e041fb67f225
+Description: crankshaft-core built using CMake
+
+Package: crankshaft-core
+Priority: optional
+Section: devel
 Installed-Size: 2397
 Maintainer: OpenCarDev Team
 Architecture: amd64
 Version: 0.1.0
 Depends: libaasdk | libaasdk-amd64, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libglib2.0-0t64 (>= 2.12.0), libgstreamer-plugins-base1.0-0 (>= 1.0.0), libgstreamer1.0-0 (>= 1.4.0), libprotobuf32t64 (>= 3.21.12), libqt6core6t64 (>= 6.4.0), libqt6dbus6t64 (>= 6.4.0), libqt6gui6t64 (>= 6.1.2), libqt6multimedia6 (>= 6.2.1), libqt6network6t64 (>= 6.1.2), libqt6sql6t64 (>= 6.1.2), libqt6websockets6 (>= 6.2.1), libstdc++6 (>= 13.1), libusb-1.0-0 (>= 2:1.0.9), qt6-websockets-abi (= 6.4.2)
 Filename: pool/stable/c/crankshaft-core/crankshaft-core_0.1.0_ubuntu24.04_amd64.deb
-Size: 782300
-MD5sum: a9920482329715cc7eb7397a3e9fc7ba
-SHA1: d07f73018c7517834192b307be58200599b9162a
-SHA256: 5a14786ce5479486791961dabe55b2835524f57e31361054892766d79f988a43
-SHA512: 0a64bf52b105a5a2734dbaa3598d87fb0d53566a8761a2a512be327349db59f8516506d8f27ebb1d5876cfd0ed4bd000c13768177294583ace0bb5404f09e6fa
+Size: 782306
+MD5sum: 17696f6dc213d632d7c86767af9f7484
+SHA1: 85ef5ddafd1aa4690f55514c20245f45c9093ce3
+SHA256: a035e550609b949d047d75069f3ae9039aaa988fb5818ccbe0246059599f20c4
+SHA512: 032f08f7c4868257797061c35d93ca2a35a6dc52251015f51f29f7417be28482e23d442057faddf98484a1116c56af855ca0ddf04d201358c3d7a11fa364c620
 Description: crankshaft-core built using CMake
 
 Package: crankshaft-ui-slim
