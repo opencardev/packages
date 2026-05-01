@@ -8,10 +8,10 @@ Version: 0.1.0
 Depends: libaasdk | libaasdk-amd64, libc6 (>= 2.34), libgcc-s1 (>= 3.5), libglib2.0-0t64 (>= 2.12.0), libgstreamer-plugins-base1.0-0 (>= 1.0.0), libgstreamer1.0-0 (>= 1.4.0), libprotobuf32t64 (>= 3.21.12), libqt6core6t64 (>= 6.8.2), libqt6dbus6 (>= 6.8.2), libqt6gui6 (>= 6.1.2), libqt6multimedia6 (>= 6.6.1), libqt6network6 (>= 6.1.2), libqt6sql6 (>= 6.1.2), libqt6websockets6 (>= 6.6.0), libstdc++6 (>= 14), libusb-1.0-0 (>= 2:1.0.9)
 Filename: pool/stable/c/crankshaft-core/crankshaft-core_0.1.0_deb13_armhf.deb
 Size: 645368
-MD5sum: e1f28b3b8b7dd4f9a293b159bb0d2e42
-SHA1: 67089680f1bad9618e3d046f619a8db59da649a0
-SHA256: 65a9a269f1843f1b6fa9ac1f19849a6b475390bed99e0cb02d4910e80cdabb9c
-SHA512: 0f653db2dc9d094561ba1be64bb1574b96dbc0df646aaff257f4b9de72178b7d191c6fbbebe14e94038bc940ca60e4eb76bbd180cbadfe06c4e662a4f2e892dc
+MD5sum: 08901e25b3f2289e02543ad7f15b6dfc
+SHA1: e39f0bc13cba70c567dbb684c4b438d648b662bf
+SHA256: 8d35096213416225e60237ccef83fc55990aefbfbd4c94e7feab656ec0945bc7
+SHA512: 7040ec0d54114b409fd03794ad40947e7dffa18576846a8ae825e9da420a8e01a06fc0175a5c7341760aedcd8f56bfb3c446746d3632928d652bd9295d31a8db
 Description: crankshaft-core built using CMake
 
 Package: crankshaft-ui-slim

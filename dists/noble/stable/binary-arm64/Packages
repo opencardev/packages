@@ -7,11 +7,11 @@ Architecture: arm64
 Version: 0.1.0
 Depends: libaasdk | libaasdk-amd64, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libglib2.0-0t64 (>= 2.12.0), libgstreamer-plugins-base1.0-0 (>= 1.0.0), libgstreamer1.0-0 (>= 1.4.0), libprotobuf32t64 (>= 3.21.12), libqt6core6t64 (>= 6.4.0), libqt6dbus6t64 (>= 6.4.0), libqt6gui6t64 (>= 6.1.2), libqt6multimedia6 (>= 6.2.1), libqt6network6t64 (>= 6.1.2), libqt6sql6t64 (>= 6.1.2), libqt6websockets6 (>= 6.2.1), libstdc++6 (>= 13.1), libusb-1.0-0 (>= 2:1.0.9), qt6-websockets-abi (= 6.4.2)
 Filename: pool/stable/c/crankshaft-core/crankshaft-core_0.1.0_ubuntu24.04_arm64.deb
-Size: 748354
-MD5sum: 779aac3b1a55933d1bc0ea215d436caf
-SHA1: c6a1a2d55d0e852f14d4fc1c25c431a143611288
-SHA256: d22714c12a6b6661cb917d8afdae9506a429dc67c604d52d2061768de3bb3fe0
-SHA512: 63fae373b7630ef4e4d4708fb3b2e95b6668f8a6b54ad9ae1c0a4e94ef398f9b1caaba233d640385861ac4d82a81d82827b63d7f86f738f616df7928dbf3687e
+Size: 748352
+MD5sum: 3d2b1cea618bffa4307f90fb624fa7e3
+SHA1: 731c9cebae71b76a8df3c9dfeef7c6666ea9e288
+SHA256: 735fd9919820f4c2a23744be2cb31289cfb690fe2a558a86b08b5a97d53fc827
+SHA512: 40b53f34eeb0cc516051982250954a01ef9981b6b639b2e3d62c6f17fe61a67bd60d9b071325327d28560d04ce3fd01cba39d21a6704c5812a2cf11f00f2ca87
 Description: crankshaft-core built using CMake
 
 Package: crankshaft-ui-slim
