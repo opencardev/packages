@@ -14,6 +14,22 @@ SHA256: 181a107f75148c983b9e80a7090544132ceb52878604ea1ca80ec6aaf2f58f72
 SHA512: 2bb7cf29e8aee18360494fbb5a2f4fcdbace759bbc6e59a726850dd484e42b96c4e83e85aa43b94a933fbdd21a756f7c4e1dbec8f187209e486a6eac0c6fc189
 Description: crankshaft-core built using CMake
 
+Package: crankshaft-ui-slim
+Priority: optional
+Section: devel
+Installed-Size: 586
+Maintainer: OpenCarDev Team
+Architecture: arm64
+Version: 1.1.0-alpha.4
+Depends: crankshaft-core, libqt6core6, libqt6gui6, libqt6qml6, libqt6quick6, libqt6multimedia6, libqt6sql6, libqt6network6, libqt6websockets6, libqt6dbus6, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-window, qt6-qpa-plugins, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libqt6core6t64 (>= 6.8.2), libqt6gui6 (>= 6.1.2), libqt6network6 (>= 6.4.0), libqt6qml6 (>= 6.6.0), libqt6quickcontrols2-6 (>= 6.6.0), libqt6websockets6 (>= 6.6.0), libstdc++6 (>= 5)
+Filename: pool/nightly/c/crankshaft-ui-slim/crankshaft-ui-slim_1.1.0-alpha.4_deb13_arm64.deb
+Size: 213918
+MD5sum: fbea15ad6aa77f6bfdc6ea65cce392ba
+SHA1: e9120434a7b52ad82104b3610c3690f648a566e2
+SHA256: b4c49558098ef4ee14d5f0ce29735d99e1cfa3ab911aa1e2a0b0a393f743e97f
+SHA512: af290cdba48ca0f4732e55caef1f50d6ea08c073c348d43ae864b8cc67005c8b6914fc99fff959f7744130a8846b0b467c5f41d0afc0b5731ddce36d9d5bfc7f
+Description: crankshaft-ui-slim built using CMake
+
 Package: libaasdk
 Priority: optional
 Section: libs
