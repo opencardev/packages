@@ -1,3 +1,19 @@
+Package: crankshaft-core
+Priority: optional
+Section: devel
+Installed-Size: 1695
+Maintainer: OpenCarDev Team
+Architecture: armhf
+Version: 1.1.0-alpha.4
+Depends: libaasdk | libaasdk-amd64, libqt6core6, libqt6network6, libqt6websockets6, libqt6gui6, libqt6dbus6, libqt6sql6, libqt6bluetooth6, libqt6multimedia6, gstreamer1.0-tools, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-libav, libgstreamer1.0-0, libgstreamer-plugins-base1.0-0, dbus, libusb-1.0-0, libssl3, libprotobuf32, libasound2, libpulse0, libc6 (>= 2.34), libgcc-s1 (>= 3.5), libglib2.0-0t64 (>= 2.12.0), libgstreamer-plugins-base1.0-0 (>= 1.0.0), libgstreamer1.0-0 (>= 1.4.0), libprotobuf32t64 (>= 3.21.12), libqt6core6t64 (>= 6.8.2), libqt6dbus6 (>= 6.8.2), libqt6gui6 (>= 6.1.2), libqt6multimedia6 (>= 6.6.1), libqt6network6 (>= 6.1.2), libqt6sql6 (>= 6.1.2), libqt6websockets6 (>= 6.6.0), libstdc++6 (>= 14), libusb-1.0-0 (>= 2:1.0.9)
+Filename: pool/nightly/c/crankshaft-core/crankshaft-core_1.1.0-alpha.4_deb13_armhf.deb
+Size: 645456
+MD5sum: 0b497348cdd202e2c32dca77239cf2c8
+SHA1: 6db393e5365c1d20af5f5f60eb429c89acec3ef9
+SHA256: 34f6bd1cfe181548320406eda26690b2aa9880fde69988ee174f2d2bd2a8434b
+SHA512: b9c26f0f92b68d16b9842afcdd65c2c41ca1ff1914d361835af155f3dea14ba6ae139162f7bafa48210abdb4fbd4d375489dd294aec1f4c3f34ae91eb786fc32
+Description: crankshaft-core built using CMake
+
 Package: libaasdk
 Priority: optional
 Section: libs
