@@ -49,6 +49,22 @@ Description: crankshaft-core built using CMake
 Package: crankshaft-ui-slim
 Priority: optional
 Section: devel
+Installed-Size: 624
+Maintainer: OpenCarDev Team
+Architecture: amd64
+Version: 1.0.1-4
+Depends: crankshaft-core, libqt6core6, libqt6gui6, libqt6qml6, libqt6quick6, libqt6multimedia6, libqt6sql6, libqt6network6, libqt6websockets6, libqt6dbus6, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-window, qt6-qpa-plugins, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libqt6core6t64 (>= 6.8.2), libqt6gui6 (>= 6.1.2), libqt6network6 (>= 6.4.0), libqt6qml6 (>= 6.6.0), libqt6quickcontrols2-6 (>= 6.6.0), libqt6websockets6 (>= 6.6.0), libstdc++6 (>= 5)
+Filename: pool/stable/c/crankshaft-ui-slim/crankshaft-ui-slim_1.0.1-4_deb13_amd64.deb
+Size: 221560
+MD5sum: 3b1ce60337496bf4cba0ef4ecca45a2c
+SHA1: 8c33e064c7ca00654eeb9b53bb837bb934c41423
+SHA256: a2c0adeee2110a366089082d2f74cf4e504f475c3be69ccc5220126e9b999637
+SHA512: ae11530ae1dc97dfab4bfc116e7188aee450d9e94e70eba538a4e94524b8c7ce9b1bf21f006bda4ab935356ef14e1cf6b2e1050a01380cdc4297bd8c5cc2bfed
+Description: crankshaft-ui-slim built using CMake
+
+Package: crankshaft-ui-slim
+Priority: optional
+Section: devel
 Installed-Size: 623
 Maintainer: OpenCarDev Team
 Architecture: amd64
