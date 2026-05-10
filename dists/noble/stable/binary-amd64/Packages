@@ -100,6 +100,22 @@ Section: devel
 Installed-Size: 648
 Maintainer: OpenCarDev Team
 Architecture: amd64
+Version: 1.0.1-5
+Depends: crankshaft-core, libqt6core6 | libqt6core6t64, libqt6gui6 | libqt6gui6t64, libqt6qml6 | libqt6qml6t64, libqt6quick6 | libqt6quick6t64, libqt6multimedia6 | libqt6multimedia6t64, libqt6sql6 | libqt6sql6t64, libqt6network6 | libqt6network6t64, libqt6websockets6 | libqt6websockets6t64, libqt6dbus6 | libqt6dbus6t64, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-window, qt6-qpa-plugins, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libqt6core6t64 (>= 6.4.0), libqt6gui6t64 (>= 6.1.2), libqt6network6t64 (>= 6.4.0), libqt6qml6 (>= 6.2.0), libqt6quickcontrols2-6 (>= 6.2.0), libqt6websockets6 (>= 6.2.1), libstdc++6 (>= 5), qt6-websockets-abi (= 6.4.2)
+Filename: pool/stable/c/crankshaft-ui-slim/crankshaft-ui-slim_1.0.1-5_ubuntu24.04_amd64.deb
+Size: 223908
+MD5sum: df38fd38834ab64a38f082e1456db468
+SHA1: a26ea61dfd107233f6af0eedb08e4758a90c0b38
+SHA256: e655ca6349517e5aa705b96fd9aee0d80dc953843e67da81a15219afe6f25b12
+SHA512: 72f55413c306779cffae0b4c07eebd7de4c8085d998c556f17b1dc663aed8a714c9dd8b02e897956c9140bc04e3a5d4bd51e2e61506a0074471855a5152b2b5f
+Description: crankshaft-ui-slim built using CMake
+
+Package: crankshaft-ui-slim
+Priority: optional
+Section: devel
+Installed-Size: 648
+Maintainer: OpenCarDev Team
+Architecture: amd64
 Version: 1.0.1-4
 Depends: crankshaft-core, libqt6core6, libqt6gui6, libqt6qml6, libqt6quick6, libqt6multimedia6, libqt6sql6, libqt6network6, libqt6websockets6, libqt6dbus6, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-window, qt6-qpa-plugins, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libqt6core6t64 (>= 6.4.0), libqt6gui6t64 (>= 6.1.2), libqt6network6t64 (>= 6.4.0), libqt6qml6 (>= 6.2.0), libqt6quickcontrols2-6 (>= 6.2.0), libqt6websockets6 (>= 6.2.1), libstdc++6 (>= 5), qt6-websockets-abi (= 6.4.2)
 Filename: pool/stable/c/crankshaft-ui-slim/crankshaft-ui-slim_1.0.1-4_ubuntu24.04_amd64.deb

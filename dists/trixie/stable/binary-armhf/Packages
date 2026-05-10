@@ -68,6 +68,22 @@ Section: devel
 Installed-Size: 521
 Maintainer: OpenCarDev Team
 Architecture: armhf
+Version: 1.0.1-5
+Depends: crankshaft-core, libqt6core6 | libqt6core6t64, libqt6gui6 | libqt6gui6t64, libqt6qml6 | libqt6qml6t64, libqt6quick6 | libqt6quick6t64, libqt6multimedia6 | libqt6multimedia6t64, libqt6sql6 | libqt6sql6t64, libqt6network6 | libqt6network6t64, libqt6websockets6 | libqt6websockets6t64, libqt6dbus6 | libqt6dbus6t64, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-window, qt6-qpa-plugins, libc6 (>= 2.34), libgcc-s1 (>= 3.5), libqt6core6t64 (>= 6.8.2), libqt6gui6 (>= 6.1.2), libqt6network6 (>= 6.4.0), libqt6qml6 (>= 6.6.0), libqt6quickcontrols2-6 (>= 6.6.0), libqt6websockets6 (>= 6.6.0), libstdc++6 (>= 5)
+Filename: pool/stable/c/crankshaft-ui-slim/crankshaft-ui-slim_1.0.1-5_deb13_armhf.deb
+Size: 198160
+MD5sum: c37a8fa6a0e0fe1aca18eb9a5c519fba
+SHA1: 9e9ed7ef353b9ec9b4b763c436c56a39a8bf21f7
+SHA256: 574061167be114f92d2f583e902cf56e5ee4138e0a4f09a8302273084ee1219d
+SHA512: 276260830c71dbc5b6c3ddc677a78662fc5aba58964a0e767eea75d03b9ad43a9977a5ca5566d545831f7e91f9c48ac4a0ca9eef127895d71aa1b9f0c40b2833
+Description: crankshaft-ui-slim built using CMake
+
+Package: crankshaft-ui-slim
+Priority: optional
+Section: devel
+Installed-Size: 521
+Maintainer: OpenCarDev Team
+Architecture: armhf
 Version: 1.0.1-4
 Depends: crankshaft-core, libqt6core6, libqt6gui6, libqt6qml6, libqt6quick6, libqt6multimedia6, libqt6sql6, libqt6network6, libqt6websockets6, libqt6dbus6, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-window, qt6-qpa-plugins, libc6 (>= 2.34), libgcc-s1 (>= 3.5), libqt6core6t64 (>= 6.8.2), libqt6gui6 (>= 6.1.2), libqt6network6 (>= 6.4.0), libqt6qml6 (>= 6.6.0), libqt6quickcontrols2-6 (>= 6.6.0), libqt6websockets6 (>= 6.6.0), libstdc++6 (>= 5)
 Filename: pool/stable/c/crankshaft-ui-slim/crankshaft-ui-slim_1.0.1-4_deb13_armhf.deb

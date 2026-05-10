@@ -68,6 +68,22 @@ Section: devel
 Installed-Size: 498
 Maintainer: OpenCarDev Team
 Architecture: armhf
+Version: 1.0.1-5
+Depends: crankshaft-core, libqt6core6 | libqt6core6t64, libqt6gui6 | libqt6gui6t64, libqt6qml6 | libqt6qml6t64, libqt6quick6 | libqt6quick6t64, libqt6multimedia6 | libqt6multimedia6t64, libqt6sql6 | libqt6sql6t64, libqt6network6 | libqt6network6t64, libqt6websockets6 | libqt6websockets6t64, libqt6dbus6 | libqt6dbus6t64, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-window, qt6-qpa-plugins, libc6 (>= 2.34), libgcc-s1 (>= 3.5), libqt6core6t64 (>= 6.4.0), libqt6gui6t64 (>= 6.1.2), libqt6network6t64 (>= 6.4.0), libqt6qml6 (>= 6.2.0), libqt6quickcontrols2-6 (>= 6.2.0), libqt6websockets6 (>= 6.2.1), libstdc++6 (>= 5), qt6-websockets-abi (= 6.4.2)
+Filename: pool/stable/c/crankshaft-ui-slim/crankshaft-ui-slim_1.0.1-5_ubuntu24.04_armhf.deb
+Size: 204420
+MD5sum: a541c691251b960d144611018de2243f
+SHA1: 144aeba718f86106592752f5d46d168aba42cd0a
+SHA256: 88402205c66a22f2c46a642895bbf0421655ddfba35ace5f0f53a0df55b94c19
+SHA512: 3db19f2245364d0338c93124d0a0b70915a3fe5698639c4a1630621c08ef497c815c7196d90314de132ae7ae191f4fdba574ab21a7d71d457ceffe19e04640fe
+Description: crankshaft-ui-slim built using CMake
+
+Package: crankshaft-ui-slim
+Priority: optional
+Section: devel
+Installed-Size: 498
+Maintainer: OpenCarDev Team
+Architecture: armhf
 Version: 1.0.1-4
 Depends: crankshaft-core, libqt6core6, libqt6gui6, libqt6qml6, libqt6quick6, libqt6multimedia6, libqt6sql6, libqt6network6, libqt6websockets6, libqt6dbus6, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-window, qt6-qpa-plugins, libc6 (>= 2.34), libgcc-s1 (>= 3.5), libqt6core6t64 (>= 6.4.0), libqt6gui6t64 (>= 6.1.2), libqt6network6t64 (>= 6.4.0), libqt6qml6 (>= 6.2.0), libqt6quickcontrols2-6 (>= 6.2.0), libqt6websockets6 (>= 6.2.1), libstdc++6 (>= 5), qt6-websockets-abi (= 6.4.2)
 Filename: pool/stable/c/crankshaft-ui-slim/crankshaft-ui-slim_1.0.1-4_ubuntu24.04_armhf.deb
