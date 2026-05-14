@@ -113,17 +113,17 @@ Description: crankshaft-ui-slim built using CMake
 Package: libaasdk
 Priority: optional
 Section: libs
-Installed-Size: 274930
+Installed-Size: 288951
 Maintainer: AASDK <opencardevuk@gmail.com>
 Architecture: amd64
 Version: 4.1.20260427-newdev.4
 Depends: libc6 (>= 2.38), libgcc-s1 (>= 3.0), libprotobuf32t64 (>= 3.21.12), libssl3t64 (>= 3.0.0), libstdc++6 (>= 13.1), libusb-1.0-0 (>= 2:1.0.16)
-Filename: pool/nightly/liba/libaasdk/libaasdk_4.1.20260427-newdev.4_ubuntu24.04_amd64.deb
-Size: 37717146
-MD5sum: 761f1dcc3cd7a230e2b5c4a52527fea9
-SHA1: 2a949d66bdeb26b8389f75de80d55f9080a03bb2
-SHA256: f32cb08cdd2867d75b34d6557d3c05ef69a52dffbfd12f04e0c9754edc8507d7
-SHA512: e5b54fb041882b5eb8620ab553f891420d0c0823a17b876ec7bb1ee8a93949270cc64023ab85d922495b8d338e5f938da9d460bb4bf23800db9a601eec079f55
+Filename: pool/nightly/liba/libaasdk/libaasdk_4.1.20260427-newdev.4_0ubuntu1~24.04_amd64.deb
+Size: 38408314
+MD5sum: fd93cd3d80b8d4cee7081d2ebc2f97ae
+SHA1: 965e2bd3ae38c4b6c8c09df3fa8b13cd18eae1ae
+SHA256: 7d072b1adcee2bcc4b5802ed079710e1392485f9e5fcbb932d45614a6f9d85a0
+SHA512: 407bfa0d4554112f95420eda3553797823667bad00ded30db1ca7eedca7a114487c5eeac1d40c9a1b2af1e9042682d409c41ac59c9cb4474b5dd9a1f809c277b
 Description: Android Auto SDK Library
  Runtime libraries for Android Auto SDK on amd64 architecture
 Homepage: https://github.com/opencardev/aasdk
@@ -172,12 +172,12 @@ Maintainer: AASDK <opencardevuk@gmail.com>
 Architecture: amd64
 Version: 4.1.20260427-newdev.4
 Depends: libaasdk (= 4.1.20260427-newdev.4)
-Filename: pool/nightly/liba/libaasdk-dev/libaasdk-dev_4.1.20260427-newdev.4_ubuntu24.04_amd64.deb
-Size: 305642
-MD5sum: 78959531a24e1dc27393c855c21869a5
-SHA1: f80acaba2a23253168408c60793efd11ba68974c
-SHA256: 24d5487ed9443f6517e224c4191560db58c180bd1d60ac89dab3fd30787ece20
-SHA512: 0b0b410b30c43b0a3387bac405665485a3130d2b7e26e6fe08fd3ab1ad243b8a1ccca1fe0be10b0cd4e3ae4cfd3484845347711df30a8df19a248843eebeffe3
+Filename: pool/nightly/liba/libaasdk-dev/libaasdk-dev_4.1.20260427-newdev.4_0ubuntu1~24.04_amd64.deb
+Size: 305652
+MD5sum: 6c48478fa2dc5241d40c6e9d479dfb5f
+SHA1: c8a4c30f042292772b97b73a4a504afd9febb80a
+SHA256: ef5f6170dd2b1a87894d0263ed6432a4e978e8a0de64d4293cc8ca30d9a37bbe
+SHA512: bc9ee697bbc63dd540368fdda8614ff8376d72fa4531a6162ba2b8a32bd27e5db04a5d77d41c1f82acccb0b8874b240ddc42792afae1f60cf7ac4964f468aa79
 Description: Android Auto SDK Library
  Development headers and CMake files for Android Auto SDK on amd64 architecture
 Homepage: https://github.com/opencardev/aasdk
