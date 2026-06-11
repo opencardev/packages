@@ -368,17 +368,17 @@ Description: crankshaft-slim-ui built using CMake
 Package: libaasdk
 Priority: optional
 Section: libs
-Installed-Size: 288951
+Installed-Size: 274930
 Maintainer: AASDK <opencardevuk@gmail.com>
 Architecture: amd64
 Version: 4.1.20260427
 Depends: libc6 (>= 2.38), libgcc-s1 (>= 3.0), libprotobuf32t64 (>= 3.21.12), libssl3t64 (>= 3.0.0), libstdc++6 (>= 13.1), libusb-1.0-0 (>= 2:1.0.16)
-Filename: pool/stable/liba/libaasdk/libaasdk_4.1.20260427-2_0ubuntu1~24.04_amd64.deb
-Size: 38408366
-MD5sum: 4cfd57b09f394590030d2506b3db92c3
-SHA1: 9bbbd01673851da4abf61584396e0d9f64762d48
-SHA256: 7beb055b78c80ac5e8e657a3fc9c08cd267ec635cec4085e2f187b8407c27ec2
-SHA512: 3943f2b0ccd3e71e1be8cbe83be272b52fb0ff653c6e9597b8f4f900491882c7d9a96b8987baaf515f3bdffd8cd87b6cac8ea6e495758f066766c1c7ecb32e22
+Filename: pool/stable/liba/libaasdk/libaasdk_4.1.20260427-2_ubuntu24.04_amd64.deb
+Size: 37717124
+MD5sum: 22eaaec96747552a02944d6835a53f98
+SHA1: 3bb458fa69b1d00ce2855d9aac19a622cb0049ee
+SHA256: 675957e2d35fc1ea8dbde575403b22ecd9a28cb16896bf09f555c7bcc132ded7
+SHA512: f6a078b82ead6ed0b54dd6c70a2ad46a244e772e493c5bffe258b78b98e6c3c10728b1992b67e2c8f8b192fcb5ab74e37d5c3d5388f83e6dafe6a683cd932e78
 Description: Android Auto SDK Library
  Runtime libraries for Android Auto SDK on amd64 architecture
 Homepage: https://github.com/opencardev/aasdk
