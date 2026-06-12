@@ -161,6 +161,24 @@ Description: crankshaft-ui-slim built using CMake
 Package: libaasdk
 Priority: optional
 Section: libs
+Installed-Size: 274930
+Maintainer: AASDK <opencardevuk@gmail.com>
+Architecture: amd64
+Version: 4.1.20260427-newdev.5
+Depends: libc6 (>= 2.38), libgcc-s1 (>= 3.0), libprotobuf32t64 (>= 3.21.12), libssl3t64 (>= 3.0.0), libstdc++6 (>= 13.1), libusb-1.0-0 (>= 2:1.0.16)
+Filename: pool/nightly/liba/libaasdk/libaasdk_4.1.20260427-newdev.5_ubuntu24.04_amd64.deb
+Size: 37717142
+MD5sum: f7a5e4275984e3185a8b9435e7dc08c5
+SHA1: 2883397caff3f4e58bad0710c545dd3828e379a0
+SHA256: a401c9a4e7efe7830a181dabab54c9060abd43bb9a31dcb92d086a78dd0ef2ad
+SHA512: 2a483ab6671a3bc65f566a5178d1f223f57cef52a5587461b66a034f303028efd1a7e5143615189bba9985833f68bc9fb35ede712610fb39221dbfc27f33e450
+Description: Android Auto SDK Library
+ Runtime libraries for Android Auto SDK on amd64 architecture
+Homepage: https://github.com/opencardev/aasdk
+
+Package: libaasdk
+Priority: optional
+Section: libs
 Installed-Size: 288951
 Maintainer: AASDK <opencardevuk@gmail.com>
 Architecture: amd64
@@ -210,6 +228,24 @@ SHA256: 596c3cf6d4705e728dd776b25bd71445756609064a985fae96458229c5f7dd66
 SHA512: ec6ce49f1a619f6d749bec6b9ffc4810a90e64f603dee06343ed3f74be18f09460c0eb7acde1d447a0ccfcb4212345151780a54b09817cc38793747b0b671a73
 Description: Android Auto SDK Library
  Runtime libraries for Android Auto SDK on amd64 architecture
+Homepage: https://github.com/opencardev/aasdk
+
+Package: libaasdk-dev
+Priority: optional
+Section: libdevel
+Installed-Size: 4110
+Maintainer: AASDK <opencardevuk@gmail.com>
+Architecture: amd64
+Version: 4.1.20260427-newdev.5
+Depends: libaasdk (= 4.1.20260427-newdev.5)
+Filename: pool/nightly/liba/libaasdk-dev/libaasdk-dev_4.1.20260427-newdev.5_ubuntu24.04_amd64.deb
+Size: 305684
+MD5sum: 566393a456dd2c5c5b50bd949ad51d42
+SHA1: 854052cd1b400678bdc364a12b46869b4c97b81c
+SHA256: 23ed4fa6f18b9f5e66c39084a1b422336603ec6ca0d99a4d47a053764b230135
+SHA512: ab4cd766483f80e44f209567c7b51ab150b10f012d46065e7e55a7219fc35f7ae4747137b449712618cb1eff3579b2d6bc5761f188782403eff52c95bdc9d311
+Description: Android Auto SDK Library
+ Development headers and CMake files for Android Auto SDK on amd64 architecture
 Homepage: https://github.com/opencardev/aasdk
 
 Package: libaasdk-dev
