@@ -1,0 +1,16 @@
+Package: crankshaft-ui-slim
+Priority: optional
+Section: devel
+Installed-Size: 663
+Maintainer: OpenCarDev Team
+Architecture: amd64
+Version: 1.0.1-17
+Depends: crankshaft-core, libqt6core6 | libqt6core6t64, libqt6gui6 | libqt6gui6t64, libqt6qml6 | libqt6qml6t64, libqt6quick6 | libqt6quick6t64, libqt6multimedia6 | libqt6multimedia6t64, libqt6sql6 | libqt6sql6t64, libqt6network6 | libqt6network6t64, libqt6websockets6 | libqt6websockets6t64, libqt6dbus6 | libqt6dbus6t64, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-window, qt6-qpa-plugins, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libqt6core6t64 (>= 6.4.0), libqt6gui6t64 (>= 6.1.2), libqt6network6t64 (>= 6.4.0), libqt6qml6 (>= 6.2.0), libqt6quickcontrols2-6 (>= 6.2.0), libqt6websockets6 (>= 6.2.1), libstdc++6 (>= 5), qt6-websockets-abi (= 6.4.2)
+Filename: pool/unstable/c/crankshaft-ui-slim/crankshaft-ui-slim_1.0.1-17_ubuntu24.04_amd64.deb
+Size: 231508
+MD5sum: 872f38e53adf5bc8e5c00c9ae2f19868
+SHA1: ea6e6ee53a9b53143b0b02daa9e866d9b1d42e05
+SHA256: 131d187e80eebd25fc12675a1ce5123afe8e551d762f27bdb97d7f7b24428b5c
+SHA512: 7c7c7c3f76e5780ffe3d00f585745ef1c3f92fae3616eabdfc583185374cae6cf43edf18305f64415d790ed2d7ab5f615bcbbedfce06099c68effe06998a5256
+Description: crankshaft-ui-slim built using CMake
+
