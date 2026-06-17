@@ -114,6 +114,8 @@ jobs:
       - name: Trigger publish for stable (main branch)
         if: steps.check_builds.outputs.has_main == 'true'
         run: |
+          set -euo pipefail
+          
           echo "🚀 Triggering publish for stable channel"
           
           gh workflow run apt-publish.yml \
@@ -130,7 +132,51 @@ jobs:
             --json databaseId \
             --jq '.[0].databaseId')
           if [ -n "$publish_run_id" ] && [ "$publish_run_id" != "null" ]; then
-            gh run watch "$publish_run_id" --repo opencardev/packages
+            echo "⏳ Monitoring stable publish run $publish_run_id..."
+            poll_interval_seconds=30
+            timeout_seconds=3600
+            deadline=$((SECONDS + timeout_seconds))
+            attempt=0
+            while [ "$SECONDS" -lt "$deadline" ]; do
+              attempt=$((attempt + 1))
+              if run_info=$(gh run view "$publish_run_id" --repo opencardev/packages --json status,conclusion 2>&1); then
+                run_status=$(echo "$run_info" | jq -r '.status // ""') || {
+                  echo "⚠️ Failed to parse API response (attempt $attempt), retrying in ${poll_interval_seconds} seconds..."
+                  remaining_seconds=$((deadline - SECONDS))
+                  if [ "$remaining_seconds" -le 0 ]; then
+                    break
+                  fi
+                  sleep "$(( remaining_seconds < poll_interval_seconds ? remaining_seconds : poll_interval_seconds ))"
+                  continue
+                }
+                run_conclusion=$(echo "$run_info" | jq -r '.conclusion // ""') || run_conclusion=""
+                echo "  Status: ${run_status:-unknown}"
+                if [ "$run_status" = "completed" ]; then
+                  if [ "$run_conclusion" = "success" ]; then
+                    echo "✅ Stable publish run $publish_run_id completed successfully"
+                    break
+                  else
+                    echo "❌ Stable publish run $publish_run_id completed with conclusion: ${run_conclusion:-unknown}"
+                    exit 1
+                  fi
+                fi
+                remaining_seconds=$((deadline - SECONDS))
+                if [ "$remaining_seconds" -le 0 ]; then
+                  break
+                fi
+                sleep "$(( remaining_seconds < poll_interval_seconds ? remaining_seconds : poll_interval_seconds ))"
+              else
+                echo "⚠️ API error (attempt $attempt): $run_info"
+                echo "Retrying in ${poll_interval_seconds} seconds..."
+                remaining_seconds=$((deadline - SECONDS))
+                if [ "$remaining_seconds" -le 0 ]; then
+                  break
+                fi
+                sleep "$(( remaining_seconds < poll_interval_seconds ? remaining_seconds : poll_interval_seconds ))"
+              fi
+            done
+            echo "❌ Timed out after $((timeout_seconds / 60)) minutes waiting for stable publish run $publish_run_id"
+            exit 1
           else
             echo "❌ Could not determine publish run id for stable channel"
             exit 1
@@ -141,6 +187,8 @@ jobs:
       - name: Trigger publish for nightly (dev branch)
         if: steps.check_builds.outputs.has_dev == 'true'
         run: |
+          set -euo pipefail
+          
           echo "🚀 Triggering publish for nightly channel"
           
           gh workflow run apt-publish.yml \
@@ -157,7 +205,51 @@ jobs:
             --json databaseId \
             --jq '.[0].databaseId')
           if [ -n "$publish_run_id" ] && [ "$publish_run_id" != "null" ]; then
-            gh run watch "$publish_run_id" --repo opencardev/packages
+            echo "⏳ Monitoring nightly publish run $publish_run_id..."
+            poll_interval_seconds=30
+            timeout_seconds=3600
+            deadline=$((SECONDS + timeout_seconds))
+            attempt=0
+            while [ "$SECONDS" -lt "$deadline" ]; do
+              attempt=$((attempt + 1))
+              if run_info=$(gh run view "$publish_run_id" --repo opencardev/packages --json status,conclusion 2>&1); then
+                run_status=$(echo "$run_info" | jq -r '.status // ""') || {
+                  echo "⚠️ Failed to parse API response (attempt $attempt), retrying in ${poll_interval_seconds} seconds..."
+                  remaining_seconds=$((deadline - SECONDS))
+                  if [ "$remaining_seconds" -le 0 ]; then
+                    break
+                  fi
+                  sleep "$(( remaining_seconds < poll_interval_seconds ? remaining_seconds : poll_interval_seconds ))"
+                  continue
+                }
+                run_conclusion=$(echo "$run_info" | jq -r '.conclusion // ""') || run_conclusion=""
+                echo "  Status: ${run_status:-unknown}"
+                if [ "$run_status" = "completed" ]; then
+                  if [ "$run_conclusion" = "success" ]; then
+                    echo "✅ Nightly publish run $publish_run_id completed successfully"
+                    break
+                  else
+                    echo "❌ Nightly publish run $publish_run_id completed with conclusion: ${run_conclusion:-unknown}"
+                    exit 1
+                  fi
+                fi
+                remaining_seconds=$((deadline - SECONDS))
+                if [ "$remaining_seconds" -le 0 ]; then
+                  break
+                fi
+                sleep "$(( remaining_seconds < poll_interval_seconds ? remaining_seconds : poll_interval_seconds ))"
+              else
+                echo "⚠️ API error (attempt $attempt): $run_info"
+                echo "Retrying in ${poll_interval_seconds} seconds..."
+                remaining_seconds=$((deadline - SECONDS))
+                if [ "$remaining_seconds" -le 0 ]; then
+                  break
+                fi
+                sleep "$(( remaining_seconds < poll_interval_seconds ? remaining_seconds : poll_interval_seconds ))"
+              fi
+            done
+            echo "❌ Timed out after $((timeout_seconds / 60)) minutes waiting for nightly publish run $publish_run_id"
+            exit 1
           else
             echo "❌ Could not determine publish run id for nightly channel"
             exit 1
