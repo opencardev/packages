@@ -130,7 +130,27 @@ jobs:
             --json databaseId \
             --jq '.[0].databaseId')
           if [ -n "$publish_run_id" ] && [ "$publish_run_id" != "null" ]; then
-            gh run watch "$publish_run_id" --repo opencardev/packages
+            echo "⏳ Monitoring stable publish run $publish_run_id..."
+            while true; do
+              run_info=$(gh run view "$publish_run_id" --repo opencardev/packages --json status,conclusion 2>/dev/null) || {
+                echo "⚠️ Transient API error, retrying in 30 seconds..."
+                sleep 30
+                continue
+              }
+              run_status=$(echo "$run_info" | jq -r '.status')
+              run_conclusion=$(echo "$run_info" | jq -r '.conclusion')
+              echo "  Status: $run_status"
+              if [ "$run_status" = "completed" ]; then
+                if [ "$run_conclusion" = "success" ]; then
+                  echo "✅ Stable publish run $publish_run_id completed successfully"
+                  break
+                else
+                  echo "❌ Stable publish run $publish_run_id completed with conclusion: $run_conclusion"
+                  exit 1
+                fi
+              fi
+              sleep 30
+            done
           else
             echo "❌ Could not determine publish run id for stable channel"
             exit 1
@@ -157,7 +177,27 @@ jobs:
             --json databaseId \
             --jq '.[0].databaseId')
           if [ -n "$publish_run_id" ] && [ "$publish_run_id" != "null" ]; then
-            gh run watch "$publish_run_id" --repo opencardev/packages
+            echo "⏳ Monitoring nightly publish run $publish_run_id..."
+            while true; do
+              run_info=$(gh run view "$publish_run_id" --repo opencardev/packages --json status,conclusion 2>/dev/null) || {
+                echo "⚠️ Transient API error, retrying in 30 seconds..."
+                sleep 30
+                continue
+              }
+              run_status=$(echo "$run_info" | jq -r '.status')
+              run_conclusion=$(echo "$run_info" | jq -r '.conclusion')
+              echo "  Status: $run_status"
+              if [ "$run_status" = "completed" ]; then
+                if [ "$run_conclusion" = "success" ]; then
+                  echo "✅ Nightly publish run $publish_run_id completed successfully"
+                  break
+                else
+                  echo "❌ Nightly publish run $publish_run_id completed with conclusion: $run_conclusion"
+                  exit 1
+                fi
+              fi
+              sleep 30
+            done
           else
             echo "❌ Could not determine publish run id for nightly channel"
             exit 1
