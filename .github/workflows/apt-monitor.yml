@@ -114,6 +114,8 @@ jobs:
       - name: Trigger publish for stable (main branch)
         if: steps.check_builds.outputs.has_main == 'true'
         run: |
+          set -euo pipefail
+          
           echo "🚀 Triggering publish for stable channel"
           
           gh workflow run apt-publish.yml \
@@ -131,26 +133,37 @@ jobs:
             --jq '.[0].databaseId')
           if [ -n "$publish_run_id" ] && [ "$publish_run_id" != "null" ]; then
             echo "⏳ Monitoring stable publish run $publish_run_id..."
-            while true; do
+            max_iterations=120
+            i=0
+            while [ $i -lt $max_iterations ]; do
+              i=$((i + 1))
               run_info=$(gh run view "$publish_run_id" --repo opencardev/packages --json status,conclusion 2>/dev/null) || {
-                echo "⚠️ Transient API error, retrying in 30 seconds..."
+                echo "⚠️ Transient API error (attempt $i/$max_iterations), retrying in 30 seconds..."
                 sleep 30
                 continue
               }
-              run_status=$(echo "$run_info" | jq -r '.status')
-              run_conclusion=$(echo "$run_info" | jq -r '.conclusion')
-              echo "  Status: $run_status"
+              run_status=$(echo "$run_info" | jq -r '.status // ""' 2>/dev/null) || {
+                echo "⚠️ Failed to parse API response (attempt $i/$max_iterations), retrying in 30 seconds..."
+                sleep 30
+                continue
+              }
+              run_conclusion=$(echo "$run_info" | jq -r '.conclusion // ""' 2>/dev/null) || run_conclusion=""
+              echo "  Status: ${run_status:-unknown}"
               if [ "$run_status" = "completed" ]; then
                 if [ "$run_conclusion" = "success" ]; then
                   echo "✅ Stable publish run $publish_run_id completed successfully"
                   break
                 else
-                  echo "❌ Stable publish run $publish_run_id completed with conclusion: $run_conclusion"
+                  echo "❌ Stable publish run $publish_run_id completed with conclusion: ${run_conclusion:-unknown}"
                   exit 1
                 fi
               fi
               sleep 30
             done
+            if [ $i -ge $max_iterations ]; then
+              echo "❌ Timed out after $((max_iterations * 30 / 60)) minutes waiting for stable publish run $publish_run_id"
+              exit 1
+            fi
           else
             echo "❌ Could not determine publish run id for stable channel"
             exit 1
@@ -161,6 +174,8 @@ jobs:
       - name: Trigger publish for nightly (dev branch)
         if: steps.check_builds.outputs.has_dev == 'true'
         run: |
+          set -euo pipefail
+          
           echo "🚀 Triggering publish for nightly channel"
           
           gh workflow run apt-publish.yml \
@@ -178,26 +193,37 @@ jobs:
             --jq '.[0].databaseId')
           if [ -n "$publish_run_id" ] && [ "$publish_run_id" != "null" ]; then
             echo "⏳ Monitoring nightly publish run $publish_run_id..."
-            while true; do
+            max_iterations=120
+            i=0
+            while [ $i -lt $max_iterations ]; do
+              i=$((i + 1))
               run_info=$(gh run view "$publish_run_id" --repo opencardev/packages --json status,conclusion 2>/dev/null) || {
-                echo "⚠️ Transient API error, retrying in 30 seconds..."
+                echo "⚠️ Transient API error (attempt $i/$max_iterations), retrying in 30 seconds..."
                 sleep 30
                 continue
               }
-              run_status=$(echo "$run_info" | jq -r '.status')
-              run_conclusion=$(echo "$run_info" | jq -r '.conclusion')
-              echo "  Status: $run_status"
+              run_status=$(echo "$run_info" | jq -r '.status // ""' 2>/dev/null) || {
+                echo "⚠️ Failed to parse API response (attempt $i/$max_iterations), retrying in 30 seconds..."
+                sleep 30
+                continue
+              }
+              run_conclusion=$(echo "$run_info" | jq -r '.conclusion // ""' 2>/dev/null) || run_conclusion=""
+              echo "  Status: ${run_status:-unknown}"
               if [ "$run_status" = "completed" ]; then
                 if [ "$run_conclusion" = "success" ]; then
                   echo "✅ Nightly publish run $publish_run_id completed successfully"
                   break
                 else
-                  echo "❌ Nightly publish run $publish_run_id completed with conclusion: $run_conclusion"
+                  echo "❌ Nightly publish run $publish_run_id completed with conclusion: ${run_conclusion:-unknown}"
                   exit 1
                 fi
               fi
               sleep 30
             done
+            if [ $i -ge $max_iterations ]; then
+              echo "❌ Timed out after $((max_iterations * 30 / 60)) minutes waiting for nightly publish run $publish_run_id"
+              exit 1
+            fi
           else
             echo "❌ Could not determine publish run id for nightly channel"
             exit 1
