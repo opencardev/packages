@@ -4,6 +4,22 @@ Section: devel
 Installed-Size: 2210
 Maintainer: OpenCarDev Team
 Architecture: arm64
+Version: 1.1.0-alpha.20
+Depends: libaasdk | libaasdk-amd64, libqt6core6 | libqt6core6t64, libqt6network6 | libqt6network6t64, libqt6websockets6 | libqt6websockets6t64, libqt6gui6 | libqt6gui6t64, libqt6dbus6 | libqt6dbus6t64, libqt6sql6 | libqt6sql6t64, libqt6bluetooth6 | libqt6bluetooth6t64, libqt6multimedia6 | libqt6multimedia6t64, gstreamer1.0-tools, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-libav, libgstreamer1.0-0 | libgstreamer1.0-0t64, libgstreamer-plugins-base1.0-0 | libgstreamer-plugins-base1.0-0t64, dbus, libusb-1.0-0, libssl3 | libssl3t64, libprotobuf32 | libprotobuf32t64, libasound2 | libasound2t64, libpulse0 | libpulse0t64, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libglib2.0-0t64 (>= 2.12.0), libgstreamer-plugins-base1.0-0 (>= 1.0.0), libgstreamer1.0-0 (>= 1.4.0), libprotobuf32t64 (>= 3.21.12), libqt6core6t64 (>= 6.8.2), libqt6dbus6 (>= 6.8.2), libqt6gui6 (>= 6.1.2), libqt6multimedia6 (>= 6.6.1), libqt6network6 (>= 6.1.2), libqt6sql6 (>= 6.1.2), libqt6websockets6 (>= 6.6.0), libstdc++6 (>= 14), libusb-1.0-0 (>= 2:1.0.9)
+Filename: pool/nightly/c/crankshaft-core/crankshaft-core_1.1.0-alpha.20_deb13_arm64.deb
+Size: 723888
+MD5sum: 9fde23f8bb00c3f0a9297d18b6035e6b
+SHA1: 6ca701b23920569a7b014a57fafa05c79dc62368
+SHA256: 64c42d9dfdd1319edc2940897461aebdfc40d2146c05b3284696dda7dd8152c2
+SHA512: 1424b04c8ec4eb3bd7ae9143a53e652425661729700c46830434efa6f2230b9af4595699daf15bab38436f3c6dc2bd29471f0c5a11c067df23975fef6cc43850
+Description: crankshaft-core built using CMake
+
+Package: crankshaft-core
+Priority: optional
+Section: devel
+Installed-Size: 2210
+Maintainer: OpenCarDev Team
+Architecture: arm64
 Version: 1.1.0-alpha.16
 Depends: libaasdk | libaasdk-amd64, libqt6core6 | libqt6core6t64, libqt6network6 | libqt6network6t64, libqt6websockets6 | libqt6websockets6t64, libqt6gui6 | libqt6gui6t64, libqt6dbus6 | libqt6dbus6t64, libqt6sql6 | libqt6sql6t64, libqt6bluetooth6 | libqt6bluetooth6t64, libqt6multimedia6 | libqt6multimedia6t64, gstreamer1.0-tools, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-libav, libgstreamer1.0-0 | libgstreamer1.0-0t64, libgstreamer-plugins-base1.0-0 | libgstreamer-plugins-base1.0-0t64, dbus, libusb-1.0-0, libssl3 | libssl3t64, libprotobuf32 | libprotobuf32t64, libasound2 | libasound2t64, libpulse0 | libpulse0t64, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libglib2.0-0t64 (>= 2.12.0), libgstreamer-plugins-base1.0-0 (>= 1.0.0), libgstreamer1.0-0 (>= 1.4.0), libprotobuf32t64 (>= 3.21.12), libqt6core6t64 (>= 6.8.2), libqt6dbus6 (>= 6.8.2), libqt6gui6 (>= 6.1.2), libqt6multimedia6 (>= 6.6.1), libqt6network6 (>= 6.1.2), libqt6sql6 (>= 6.1.2), libqt6websockets6 (>= 6.6.0), libstdc++6 (>= 14), libusb-1.0-0 (>= 2:1.0.9)
 Filename: pool/nightly/c/crankshaft-core/crankshaft-core_1.1.0-alpha.16_deb13_arm64.deb
