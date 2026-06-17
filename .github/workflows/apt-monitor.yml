@@ -137,26 +137,26 @@ jobs:
             i=0
             while [ $i -lt $max_iterations ]; do
               i=$((i + 1))
-              run_info=$(gh run view "$publish_run_id" --repo opencardev/packages --json status,conclusion 2>/dev/null) || {
-                echo "⚠️ Transient API error (attempt $i/$max_iterations), retrying in 30 seconds..."
-                sleep 30
-                continue
-              }
-              run_status=$(echo "$run_info" | jq -r '.status // ""' 2>/dev/null) || {
-                echo "⚠️ Failed to parse API response (attempt $i/$max_iterations), retrying in 30 seconds..."
-                sleep 30
-                continue
-              }
-              run_conclusion=$(echo "$run_info" | jq -r '.conclusion // ""' 2>/dev/null) || run_conclusion=""
-              echo "  Status: ${run_status:-unknown}"
-              if [ "$run_status" = "completed" ]; then
-                if [ "$run_conclusion" = "success" ]; then
-                  echo "✅ Stable publish run $publish_run_id completed successfully"
-                  break
-                else
-                  echo "❌ Stable publish run $publish_run_id completed with conclusion: ${run_conclusion:-unknown}"
-                  exit 1
+              if run_info=$(gh run view "$publish_run_id" --repo opencardev/packages --json status,conclusion 2>&1); then
+                run_status=$(echo "$run_info" | jq -r '.status // ""') || {
+                  echo "⚠️ Failed to parse API response (attempt $i/$max_iterations), retrying in 30 seconds..."
+                  sleep 30
+                  continue
+                }
+                run_conclusion=$(echo "$run_info" | jq -r '.conclusion // ""') || run_conclusion=""
+                echo "  Status: ${run_status:-unknown}"
+                if [ "$run_status" = "completed" ]; then
+                  if [ "$run_conclusion" = "success" ]; then
+                    echo "✅ Stable publish run $publish_run_id completed successfully"
+                    break
+                  else
+                    echo "❌ Stable publish run $publish_run_id completed with conclusion: ${run_conclusion:-unknown}"
+                    exit 1
+                  fi
                 fi
+              else
+                echo "⚠️ API error (attempt $i/$max_iterations): $run_info"
+                echo "Retrying in 30 seconds..."
               fi
               sleep 30
             done
@@ -197,26 +197,26 @@ jobs:
             i=0
             while [ $i -lt $max_iterations ]; do
               i=$((i + 1))
-              run_info=$(gh run view "$publish_run_id" --repo opencardev/packages --json status,conclusion 2>/dev/null) || {
-                echo "⚠️ Transient API error (attempt $i/$max_iterations), retrying in 30 seconds..."
-                sleep 30
-                continue
-              }
-              run_status=$(echo "$run_info" | jq -r '.status // ""' 2>/dev/null) || {
-                echo "⚠️ Failed to parse API response (attempt $i/$max_iterations), retrying in 30 seconds..."
-                sleep 30
-                continue
-              }
-              run_conclusion=$(echo "$run_info" | jq -r '.conclusion // ""' 2>/dev/null) || run_conclusion=""
-              echo "  Status: ${run_status:-unknown}"
-              if [ "$run_status" = "completed" ]; then
-                if [ "$run_conclusion" = "success" ]; then
-                  echo "✅ Nightly publish run $publish_run_id completed successfully"
-                  break
-                else
-                  echo "❌ Nightly publish run $publish_run_id completed with conclusion: ${run_conclusion:-unknown}"
-                  exit 1
+              if run_info=$(gh run view "$publish_run_id" --repo opencardev/packages --json status,conclusion 2>&1); then
+                run_status=$(echo "$run_info" | jq -r '.status // ""') || {
+                  echo "⚠️ Failed to parse API response (attempt $i/$max_iterations), retrying in 30 seconds..."
+                  sleep 30
+                  continue
+                }
+                run_conclusion=$(echo "$run_info" | jq -r '.conclusion // ""') || run_conclusion=""
+                echo "  Status: ${run_status:-unknown}"
+                if [ "$run_status" = "completed" ]; then
+                  if [ "$run_conclusion" = "success" ]; then
+                    echo "✅ Nightly publish run $publish_run_id completed successfully"
+                    break
+                  else
+                    echo "❌ Nightly publish run $publish_run_id completed with conclusion: ${run_conclusion:-unknown}"
+                    exit 1
+                  fi
                 fi
+              else
+                echo "⚠️ API error (attempt $i/$max_iterations): $run_info"
+                echo "Retrying in 30 seconds..."
               fi
               sleep 30
             done
