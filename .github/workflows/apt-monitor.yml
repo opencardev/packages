@@ -133,14 +133,20 @@ jobs:
             --jq '.[0].databaseId')
           if [ -n "$publish_run_id" ] && [ "$publish_run_id" != "null" ]; then
             echo "⏳ Monitoring stable publish run $publish_run_id..."
-            max_iterations=120
-            i=0
-            while [ $i -lt $max_iterations ]; do
-              i=$((i + 1))
+            poll_interval_seconds=30
+            timeout_seconds=3600
+            deadline=$((SECONDS + timeout_seconds))
+            attempt=0
+            while [ "$SECONDS" -lt "$deadline" ]; do
+              attempt=$((attempt + 1))
               if run_info=$(gh run view "$publish_run_id" --repo opencardev/packages --json status,conclusion 2>&1); then
                 run_status=$(echo "$run_info" | jq -r '.status // ""') || {
-                  echo "⚠️ Failed to parse API response (attempt $i/$max_iterations), retrying in 30 seconds..."
-                  sleep 30
+                  echo "⚠️ Failed to parse API response (attempt $attempt), retrying in ${poll_interval_seconds} seconds..."
+                  remaining_seconds=$((deadline - SECONDS))
+                  if [ "$remaining_seconds" -le 0 ]; then
+                    break
+                  fi
+                  sleep "$(( remaining_seconds < poll_interval_seconds ? remaining_seconds : poll_interval_seconds ))"
                   continue
                 }
                 run_conclusion=$(echo "$run_info" | jq -r '.conclusion // ""') || run_conclusion=""
@@ -154,16 +160,23 @@ jobs:
                     exit 1
                   fi
                 fi
+                remaining_seconds=$((deadline - SECONDS))
+                if [ "$remaining_seconds" -le 0 ]; then
+                  break
+                fi
+                sleep "$(( remaining_seconds < poll_interval_seconds ? remaining_seconds : poll_interval_seconds ))"
               else
-                echo "⚠️ API error (attempt $i/$max_iterations): $run_info"
-                echo "Retrying in 30 seconds..."
+                echo "⚠️ API error (attempt $attempt): $run_info"
+                echo "Retrying in ${poll_interval_seconds} seconds..."
+                remaining_seconds=$((deadline - SECONDS))
+                if [ "$remaining_seconds" -le 0 ]; then
+                  break
+                fi
+                sleep "$(( remaining_seconds < poll_interval_seconds ? remaining_seconds : poll_interval_seconds ))"
               fi
-              sleep 30
             done
-            if [ $i -ge $max_iterations ]; then
-              echo "❌ Timed out after $((max_iterations * 30 / 60)) minutes waiting for stable publish run $publish_run_id"
-              exit 1
-            fi
+            echo "❌ Timed out after $((timeout_seconds / 60)) minutes waiting for stable publish run $publish_run_id"
+            exit 1
           else
             echo "❌ Could not determine publish run id for stable channel"
             exit 1
@@ -193,14 +206,20 @@ jobs:
             --jq '.[0].databaseId')
           if [ -n "$publish_run_id" ] && [ "$publish_run_id" != "null" ]; then
             echo "⏳ Monitoring nightly publish run $publish_run_id..."
-            max_iterations=120
-            i=0
-            while [ $i -lt $max_iterations ]; do
-              i=$((i + 1))
+            poll_interval_seconds=30
+            timeout_seconds=3600
+            deadline=$((SECONDS + timeout_seconds))
+            attempt=0
+            while [ "$SECONDS" -lt "$deadline" ]; do
+              attempt=$((attempt + 1))
               if run_info=$(gh run view "$publish_run_id" --repo opencardev/packages --json status,conclusion 2>&1); then
                 run_status=$(echo "$run_info" | jq -r '.status // ""') || {
-                  echo "⚠️ Failed to parse API response (attempt $i/$max_iterations), retrying in 30 seconds..."
-                  sleep 30
+                  echo "⚠️ Failed to parse API response (attempt $attempt), retrying in ${poll_interval_seconds} seconds..."
+                  remaining_seconds=$((deadline - SECONDS))
+                  if [ "$remaining_seconds" -le 0 ]; then
+                    break
+                  fi
+                  sleep "$(( remaining_seconds < poll_interval_seconds ? remaining_seconds : poll_interval_seconds ))"
                   continue
                 }
                 run_conclusion=$(echo "$run_info" | jq -r '.conclusion // ""') || run_conclusion=""
@@ -214,16 +233,23 @@ jobs:
                     exit 1
                   fi
                 fi
+                remaining_seconds=$((deadline - SECONDS))
+                if [ "$remaining_seconds" -le 0 ]; then
+                  break
+                fi
+                sleep "$(( remaining_seconds < poll_interval_seconds ? remaining_seconds : poll_interval_seconds ))"
               else
-                echo "⚠️ API error (attempt $i/$max_iterations): $run_info"
-                echo "Retrying in 30 seconds..."
+                echo "⚠️ API error (attempt $attempt): $run_info"
+                echo "Retrying in ${poll_interval_seconds} seconds..."
+                remaining_seconds=$((deadline - SECONDS))
+                if [ "$remaining_seconds" -le 0 ]; then
+                  break
+                fi
+                sleep "$(( remaining_seconds < poll_interval_seconds ? remaining_seconds : poll_interval_seconds ))"
               fi
-              sleep 30
             done
-            if [ $i -ge $max_iterations ]; then
-              echo "❌ Timed out after $((max_iterations * 30 / 60)) minutes waiting for nightly publish run $publish_run_id"
-              exit 1
-            fi
+            echo "❌ Timed out after $((timeout_seconds / 60)) minutes waiting for nightly publish run $publish_run_id"
+            exit 1
           else
             echo "❌ Could not determine publish run id for nightly channel"
             exit 1
