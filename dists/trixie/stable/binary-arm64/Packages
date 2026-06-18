@@ -164,6 +164,22 @@ Section: devel
 Installed-Size: 652
 Maintainer: OpenCarDev Team
 Architecture: arm64
+Version: 1.1.0-1
+Depends: crankshaft-core, libqt6core6 | libqt6core6t64, libqt6gui6 | libqt6gui6t64, libqt6qml6 | libqt6qml6t64, libqt6quick6 | libqt6quick6t64, libqt6multimedia6 | libqt6multimedia6t64, libqt6sql6 | libqt6sql6t64, libqt6network6 | libqt6network6t64, libqt6websockets6 | libqt6websockets6t64, libqt6dbus6 | libqt6dbus6t64, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-window, qt6-qpa-plugins, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libqt6core6t64 (>= 6.8.2), libqt6gui6 (>= 6.1.2), libqt6network6 (>= 6.4.0), libqt6qml6 (>= 6.6.0), libqt6quickcontrols2-6 (>= 6.6.0), libqt6websockets6 (>= 6.6.0), libstdc++6 (>= 5)
+Filename: pool/stable/c/crankshaft-ui-slim/crankshaft-ui-slim_1.1.0-1_deb13_arm64.deb
+Size: 220802
+MD5sum: f2cf0ffaffbafcde004f24f7a72e3b4a
+SHA1: 998d4973fdc46c339599dea4cd0d88b76b31712e
+SHA256: 74b13d3e1895e095922691152f3c25c78734c4881cdaa407c4d68bfc1d243d21
+SHA512: 1502bb933aacf17cb4467f05b906d023d292ec6c8eb026bb72f011de43dffe92fba5e76d740be31433b41ddf2c23a12673b8494690a4ed999c6f7760e5898cee
+Description: crankshaft-ui-slim built using CMake
+
+Package: crankshaft-ui-slim
+Priority: optional
+Section: devel
+Installed-Size: 652
+Maintainer: OpenCarDev Team
+Architecture: arm64
 Version: 1.0.1-16
 Depends: crankshaft-core, libqt6core6 | libqt6core6t64, libqt6gui6 | libqt6gui6t64, libqt6qml6 | libqt6qml6t64, libqt6quick6 | libqt6quick6t64, libqt6multimedia6 | libqt6multimedia6t64, libqt6sql6 | libqt6sql6t64, libqt6network6 | libqt6network6t64, libqt6websockets6 | libqt6websockets6t64, libqt6dbus6 | libqt6dbus6t64, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-window, qt6-qpa-plugins, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libqt6core6t64 (>= 6.8.2), libqt6gui6 (>= 6.1.2), libqt6network6 (>= 6.4.0), libqt6qml6 (>= 6.6.0), libqt6quickcontrols2-6 (>= 6.6.0), libqt6websockets6 (>= 6.6.0), libstdc++6 (>= 5)
 Filename: pool/stable/c/crankshaft-ui-slim/crankshaft-ui-slim_1.0.1-16_deb13_arm64.deb
