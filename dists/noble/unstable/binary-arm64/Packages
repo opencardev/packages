@@ -1,3 +1,19 @@
+Package: crankshaft-core
+Priority: optional
+Section: devel
+Installed-Size: 2274
+Maintainer: OpenCarDev Team
+Architecture: arm64
+Version: 1.0.1-bugfix-flicker-fix.1
+Depends: libaasdk | libaasdk-amd64, libqt6core6 | libqt6core6t64, libqt6network6 | libqt6network6t64, libqt6websockets6 | libqt6websockets6t64, libqt6gui6 | libqt6gui6t64, libqt6dbus6 | libqt6dbus6t64, libqt6sql6 | libqt6sql6t64, libqt6bluetooth6 | libqt6bluetooth6t64, libqt6multimedia6 | libqt6multimedia6t64, gstreamer1.0-tools, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-libav, libgstreamer1.0-0 | libgstreamer1.0-0t64, libgstreamer-plugins-base1.0-0 | libgstreamer-plugins-base1.0-0t64, dbus, libusb-1.0-0, libssl3 | libssl3t64, libprotobuf32 | libprotobuf32t64, libasound2 | libasound2t64, libpulse0 | libpulse0t64, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libglib2.0-0t64 (>= 2.12.0), libgstreamer-plugins-base1.0-0 (>= 1.0.0), libgstreamer1.0-0 (>= 1.4.0), libprotobuf32t64 (>= 3.21.12), libqt6core6t64 (>= 6.4.0), libqt6dbus6t64 (>= 6.4.0), libqt6gui6t64 (>= 6.1.2), libqt6multimedia6 (>= 6.2.1), libqt6network6t64 (>= 6.1.2), libqt6sql6t64 (>= 6.1.2), libqt6websockets6 (>= 6.2.1), libstdc++6 (>= 13.1), libusb-1.0-0 (>= 2:1.0.9), qt6-websockets-abi (= 6.4.2)
+Filename: pool/unstable/c/crankshaft-core/crankshaft-core_1.0.1-bugfix-flicker-fix.1_ubuntu24.04_arm64.deb
+Size: 753358
+MD5sum: ff8f536c755a2a028c230605fc9a7771
+SHA1: c26af41f4490493a1a176d410c3edf6b6ff9f4ca
+SHA256: 1c06975f51d8686516ca2bf9e63f8dc5c218fb3dc1270b515958c2d582659263
+SHA512: 763cc345a9a541d9e07d681c9081ded0e16b378e955d787d53e7cd5b871b3732afaa1902dd6933d203486323529c4e9437309f1fe3f9be21fac004dab9184abd
+Description: crankshaft-core built using CMake
+
 Package: crankshaft-ui-slim
 Priority: optional
 Section: devel
