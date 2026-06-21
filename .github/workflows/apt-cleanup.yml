@@ -6,8 +6,7 @@ permissions:
 
 on:
   schedule:
-    # Run daily at 02:00 UTC
-    - cron: '0 2 * * *'
+    - cron: '0 2 1 * *'
 
   workflow_dispatch:
     inputs:
