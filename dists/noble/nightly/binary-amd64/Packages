@@ -342,6 +342,24 @@ Description: Android Auto SDK Library
  Runtime libraries for Android Auto SDK on amd64 architecture
 Homepage: https://github.com/opencardev/aasdk
 
+Package: libaasdk
+Priority: optional
+Section: libs
+Installed-Size: 274930
+Maintainer: AASDK <opencardevuk@gmail.com>
+Architecture: amd64
+Version: 4.1.20260427
+Depends: libc6 (>= 2.38), libgcc-s1 (>= 3.0), libprotobuf32t64 (>= 3.21.12), libssl3t64 (>= 3.0.0), libstdc++6 (>= 13.1), libusb-1.0-0 (>= 2:1.0.16)
+Filename: pool/nightly/liba/libaasdk/libaasdk_4.1.20260427-2_ubuntu24.04_amd64.deb
+Size: 37717116
+MD5sum: 2faa14cb080396d7fc6db7016606241a
+SHA1: f300c58ec45270c7bd47932986ae89200507601b
+SHA256: 440b73edf75e3c02ae303772baa68497e919b9e3dac0204788a15b169e208fbf
+SHA512: 2bbd1c828bf1ba89a64230693068398356d360fc0b3c7204cea79da39f5077a002070b023dd35fa7ea4bc152266162455cb8577ff9934277e2f113f7b19258e8
+Description: Android Auto SDK Library
+ Runtime libraries for Android Auto SDK on amd64 architecture
+Homepage: https://github.com/opencardev/aasdk
+
 Package: libaasdk-dev
 Priority: optional
 Section: libdevel
@@ -410,6 +428,24 @@ MD5sum: 9ff5067fd8d5c92f043cd7948c24e793
 SHA1: af8a6ac399caed8f9579e12f7871ea5ec8f828ae
 SHA256: 55bb0f121bafeab1df752cef8800a7fda728a6146ec69f36274d312435c5fe9b
 SHA512: 0408c12191a1a0ab9716a619bb5412993959f54f33801e309dca5dc319bcc37d6408f77dd409d9bce58b061dd1b696e4d63a3d3fdb520c6a9c939b9c61c80bd1
+Description: Android Auto SDK Library
+ Development headers and CMake files for Android Auto SDK on amd64 architecture
+Homepage: https://github.com/opencardev/aasdk
+
+Package: libaasdk-dev
+Priority: optional
+Section: libdevel
+Installed-Size: 4110
+Maintainer: AASDK <opencardevuk@gmail.com>
+Architecture: amd64
+Version: 4.1.20260427
+Depends: libaasdk (= 4.1.20260427)
+Filename: pool/nightly/liba/libaasdk-dev/libaasdk-dev_4.1.20260427-2_ubuntu24.04_amd64.deb
+Size: 305578
+MD5sum: 8920d5eb41a2bf9bf57030b6b43b1170
+SHA1: f7a9ddded2e90208e040dd93699fd98378619385
+SHA256: ee1b6c7d85fa6c5134ba1e79351a6f3d6ee7561ec2b5f91d652374898d3c6af5
+SHA512: 60e8f610adfe67c0339278e46bb16b5ed287f5fe1b5ae9317614c4bd7903319fbfb8d7772f27a1fa51ecb849daa328cb3c8be1938a0f422de670472fa369e6d2
 Description: Android Auto SDK Library
  Development headers and CMake files for Android Auto SDK on amd64 architecture
 Homepage: https://github.com/opencardev/aasdk
