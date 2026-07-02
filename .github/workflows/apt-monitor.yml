@@ -17,6 +17,11 @@ on:
         required: false
         type: boolean
         default: true
+      days_back:
+        description: 'Number of days to search back for builds'
+        required: false
+        type: number
+        default: 14
 
 jobs:
   monitor:
@@ -59,8 +64,11 @@ jobs:
           MAIN_BRANCH="${{ matrix.repo.main_branch }}"
           DEV_BRANCH="${{ matrix.repo.dev_branch }}"
           BUILD_WORKFLOW="${{matrix.repo.build_workflow }}"
+          DAYS_BACK="${{ inputs.days_back }}"
           
-          echo "🔍 Checking $OWNER/$REPO for new builds"
+          # Calculate cutoff date (X days ago)
+          CUTOFF_DATE=$(date -u -d "${DAYS_BACK} days ago" '+%Y-%m-%dT%H:%M:%SZ')
+          echo "🔍 Checking $OWNER/$REPO for builds since $CUTOFF_DATE (last $DAYS_BACK days)"
           
           # Get the last published build ID from our state file (if exists)
           # For now, just check the last successful run on each branch
@@ -71,15 +79,15 @@ jobs:
             --branch "$MAIN_BRANCH" \
             --workflow "$BUILD_WORKFLOW" \
             --status completed \
-            --json databaseId,conclusion,headBranch \
-            --limit 1 | jq -r '.[0] | select(.conclusion == "success") | .databaseId')
+            --json databaseId,conclusion,createdAt,headBranch \
+            --limit 100 | jq -r --arg cutoff "$CUTOFF_DATE" '.[] | select(.conclusion == "success" and .createdAt > $cutoff) | .databaseId' | head -1)
           
           if [ -n "$MAIN_RUN" ] && [ "$MAIN_RUN" != "null" ]; then
             echo "✅ Found stable build: $MAIN_RUN"
             echo "main_run=$MAIN_RUN" >> $GITHUB_OUTPUT
             echo "has_main=true" >> $GITHUB_OUTPUT
           else
-            echo "ℹ️  No successful main branch build found"
+            echo "ℹ️  No successful main branch build found in the last $DAYS_BACK days"
             echo "has_main=false" >> $GITHUB_OUTPUT
           fi
           
@@ -90,15 +98,15 @@ jobs:
               --branch "$DEV_BRANCH" \
               --workflow "$BUILD_WORKFLOW" \
               --status completed \
-              --json databaseId,conclusion,headBranch \
-              --limit 1 | jq -r '.[0] | select(.conclusion == "success") | .databaseId')
+              --json databaseId,conclusion,createdAt,headBranch \
+              --limit 100 | jq -r --arg cutoff "$CUTOFF_DATE" '.[] | select(.conclusion == "success" and .createdAt > $cutoff) | .databaseId' | head -1)
           
             if [ -n "$DEV_RUN" ] && [ "$DEV_RUN" != "null" ]; then
               echo "✅ Found nightly build: $DEV_RUN"
               echo "dev_run=$DEV_RUN" >> $GITHUB_OUTPUT
               echo "has_dev=true" >> $GITHUB_OUTPUT
             else
-              echo "ℹ️  No successful dev branch build found"
+              echo "ℹ️  No successful dev branch build found in the last $DAYS_BACK days"
               echo "has_dev=false" >> $GITHUB_OUTPUT
             fi
           else
@@ -269,6 +277,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Run Date**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
           echo "**Status**: ${{ needs.monitor.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Search Window**: Last ${{ inputs.days_back }} days" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           echo "## Monitored Repositories" >> $GITHUB_STEP_SUMMARY
