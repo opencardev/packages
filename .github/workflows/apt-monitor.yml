@@ -162,7 +162,7 @@ jobs:
                 if [ "$run_status" = "completed" ]; then
                   if [ "$run_conclusion" = "success" ]; then
                     echo "✅ Stable publish run $publish_run_id completed successfully"
-                    break
+                    exit 0
                   else
                     echo "❌ Stable publish run $publish_run_id completed with conclusion: ${run_conclusion:-unknown}"
                     exit 1
@@ -235,7 +235,7 @@ jobs:
                 if [ "$run_status" = "completed" ]; then
                   if [ "$run_conclusion" = "success" ]; then
                     echo "✅ Nightly publish run $publish_run_id completed successfully"
-                    break
+                    exit 0
                   else
                     echo "❌ Nightly publish run $publish_run_id completed with conclusion: ${run_conclusion:-unknown}"
                     exit 1
