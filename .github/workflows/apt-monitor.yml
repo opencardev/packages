@@ -32,11 +32,11 @@ jobs:
       max-parallel: 1
       matrix:
         repo:
-#          - owner: opencardev
-#            name: aasdk
-  #          main_branch: newdev
-#            dev_branch: newdev
- #           build_workflow: CI
+          - owner: opencardev
+            name: aasdk
+            main_branch: newdev
+            dev_branch: main
+            build_workflow: CI
 #          - owner: opencardev
 #            name: openauto
 #            main_branch: main
