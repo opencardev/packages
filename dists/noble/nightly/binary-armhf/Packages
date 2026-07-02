@@ -78,6 +78,22 @@ SHA256: 21a9d5819a5316b01ae476b73cd733ef6d5036dc9c941396bd9dad2c2a645fe0
 SHA512: 4a9847d272cd14da5f6ac81c054ec7656587c01a3cf9253395f76779ce77c4bb1737ee5861186508b7b2931e40eb92b1e99839b992ec9fb4ac9f1494725eeb62
 Description: crankshaft-core built using CMake
 
+Package: crankshaft-core
+Priority: optional
+Section: devel
+Installed-Size: 1794
+Maintainer: OpenCarDev Team
+Architecture: armhf
+Version: 1.1.0-21
+Depends: libaasdk | libaasdk-amd64, libqt6core6 | libqt6core6t64, libqt6network6 | libqt6network6t64, libqt6websockets6 | libqt6websockets6t64, libqt6gui6 | libqt6gui6t64, libqt6dbus6 | libqt6dbus6t64, libqt6sql6 | libqt6sql6t64, libqt6bluetooth6 | libqt6bluetooth6t64, libqt6multimedia6 | libqt6multimedia6t64, gstreamer1.0-tools, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-libav, libgstreamer1.0-0 | libgstreamer1.0-0t64, libgstreamer-plugins-base1.0-0 | libgstreamer-plugins-base1.0-0t64, dbus, libusb-1.0-0, libssl3 | libssl3t64, libprotobuf32 | libprotobuf32t64, libasound2 | libasound2t64, libpulse0 | libpulse0t64, libc6 (>= 2.34), libgcc-s1 (>= 3.5), libglib2.0-0t64 (>= 2.12.0), libgstreamer-plugins-base1.0-0 (>= 1.0.0), libgstreamer1.0-0 (>= 1.4.0), libprotobuf32t64 (>= 3.21.12), libqt6core6t64 (>= 6.4.0), libqt6dbus6t64 (>= 6.4.0), libqt6gui6t64 (>= 6.1.2), libqt6multimedia6 (>= 6.2.1), libqt6network6t64 (>= 6.1.2), libqt6sql6t64 (>= 6.1.2), libqt6websockets6 (>= 6.2.1), libstdc++6 (>= 13.1), libusb-1.0-0 (>= 2:1.0.9), qt6-websockets-abi (= 6.4.2)
+Filename: pool/nightly/c/crankshaft-core/crankshaft-core_1.1.0-21_ubuntu24.04_armhf.deb
+Size: 693988
+MD5sum: a1e3d0d3106143c83785eef3f8e5e6e7
+SHA1: e3e26c4dc18944d1fbe93a8ae43b3ae07a8cc5e3
+SHA256: 058b50d57ce0932c198eb735e8cdcf58d7bf1df44b967f78798c2bc1adabd1ae
+SHA512: cc84d10d1c9ee59840da4dd09b507ace3c6ddc15d802755ad1e65f496f6257792f818e10c93a37c66150a2c3394cfce0f28f8dcf46d4523b012d637dfacf3085
+Description: crankshaft-core built using CMake
+
 Package: crankshaft-ui-slim
 Priority: optional
 Section: devel
