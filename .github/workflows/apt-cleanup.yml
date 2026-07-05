@@ -6,12 +6,12 @@ permissions:
 
 on:
   schedule:
-    - cron: '0 2 1 * *'
+    - cron: "0 2 1 * *"
 
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Dry run (no actual deletions)'
+        description: "Dry run (no actual deletions)"
         required: false
         type: boolean
         default: false
@@ -19,7 +19,7 @@ on:
 jobs:
   cleanup:
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 60
     outputs:
       has_removals: ${{ steps.analyze.outputs.has_removals }}
       remove_count: ${{ steps.analyze.outputs.remove_count }}
@@ -33,272 +33,158 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y aptly gnupg dirmngr
-          
-      - name: Configure Aptly
-        run: |
-          set -euo pipefail
-          
-          echo "🔧 Configuring Aptly for cleanup"
-          
-          mkdir -p ~/.aptly
-          cat > ~/.aptly.conf << EOF
-          {
-            "rootDir": "$HOME/.aptly",
-            "downloadConcurrency": 4,
-            "downloadSpeedLimit": 0,
-            "architectures": ["amd64", "arm64", "armhf"],
-            "dependencyFollowSuggests": false,
-            "dependencyFollowRecommends": false,
-            "dependencyFollowAllVariants": false,
-            "dependencyFollowSource": false,
-            "gpgDisableSign": false,
-            "gpgDisableVerify": false,
-            "gpgProvider": "gpg",
-            "downloadSourcePackages": false,
-            "ppaDistributorID": "debian",
-            "ppaCodename": "",
-            "skipContentsPublishing": false,
-            "FileSystemPublishEndpoints": {
-              "repo": {
-                "rootDir": "$HOME/.aptly/public",
-                "linkMethod": "hardlink"
-              }
-            },
-            "S3PublishEndpoints": {},
-            "SwiftPublishEndpoints": {}
-          }
-          EOF
-          
-      - name: Import existing repository into Aptly
-        run: |
-          set -euo pipefail
-          
-          echo "📥 Importing existing APT repository structure into Aptly"
-          
-          # Check if repository exists
-          if [ ! -d "dists" ] || [ ! -d "pool" ]; then
-            echo "⚠️  No existing repository found (dists/ or pool/ missing)"
-            echo "Nothing to cleanup"
-            exit 0
-          fi
-          
-          # Copy existing published repository to Aptly's public directory
-          mkdir -p ~/.aptly/public
-          cp -a dists pool ~/.aptly/public/ 2>/dev/null || true
-          
-          echo "✅ Repository structure imported"
-          
-      - name: Analyze snapshots and identify old versions
-        id: analyze
-        run: |
-          set -euo pipefail
-          
-          DRY_RUN="${{ inputs.dry_run || 'false' }}"
-          
-          echo "🔍 Analyzing Aptly snapshots for cleanup"
-          echo "Dry run mode: $DRY_RUN"
-          
-          > /tmp/cleanup_stats.txt
-          > /tmp/snapshots_to_remove.txt
-          
-          # Determine retention policy by channel
-          declare -A RETENTION_POLICY
-          RETENTION_POLICY[stable]=7
-          RETENTION_POLICY[nightly]=3
-          RETENTION_POLICY[unstable]=2
-          
-          echo "## Snapshot Retention Policy" >> /tmp/cleanup_stats.txt
-          for channel in stable nightly unstable; do
-            echo "channel=$channel|keep=${RETENTION_POLICY[$channel]}" >> /tmp/cleanup_stats.txt
-            echo "  $channel: Keep last ${RETENTION_POLICY[$channel]} snapshots"
-          done
-          
-          # List all snapshots
-          if ! aptly snapshot list -raw 2>/dev/null | grep -q .; then
-            echo "⚠️  No snapshots found in Aptly database"
-            echo "This is expected if using file-based repository (not Aptly-managed)"
-            echo "has_removals=false" >> $GITHUB_OUTPUT
-            echo "remove_count=0" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          
-          echo ""
-          echo "📸 Analyzing snapshots by channel..."
-          
-          TOTAL_REMOVALS=0
-          
-          # For each channel
-          for channel in stable nightly unstable; do
-            KEEP_COUNT=${RETENTION_POLICY[$channel]}
-            
-            echo ""
-            echo "📦 Channel: $channel (keep last $KEEP_COUNT)"
-            
-            # Get all snapshots for this channel, sorted by timestamp (newest first)
-            # Snapshots are named: CHANNEL-TIMESTAMP (e.g., stable-2026-01-31-143022)
-            SNAPSHOTS=$(aptly snapshot list -raw | grep "^${channel}-" | sort -r || echo "")
-            
-            if [ -z "$SNAPSHOTS" ]; then
-              echo "  No snapshots found for $channel"
-              continue
-            fi
-            
-            SNAPSHOT_COUNT=$(echo "$SNAPSHOTS" | wc -l)
-            echo "  Found $SNAPSHOT_COUNT snapshot(s)"
-            
-            if [ "$SNAPSHOT_COUNT" -le "$KEEP_COUNT" ]; then
-              echo "  ✅ All snapshots within retention policy"
-              continue
-            fi
-            
-            # Mark old snapshots for removal
-            OLD_SNAPSHOTS=$(echo "$SNAPSHOTS" | tail -n +$((KEEP_COUNT + 1)))
-            REMOVE_COUNT=$((SNAPSHOT_COUNT - KEEP_COUNT))
-            
-            echo "  🗑️  Marking $REMOVE_COUNT old snapshot(s) for removal:"
-            
-            for snapshot in $OLD_SNAPSHOTS; do
-              echo "    - $snapshot"
-              echo "$snapshot" >> /tmp/snapshots_to_remove.txt
-              TOTAL_REMOVALS=$((TOTAL_REMOVALS + 1))
-              echo "snapshot=$snapshot|channel=$channel|action=remove" >> /tmp/cleanup_stats.txt
-            done
-          done
-          
-          # Save results
-          if [ "$TOTAL_REMOVALS" -gt 0 ]; then
-            echo ""
-            echo "📋 Total snapshots marked for removal: $TOTAL_REMOVALS"
-            echo "has_removals=true" >> $GITHUB_OUTPUT
-            echo "remove_count=$TOTAL_REMOVALS" >> $GITHUB_OUTPUT
-          else
-            echo ""
-            echo "✅ No snapshots need to be removed"
-            echo "has_removals=false" >> $GITHUB_OUTPUT
-            echo "remove_count=0" >> $GITHUB_OUTPUT
-          fi
-          
-      - name: Set up GPG key
-        if: steps.analyze.outputs.has_removals == 'true' && inputs.dry_run != 'true'
-        run: |
-          set -euo pipefail
-          
-          echo "${{ secrets.APT_SIGNING_KEY }}" | gpg --import --batch --yes 2>&1 | grep -E "imported|key"
-          
-          KEYID=$(gpg --list-secret-keys --keyid-format SHORT 2>/dev/null | grep "^sec" | awk '{print $2}' | cut -d'/' -f2 | head -1)
-          echo "GPG_KEYID=$KEYID" >> $GITHUB_ENV
-          
-          mkdir -p ~/.gnupg
-          chmod 700 ~/.gnupg
-          cat >> ~/.gnupg/gpg.conf << 'EOF'
-          use-agent
-          pinentry-mode loopback
-          batch
-          yes
-          EOF
-          
-          cat >> ~/.gnupg/gpg-agent.conf << 'EOF'
-          allow-loopback-pinentry
-          EOF
-          chmod 600 ~/.gnupg/gpg.conf ~/.gnupg/gpg-agent.conf
-          
-          gpg-connect-agent reloadagent /bye || true
-          
-      - name: Remove old snapshots from Aptly
-        if: steps.analyze.outputs.has_removals == 'true' && inputs.dry_run != 'true'
-        env:
-          GNUPGHOME: ~/.gnupg
-        run: |
-          set -euo pipefail
-          
-          echo "🗑️  Removing old snapshots from Aptly"
-          
-          # Drop publications for snapshots being removed
-          # (Aptly won't allow snapshot deletion if still published)
-          echo ""
-          echo "🔍 Checking for publications to drop..."
-          
-          while read snapshot; do
-            echo "  Checking publications for snapshot: $snapshot"
-            
-            # Check if this snapshot is published
-            PUBLISHED_TO=$(aptly publish list -raw 2>/dev/null | grep "$snapshot" || echo "")
-            
-            if [ -n "$PUBLISHED_TO" ]; then
-              echo "    ⚠️  Snapshot is published, cannot remove yet"
-              echo "    Published to: $PUBLISHED_TO"
-              echo "    Skipping $snapshot (still in use)"
-              continue
-            fi
-            
-            # Drop the snapshot
-            echo "    Dropping snapshot: $snapshot"
-            aptly snapshot drop "$snapshot" || {
-              echo "    ⚠️  Failed to drop $snapshot (may still be referenced)"
-            }
-          done < /tmp/snapshots_to_remove.txt
-          
-          echo ""
-          echo "✅ Snapshot cleanup complete"
-          
-      - name: Clean up unreferenced packages from pool
-        if: steps.analyze.outputs.has_removals == 'true' && inputs.dry_run != 'true'
-        run: |
-          set -euo pipefail
-          
-          echo "🧹 Cleaning up unreferenced packages from pool"
-          
-          # Run Aptly database cleanup to remove unreferenced packages
-          # This removes packages from the pool that are no longer referenced by any snapshot
-          aptly db cleanup 2>&1 | head -20 || {
-            echo "⚠️  Database cleanup encountered issues (may be normal if no orphans found)"
-          }
-          
-          echo "✅ Pool cleanup complete"
-          
-      - name: Export cleaned repository
-        if: steps.analyze.outputs.has_removals == 'true' && inputs.dry_run != 'true'
-        run: |
-          set -euo pipefail
-          
-          echo "📤 Exporting cleaned repository structure"
-          
-          # Remove old repository files
-          rm -rf ./dists ./pool
+          sudo apt-get install -y xz-utils gzip
 
-          if [ -d ~/.aptly/public ]; then
-            cp -a ~/.aptly/public/dists ./
-            cp -a ~/.aptly/public/pool ./
-            echo "✅ Exported cleaned repository"
-          else
-            echo "⚠️  No Aptly public directory found, nothing to export"
+      - name: Analyze unreferenced pool files
+        id: analyze
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          DRY_RUN="${{ inputs.dry_run || 'false' }}"
+          echo "🔍 Analyzing pool/ references from dists/ indexes"
+          echo "Dry run mode: $DRY_RUN"
+
+          if [[ ! -d dists || ! -d pool ]]; then
+            echo "⚠️  Missing dists/ or pool/ directories; nothing to clean"
+            echo "has_removals=false" >> "$GITHUB_OUTPUT"
+            echo "remove_count=0" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
-          
-      - name: Upload cleanup report
-        if: steps.analyze.outputs.has_removals == 'true'
+
+          tmpdir="$(mktemp -d)"
+          trap 'rm -rf "${tmpdir:-}"' EXIT
+
+          referenced_file="$tmpdir/referenced.txt"
+          pool_file="$tmpdir/pool-files.txt"
+          delete_file="$tmpdir/to-delete.txt"
+
+          : > "$referenced_file"
+          : > /tmp/cleanup_stats.txt
+
+          extract_referenced_pool_paths() {
+            local index_file="$1"
+
+            case "$index_file" in
+              *.xz) xz -dc -- "$index_file" ;;
+              *.gz) gzip -dc -- "$index_file" ;;
+              *) cat -- "$index_file" ;;
+            esac | awk '
+              BEGIN { in_files = 0; dir = "" }
+
+              /^Filename:[[:space:]]+/ {
+                path = $0
+                sub(/^Filename:[[:space:]]+/, "", path)
+                if (path ~ /^pool\//) print path
+                in_files = 0
+                next
+              }
+
+              /^Directory:[[:space:]]+/ {
+                dir = $0
+                sub(/^Directory:[[:space:]]+/, "", dir)
+                in_files = 0
+                next
+              }
+
+              /^Files:[[:space:]]*$/ { in_files = 1; next }
+
+              in_files && /^[[:space:]]+/ {
+                n = split($0, parts, /[[:space:]]+/)
+                filename = parts[n]
+                if (dir ~ /^pool\// && filename != "") print dir "/" filename
+                next
+              }
+
+              /^[A-Za-z0-9-]+:[[:space:]]*/ { in_files = 0; next }
+              /^$/ { in_files = 0 }
+            '
+          }
+
+          while IFS= read -r index; do
+            extract_referenced_pool_paths "$index" >> "$referenced_file" || true
+          done < <(find dists -type f \( -name "Packages" -o -name "Packages.gz" -o -name "Packages.xz" -o -name "Sources" -o -name "Sources.gz" -o -name "Sources.xz" \) | sort)
+
+          sort -u "$referenced_file" -o "$referenced_file"
+          find pool -type f | sed 's#^\./##' | sort > "$pool_file"
+          comm -23 "$pool_file" "$referenced_file" > "$delete_file"
+
+          total_pool="$(wc -l < "$pool_file" | tr -d ' ')"
+          referenced_count="$(wc -l < "$referenced_file" | tr -d ' ')"
+          remove_count="$(wc -l < "$delete_file" | tr -d ' ')"
+          pool_size_before="$(du -sh pool | awk '{print $1}')"
+
+          echo "Pool files total: $total_pool"
+          echo "Referenced files: $referenced_count"
+          echo "Unreferenced files: $remove_count"
+          echo "Pool size before: $pool_size_before"
+
+          {
+            echo "pool_total=$total_pool"
+            echo "referenced=$referenced_count"
+            echo "to_remove=$remove_count"
+            echo "pool_size_before=$pool_size_before"
+          } >> /tmp/cleanup_stats.txt
+
+          cp "$delete_file" /tmp/unreferenced_pool_files.txt
+
+          if [[ "$remove_count" -gt 0 ]]; then
+            echo "has_removals=true" >> "$GITHUB_OUTPUT"
+            echo "remove_count=$remove_count" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_removals=false" >> "$GITHUB_OUTPUT"
+            echo "remove_count=0" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload cleanup analysis
+        if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: cleanup-report-${{ github.run_id }}
+          name: cleanup-analysis-${{ github.run_id }}
           path: |
-              /tmp/cleanup_stats.txt
-              /tmp/packages_to_remove.txt
-          retention-days: 30
+            /tmp/cleanup_stats.txt
+            /tmp/unreferenced_pool_files.txt
+          retention-days: 14
         continue-on-error: true
+
+      - name: Delete unreferenced pool files
+        if: steps.analyze.outputs.has_removals == 'true' && inputs.dry_run != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "🗑️  Deleting unreferenced files from pool/"
+          while IFS= read -r path; do
+            [[ -z "$path" ]] && continue
+            if [[ "$path" != pool/* ]]; then
+              echo "Skipping suspicious path (outside pool): $path"
+              continue
+            fi
+            rm -f -- "$path"
+          done < /tmp/unreferenced_pool_files.txt
+
+          find pool -type d -empty -delete
+
+          pool_size_after="$(du -sh pool | awk '{print $1}')"
+          echo "Pool size after: $pool_size_after"
+          echo "pool_size_after=$pool_size_after" >> /tmp/cleanup_stats.txt
 
       - name: Commit and push changes
         if: steps.analyze.outputs.has_removals == 'true' && inputs.dry_run != 'true'
+        shell: bash
         run: |
+          set -euo pipefail
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add dists/ pool/ || true
+          git add pool/ || true
 
           if git diff --cached --quiet; then
             echo "ℹ️  No changes to commit"
           else
-            REMOVE_COUNT="${{ steps.analyze.outputs.remove_count }}"
-            git commit -m "chore: Clean up $REMOVE_COUNT old snapshot(s) and orphaned packages"
+            remove_count="${{ steps.analyze.outputs.remove_count }}"
+            git commit -m "chore: cleanup $remove_count unreferenced pool artifact(s)"
             git push origin main
             echo "✅ Pushed cleanup changes"
           fi
@@ -309,49 +195,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download cleanup artifacts
-        if: needs.cleanup.outputs.has_removals == 'true'
+      - name: Download cleanup analysis
         uses: actions/download-artifact@v8
         with:
-          name: cleanup-report-${{ github.run_id }}
+          name: cleanup-analysis-${{ github.run_id }}
           path: ./artifacts
         continue-on-error: true
 
       - name: Job Summary
+        shell: bash
         run: |
-          echo "# APT Repository Cleanup Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Status**: ${{ needs.cleanup.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Dry Run**: ${{ inputs.dry_run || 'false' }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Snapshots Removed**: ${{ needs.cleanup.outputs.remove_count || '0' }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📸 Snapshot Retention Policy" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Channel | Retention |" >> $GITHUB_STEP_SUMMARY
-          echo "|---------|-----------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Stable | Keep last 7 snapshots |" >> $GITHUB_STEP_SUMMARY
-          echo "| Nightly | Keep last 3 snapshots |" >> $GITHUB_STEP_SUMMARY
-          echo "| Unstable | Keep last 2 snapshots |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "# APT Repository Cleanup Summary"
+            echo ""
+            echo "**Status**: ${{ needs.cleanup.result }}"
+            echo "**Dry Run**: ${{ inputs.dry_run || 'false' }}"
+            echo "**Unreferenced Files**: ${{ needs.cleanup.outputs.remove_count || '0' }}"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
 
-          if [ -f ./artifacts/cleanup_stats.txt ]; then
-            echo "## 🗑️ Cleanup Details" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-
-            if [ -f ./artifacts/snapshots_to_remove.txt ]; then
-              echo "### Removed Snapshots" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-
-              while read snapshot; do
-                echo "- \`$snapshot\`" >> $GITHUB_STEP_SUMMARY
-              done < ./artifacts/snapshots_to_remove.txt
-              echo "" >> $GITHUB_STEP_SUMMARY
-            fi
-          elif [ "${{ needs.cleanup.outputs.remove_count || '0' }}" != "0" ]; then
-            echo "${{ needs.cleanup.outputs.remove_count }} old snapshot(s) were removed." >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Orphaned packages in the pool were also cleaned up via \`aptly db cleanup\`." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "✅ No snapshots required cleanup. All snapshots are within retention policy." >> $GITHUB_STEP_SUMMARY
+          if [[ -f ./artifacts/cleanup_stats.txt ]]; then
+            echo "## Details" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            sed 's/^/- /' ./artifacts/cleanup_stats.txt >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
           fi
 
+          if [[ -f ./artifacts/unreferenced_pool_files.txt ]]; then
+            count="$(wc -l < ./artifacts/unreferenced_pool_files.txt | tr -d ' ')"
+            if [[ "$count" -gt 0 ]]; then
+              echo "## Sample Removed Candidates" >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              sed -n '1,30p' ./artifacts/unreferenced_pool_files.txt | sed 's/^/- `/' | sed 's/$/`/' >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "✅ No unreferenced files detected." >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
