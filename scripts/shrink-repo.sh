@@ -190,7 +190,7 @@ main() {
 
   local tmpdir
   tmpdir="$(mktemp -d)"
-  trap 'rm -rf "$tmpdir"' EXIT
+  trap 'rm -rf "${tmpdir:-}"' EXIT
 
   local referenced_file="$tmpdir/referenced.txt"
   local pool_file="$tmpdir/pool-files.txt"
