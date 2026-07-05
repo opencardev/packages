@@ -94,6 +94,21 @@ To prevent unlimited repository growth, an automated cleanup workflow runs daily
 
 For more details, see [Package Cleanup Documentation](docs/PACKAGE_CLEANUP.md).
 
+### Manual Repository Shrink (for GitHub Pages size issues)
+
+If Pages publish fails because the repository artifact is too large, run:
+
+```bash
+# Preview only (no deletion)
+./scripts/shrink-repo.sh
+
+# Apply cleanup
+./scripts/shrink-repo.sh --apply
+```
+
+This script removes files under `pool/` that are not referenced by current
+`dists/*` package indexes, which can significantly reduce publish artifact size.
+
 ### Triggering Repository Updates
 
 The APT repository can be updated in several ways:
