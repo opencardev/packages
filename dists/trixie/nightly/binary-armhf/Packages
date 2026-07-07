@@ -1,6 +1,22 @@
 Package: crankshaft-core
 Priority: optional
 Section: devel
+Installed-Size: 1769
+Maintainer: OpenCarDev Team
+Architecture: armhf
+Version: 2.0.0-alpha.29
+Depends: libaasdk | libaasdk-amd64, libqt6core6 | libqt6core6t64, libqt6network6 | libqt6network6t64, libqt6websockets6 | libqt6websockets6t64, libqt6gui6 | libqt6gui6t64, libqt6dbus6 | libqt6dbus6t64, libqt6sql6 | libqt6sql6t64, libqt6bluetooth6 | libqt6bluetooth6t64, libqt6multimedia6 | libqt6multimedia6t64, gstreamer1.0-tools, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-libav, libgstreamer1.0-0 | libgstreamer1.0-0t64, libgstreamer-plugins-base1.0-0 | libgstreamer-plugins-base1.0-0t64, libgstreamer-plugins-bad1.0-0 | libgstreamer-plugins-bad1.0-0t64, libnice10 | libnice10t64, libsrtp2-1 | libsrtp2-1t64, dbus, libusb-1.0-0, libssl3 | libssl3t64, libprotobuf32 | libprotobuf32t64, libasound2 | libasound2t64, libpulse0 | libpulse0t64, libc6 (>= 2.34), libgcc-s1 (>= 3.5), libglib2.0-0t64 (>= 2.12.0), libgstreamer-plugins-bad1.0-0 (>= 1.26.2), libgstreamer-plugins-base1.0-0 (>= 1.0.0), libgstreamer1.0-0 (>= 1.20.0), libprotobuf32t64 (>= 3.21.12), libqt6core6t64 (>= 6.8.2), libqt6dbus6 (>= 6.8.2), libqt6gui6 (>= 6.1.2), libqt6multimedia6 (>= 6.6.1), libqt6network6 (>= 6.1.2), libqt6sql6 (>= 6.1.2), libqt6websockets6 (>= 6.6.0), libstdc++6 (>= 14), libusb-1.0-0 (>= 2:1.0.9)
+Filename: pool/nightly/c/crankshaft-core/crankshaft-core_2.0.0-alpha.29_deb13_armhf.deb
+Size: 665568
+MD5sum: 197b2ed7bec4e71429f33dc3bdea2e59
+SHA1: 9b6a462c2b0454fa53dc73df541872673078f02f
+SHA256: f142e9a712f53c69a4bf11c6b52bb226d7f1be20418f5ad20d6fdbc4b712f45c
+SHA512: 37265507360678c0669003f6289c03f4ceec7ab82ea752b48611229d8ae5780f7c9f301061ad3e505ebcdc771918850dd89e4cac0a319ec04ec36a978aba5a33
+Description: crankshaft-core built using CMake
+
+Package: crankshaft-core
+Priority: optional
+Section: devel
 Installed-Size: 1767
 Maintainer: OpenCarDev Team
 Architecture: armhf
