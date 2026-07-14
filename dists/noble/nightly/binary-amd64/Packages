@@ -1,6 +1,22 @@
 Package: crankshaft-core
 Priority: optional
 Section: devel
+Installed-Size: 2471
+Maintainer: OpenCarDev Team
+Architecture: amd64
+Version: 2.0.0-alpha.38
+Depends: libaasdk | libaasdk-amd64, libqt6core6 | libqt6core6t64, libqt6network6 | libqt6network6t64, libqt6websockets6 | libqt6websockets6t64, libqt6gui6 | libqt6gui6t64, libqt6dbus6 | libqt6dbus6t64, libqt6sql6 | libqt6sql6t64, libqt6bluetooth6 | libqt6bluetooth6t64, libqt6multimedia6 | libqt6multimedia6t64, gstreamer1.0-tools, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-libav, libgstreamer1.0-0 | libgstreamer1.0-0t64, libgstreamer-plugins-base1.0-0 | libgstreamer-plugins-base1.0-0t64, libgstreamer-plugins-bad1.0-0 | libgstreamer-plugins-bad1.0-0t64, libnice10 | libnice10t64, libsrtp2-1 | libsrtp2-1t64, dbus, libusb-1.0-0, libssl3 | libssl3t64, libprotobuf32 | libprotobuf32t64, libasound2 | libasound2t64, libpulse0 | libpulse0t64, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libglib2.0-0t64 (>= 2.12.0), libgstreamer-plugins-bad1.0-0 (>= 1.24.2), libgstreamer-plugins-base1.0-0 (>= 1.0.0), libgstreamer1.0-0 (>= 1.20.0), libprotobuf32t64 (>= 3.21.12), libqt6core6t64 (>= 6.4.0), libqt6dbus6t64 (>= 6.4.0), libqt6gui6t64 (>= 6.1.2), libqt6multimedia6 (>= 6.2.1), libqt6network6t64 (>= 6.1.2), libqt6sql6t64 (>= 6.1.2), libqt6websockets6 (>= 6.2.1), libstdc++6 (>= 13.1), libusb-1.0-0 (>= 2:1.0.9), qt6-websockets-abi (= 6.4.2)
+Filename: pool/nightly/c/crankshaft-core/crankshaft-core_2.0.0-alpha.38_ubuntu24.04_amd64.deb
+Size: 811884
+MD5sum: 56434b67da8ad5668c3f691c68abb837
+SHA1: e49048c2bd4785993f2a039170a73937b81c7305
+SHA256: 6b8c3881f64165092561ac7d54d106e96331d6a0ddea84361e72a65a16b45d7d
+SHA512: 7e79dbc0b3659e9a97b705d5537ed397326444e506f183071f3413af6b5e46cbe0c5b53ef6e3473d3e118780f6bbeab74eedc2785177af1063e879ddb9043f71
+Description: crankshaft-core built using CMake
+
+Package: crankshaft-core
+Priority: optional
+Section: devel
 Installed-Size: 5305
 Maintainer: OpenCarDev Team
 Architecture: amd64
