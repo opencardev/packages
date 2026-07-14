@@ -308,6 +308,22 @@ Section: devel
 Installed-Size: 715
 Maintainer: OpenCarDev Team
 Architecture: amd64
+Version: 2.0.0-alpha.23
+Depends: crankshaft-core, libqt6core6 | libqt6core6t64, libqt6gui6 | libqt6gui6t64, libqt6qml6 | libqt6qml6t64, libqt6quick6 | libqt6quick6t64, libqt6multimedia6 | libqt6multimedia6t64, libqt6sql6 | libqt6sql6t64, libqt6network6 | libqt6network6t64, libqt6websockets6 | libqt6websockets6t64, libqt6dbus6 | libqt6dbus6t64, libgstreamer1.0-0 | libgstreamer1.0-0t64, libgstreamer-plugins-base1.0-0 | libgstreamer-plugins-base1.0-0t64, libgstreamer-plugins-bad1.0-0 | libgstreamer-plugins-bad1.0-0t64, libnice10 | libnice10t64, libsrtp2-1 | libsrtp2-1t64, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-libav, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-window, qml6-module-qtmultimedia, qt6-qpa-plugins, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libglib2.0-0t64 (>= 2.12.0), libgstreamer-plugins-bad1.0-0 (>= 1.26.2), libgstreamer-plugins-base1.0-0 (>= 1.0.0), libgstreamer1.0-0 (>= 1.14.0), libqt6core6t64 (>= 6.8.2), libqt6gui6 (>= 6.1.2), libqt6multimedia6 (>= 6.6.1), libqt6network6 (>= 6.4.0), libqt6qml6 (>= 6.6.0), libqt6quickcontrols2-6 (>= 6.6.0), libqt6websockets6 (>= 6.6.0), libstdc++6 (>= 5)
+Filename: pool/nightly/c/crankshaft-ui-slim/crankshaft-ui-slim_2.0.0-alpha.23_deb13_amd64.deb
+Size: 255070
+MD5sum: 64a3d97c1543a4bb26951b1331a5f202
+SHA1: 45149ce15084cc8c5fa846d7f15becc8ec4d44d1
+SHA256: 4efe2336a959876bf7131b28ff17e9b42c714c4b6ffd852747ce4992717db900
+SHA512: 1b1eb5d52f73eeed9902ad066a4eaed44768c733dfea18e758134893ecf90bdb9e899c67b8d16ab9d588288875d423db40d45d7c7f907cf5890e823de087420c
+Description: crankshaft-ui-slim built using CMake
+
+Package: crankshaft-ui-slim
+Priority: optional
+Section: devel
+Installed-Size: 715
+Maintainer: OpenCarDev Team
+Architecture: amd64
 Version: 2.0.0-alpha.22
 Depends: crankshaft-core, libqt6core6 | libqt6core6t64, libqt6gui6 | libqt6gui6t64, libqt6qml6 | libqt6qml6t64, libqt6quick6 | libqt6quick6t64, libqt6multimedia6 | libqt6multimedia6t64, libqt6sql6 | libqt6sql6t64, libqt6network6 | libqt6network6t64, libqt6websockets6 | libqt6websockets6t64, libqt6dbus6 | libqt6dbus6t64, libgstreamer1.0-0 | libgstreamer1.0-0t64, libgstreamer-plugins-base1.0-0 | libgstreamer-plugins-base1.0-0t64, libgstreamer-plugins-bad1.0-0 | libgstreamer-plugins-bad1.0-0t64, libnice10 | libnice10t64, libsrtp2-1 | libsrtp2-1t64, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-libav, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-window, qml6-module-qtmultimedia, qt6-qpa-plugins, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libglib2.0-0t64 (>= 2.12.0), libgstreamer-plugins-bad1.0-0 (>= 1.26.2), libgstreamer-plugins-base1.0-0 (>= 1.0.0), libgstreamer1.0-0 (>= 1.14.0), libqt6core6t64 (>= 6.8.2), libqt6gui6 (>= 6.1.2), libqt6multimedia6 (>= 6.6.1), libqt6network6 (>= 6.4.0), libqt6qml6 (>= 6.6.0), libqt6quickcontrols2-6 (>= 6.6.0), libqt6websockets6 (>= 6.6.0), libstdc++6 (>= 5)
 Filename: pool/nightly/c/crankshaft-ui-slim/crankshaft-ui-slim_2.0.0-alpha.22_deb13_amd64.deb
