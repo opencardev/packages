@@ -785,17 +785,17 @@ Description: crankshaft-ui-slim built using CMake
 Package: crankshaft-ui-slim
 Priority: optional
 Section: devel
-Installed-Size: 653
+Installed-Size: 812
 Maintainer: OpenCarDev Team
 Architecture: arm64
 Version: 1.1.0-alpha.24
-Depends: crankshaft-core, libqt6core6 | libqt6core6t64, libqt6gui6 | libqt6gui6t64, libqt6qml6 | libqt6qml6t64, libqt6quick6 | libqt6quick6t64, libqt6multimedia6 | libqt6multimedia6t64, libqt6sql6 | libqt6sql6t64, libqt6network6 | libqt6network6t64, libqt6websockets6 | libqt6websockets6t64, libqt6dbus6 | libqt6dbus6t64, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-window, qt6-qpa-plugins, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libqt6core6t64 (>= 6.8.2), libqt6gui6 (>= 6.1.2), libqt6network6 (>= 6.4.0), libqt6qml6 (>= 6.6.0), libqt6quickcontrols2-6 (>= 6.6.0), libqt6websockets6 (>= 6.6.0), libstdc++6 (>= 5)
+Depends: crankshaft-core, libqt6core6 | libqt6core6t64, libqt6gui6 | libqt6gui6t64, libqt6qml6 | libqt6qml6t64, libqt6quick6 | libqt6quick6t64, libqt6multimedia6 | libqt6multimedia6t64, libqt6sql6 | libqt6sql6t64, libqt6network6 | libqt6network6t64, libqt6websockets6 | libqt6websockets6t64, libqt6dbus6 | libqt6dbus6t64, libgstreamer1.0-0 | libgstreamer1.0-0t64, libgstreamer-plugins-base1.0-0 | libgstreamer-plugins-base1.0-0t64, libgstreamer-plugins-bad1.0-0 | libgstreamer-plugins-bad1.0-0t64, libnice10 | libnice10t64, libsrtp2-1 | libsrtp2-1t64, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-libav, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-window, qml6-module-qtmultimedia, qt6-qpa-plugins, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libglib2.0-0t64 (>= 2.12.0), libgstreamer-plugins-bad1.0-0 (>= 1.26.2), libgstreamer-plugins-base1.0-0 (>= 1.0.0), libgstreamer1.0-0 (>= 1.14.0), libqt6core6t64 (>= 6.8.2), libqt6gui6 (>= 6.1.2), libqt6multimedia6 (>= 6.6.1), libqt6network6 (>= 6.4.0), libqt6qml6 (>= 6.6.0), libqt6quickcontrols2-6 (>= 6.6.0), libqt6websockets6 (>= 6.6.0), libstdc++6 (>= 5)
 Filename: pool/nightly/c/crankshaft-ui-slim/crankshaft-ui-slim_1.1.0-alpha.24_deb13_arm64.deb
-Size: 222194
-MD5sum: 9e9bcc25d95a8c9e9c2faf6271f64fc4
-SHA1: c99618d789a37904d83e6c988ec8d6341a5b8c99
-SHA256: 3a959a810c52eb05e13a0efbb2d734d79d352708abd1f766ac7a233775a6b549
-SHA512: bfd6183eed317e41f2634c4b691b28e786d145666302fae933498bad517c7e6bcd35903984e749b6defa28c1375d3ae9c3ba3713deee458c3a77e643622dff2b
+Size: 297776
+MD5sum: e94aace5937054a122101f268817ac24
+SHA1: cb76219db57c818c13357a7742ba60b5951a7d19
+SHA256: d4c931d3999c6c2060f02c2f85c31e6b90b27e5f05563444e05f0fe1f2d576ac
+SHA512: f798f722d392d3f74937794082c866e9298919065c6ea324cc1631e38327a0488e031d25b582792a56edd343322fa5d07a13c59563c0f98e15bb7854558df0b6
 Description: crankshaft-ui-slim built using CMake
 
 Package: crankshaft-ui-slim
