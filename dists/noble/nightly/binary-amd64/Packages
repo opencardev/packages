@@ -1022,6 +1022,22 @@ SHA256: 8d74bf53eb17e45892ba6fc2b0f6e02c440be067ba15ac2792553b96eaf15e20
 SHA512: bc7ec5dc893b3ac1c73e5978974d6a8b531fe98a3f0c3437165e7c2c89638f9f4d730ecf9c14ab9f7c424f68a08f815ae7ed0b58d850a0d17f555a0b6b5c1a25
 Description: crankshaft-ui-slim built using CMake
 
+Package: crankshaft-ui-slim
+Priority: optional
+Section: devel
+Installed-Size: 1606
+Maintainer: OpenCarDev Team
+Architecture: amd64
+Version: 1.1.0-PullRequest42.7
+Depends: crankshaft-core, libqt6core6 | libqt6core6t64, libqt6gui6 | libqt6gui6t64, libqt6qml6 | libqt6qml6t64, libqt6quick6 | libqt6quick6t64, libqt6multimedia6 | libqt6multimedia6t64, libqt6sql6 | libqt6sql6t64, libqt6network6 | libqt6network6t64, libqt6websockets6 | libqt6websockets6t64, libqt6dbus6 | libqt6dbus6t64, libgstreamer1.0-0 | libgstreamer1.0-0t64, libgstreamer-plugins-base1.0-0 | libgstreamer-plugins-base1.0-0t64, libgstreamer-plugins-bad1.0-0 | libgstreamer-plugins-bad1.0-0t64, libnice10 | libnice10t64, libsrtp2-1 | libsrtp2-1t64, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-libav, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-window, qml6-module-qtmultimedia, qt6-qpa-plugins, libc6 (>= 2.38), libgcc-s1 (>= 3.0), libglib2.0-0t64 (>= 2.12.0), libgstreamer-plugins-bad1.0-0 (>= 1.24.2), libgstreamer-plugins-base1.0-0 (>= 1.0.0), libgstreamer1.0-0 (>= 1.14.0), libqt6core6t64 (>= 6.4.0), libqt6gui6t64 (>= 6.1.2), libqt6multimedia6 (>= 6.2.1), libqt6network6t64 (>= 6.4.0), libqt6qml6 (>= 6.2.0), libqt6quickcontrols2-6 (>= 6.2.0), libqt6websockets6 (>= 6.2.1), libstdc++6 (>= 5), qt6-websockets-abi (= 6.4.2)
+Filename: pool/nightly/c/crankshaft-ui-slim/crankshaft-ui-slim_1.1.0-PullRequest42.7_0ubuntu1~24.04_amd64.deb
+Size: 526990
+MD5sum: 9d52edcf8da3418500bec59f4c28b0f5
+SHA1: 9dd24dea50808a045546714b527ae1fdc7e4f1d2
+SHA256: e8108d4a562d3b120395f305975eca5580d9aae536c3da9f7c06620b534bfc26
+SHA512: 9d4522d62997c719fde22087e2963c16eddaee19268cac0d30c1b00c80df22de28e30b9f40c83b0d296b0468b2e293d1dfc0eef27452f09bed428218a0c8ba95
+Description: crankshaft-ui-slim built using CMake
+
 Package: libaasdk
 Priority: optional
 Section: libs
